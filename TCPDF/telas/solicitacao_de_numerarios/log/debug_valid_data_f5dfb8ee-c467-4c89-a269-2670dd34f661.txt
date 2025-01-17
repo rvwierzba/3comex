@@ -1,0 +1,23 @@
+Array
+(
+    [numeroSolicitacao] => f5dfb8ee-c467-4c89-a269-2670dd34f661
+    [dataSolicitacao] => 2024-06-25
+    [cliente] => Fabio Fernandes - 00.836.439/0001-59
+    [observacoes] => x
+    [valorSolicitado] => 2500.00
+    [formaPagamento] => dinheiro
+    [dataVencimento] => 2024-06-22
+    [finalidade] => x
+    [itens] => Array
+        (
+            [0] => Array
+                (
+                    [descricao] => descricao
+                    [tributavel] => NÃO
+                    [valor] => 900.00
+                    [total] => 80000.00
+                )
+
+        )
+
+)

@@ -1,0 +1,11 @@
+Array
+(
+    [0] => Array
+        (
+            [descricao] => descricao
+            [tributavel] => NÃO
+            [valor] => 900.00
+            [total] => 80000.00
+        )
+
+)

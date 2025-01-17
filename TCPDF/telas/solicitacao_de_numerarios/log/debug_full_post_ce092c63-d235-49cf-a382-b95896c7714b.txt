@@ -1,0 +1,12 @@
+Array
+(
+    [numeroSolicitacao] => ce092c63-d235-49cf-a382-b95896c7714b
+    [dataSolicitacao] => 2024-06-29
+    [cliente] => FLEXUS COMEX DESENVOLVIMENTO DE SISTEMAS LTDA - 44475939000188
+    [observacoes] => TESTE
+    [valorSolicitado] => 3000.00
+    [formaPagamento] => cartao
+    [dataVencimento] => 2024-07-05
+    [finalidade] => PLUS
+    [itens] => [{"descricao":"ICMS","tributavel":"NÃO","valor":"8000.00","total":"90000.00"}]
+)

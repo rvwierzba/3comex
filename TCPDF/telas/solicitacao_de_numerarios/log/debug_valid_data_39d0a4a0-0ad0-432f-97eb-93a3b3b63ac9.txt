@@ -1,0 +1,15 @@
+Array
+(
+    [numeroSolicitacao] => 39d0a4a0-0ad0-432f-97eb-93a3b3b63ac9
+    [dataSolicitacao] => 01/01/1970
+    [cliente] => 
+    [observacoes] => 
+    [valorSolicitado] => NaN
+    [formaPagamento] => 
+    [dataVencimento] => 01/01/1970
+    [finalidade] => 
+    [itens] => Array
+        (
+        )
+
+)
