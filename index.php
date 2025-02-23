@@ -29,9 +29,10 @@ if($total_reg2 == 0){
 
 <link href="css/estilo-login.css" rel="stylesheet">
 
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
-
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <title><?php echo $nome_sistema ?></title>
 </head>
 <body class="bg-light">

@@ -239,15 +239,15 @@
                 <form id="form-perfil" method="post">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="exampleFormControlInput1" class="form-label">Nome</label>
+                            <label for="nome-usuario" class="form-label">Nome</label>
                             <input type="text" class="form-control" name="nome-usuario" placeholder="Nome" value="<?php echo $nome_usuario ?>">
                         </div>
                         <div class="mb-3">
-                            <label for="exampleFormControlInput1" class="form-label">Email</label>
+                            <label for="email-usuario" class="form-label">Email</label>
                             <input type="email" class="form-control" name="email-usuario" placeholder="Email" value="<?php echo $email_usuario ?>">
                         </div>
                         <div class="mb-3">
-                            <label for="exampleFormControlInput1" class="form-label">Senha</label>
+                            <label for="senha-usuario" class="form-label">Senha</label>
                             <input type="text" class="form-control" name="senha-usuario" placeholder="Senha" value="<?php echo $senha_usuario ?>">
                         </div>
                         <small><div id="mensagem-perfil" class="text-center"></div></small>
