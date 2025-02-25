@@ -432,34 +432,55 @@
                             <div class="d-flex grid gap-3">
                                 <div class="form-group">
                                     <label for="1-campo-de-pesquisa-enquadramento">Primeiro enquadramento</label>
-                                    <input type="text" class="form-control" id="1-campo-de-pesquisa-enquadramento"
+                                    <select class="form-control" id="1-campo-de-pesquisa-enquadramento"
                                            name="1-enquadramento" autocomplete="off">
-                                    <div id="1-resultados-pesquisa-enquadramento"
-                                         class="resultados-pesquisa"></div>
-                                </div>
+                                        <option selected>Selecione...</option>
+                                        <?php
+                                            foreach($pdo->query('SELECT Codigo, Descricao FROM enquadramento ORDER BY Codigo') as $row){
+                                                echo '<option value="'.$row['Codigo'].'">'.$row['Descricao'].'</option>';
+                                            }       
+                                        ?>   
+                                    </select>
+                                  </div>
                                 <div class="form-group">
                                     <label for="2-campo-de-pesquisa-enquadramento">Segundo enquadramento</label>
-                                    <input type="text" class="form-control" id="2-campo-de-pesquisa-enquadramento"
+                                    <select class="form-control" id="2-campo-de-pesquisa-enquadramento"
                                            name="2-enquadramento" autocomplete="off">
-                                    <div id="2-resultados-pesquisa-enquadramento"
-                                         class="resultados-pesquisa"></div>
+                                           <option selected>Selecione...</option>
+                                        <?php
+                                            foreach($pdo->query('SELECT Codigo, Descricao FROM enquadramento ORDER BY Codigo') as $row){
+                                                echo '<option value="'.$row['Codigo'].'">'.$row['Descricao'].'</option>';
+                                            }       
+                                        ?>      
+                                    </select>
                                 </div>
                             </div>
                             <br>
                             <div class="d-flex grid gap-3">
                                 <div class="form-group">
                                     <label for="3-campo-de-pesquisa-enquadramento">Terceiro enquadramento</label>
-                                    <input type="text" class="form-control" id="3-campo-de-pesquisa-enquadramento"
+                                    <select class="form-control" id="3-campo-de-pesquisa-enquadramento"
                                            name="3-enquadramento" autocomplete="off">
-                                    <div id="3-resultados-pesquisa-enquadramento"
-                                         class="resultados-pesquisa"></div>
+                                        <option selected>Selecione...</option>
+                                        <?php
+                                            foreach($pdo->query('SELECT Codigo, Descricao FROM enquadramento ORDER BY Codigo') as $row){
+                                                echo '<option value="'.$row['Codigo'].'">'.$row['Descricao'].'</option>';
+                                            }       
+                                        ?>       
+                                    </select>
                                 </div>
                                 <div class="form-group">
                                     <label for="4-campo-de-pesquisa-enquadramento">Quarto enquadramento</label>
-                                    <input type="text" class="form-control" id="4-campo-de-pesquisa-enquadramento"
+                                    <select class="form-control" id="4-campo-de-pesquisa-enquadramento"
                                            name="4-enquadramento" autocomplete="off">
-                                    <div id="4-resultados-pesquisa-enquadramento"
-                                         class="resultados-pesquisa"></div>
+                                        <option selected>Selecione...</option>
+                                        <?php
+                                            foreach($pdo->query('SELECT Codigo, Descricao FROM enquadramento ORDER BY Codigo') as $row){
+                                                echo '<option value="'.$row['Codigo'].'">'.$row['Descricao'].'</option>';
+                                            }       
+                                        ?>      
+                                    </select>
+                                 
                                 </div>
                             </div>
                         </div>
