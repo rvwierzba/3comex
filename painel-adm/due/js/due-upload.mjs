@@ -1,4 +1,5 @@
 // due-upload.mjs
+
 class NFeProcessor {
     constructor() {
         this.notasFiscais = [];
@@ -38,15 +39,15 @@ class NFeProcessor {
                     const xmlString = event.target.result;
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(xmlString, "text/xml");
-                    
+
                     const nfeProc = xmlDoc.getElementsByTagNameNS(this.nfeNS, 'nfeProc')[0];
                     const nfe = xmlDoc.getElementsByTagNameNS(this.nfeNS, 'NFe')[0];
-                    
+
                     if (!nfeProc && !nfe) {
                         reject(new Error(`Arquivo ${file.name} não é uma NF-e válida.`));
                         return;
                     }
-                    
+
                     const nfData = this.extractData(xmlDoc);
                     this.notasFiscais.push(nfData);
                     this.totalNFs++;
@@ -131,7 +132,6 @@ class NFeProcessor {
         const time = timePart.substring(0, 8);
         return `${day}/${month}/${year} ${time}`;
     }
-
     updateTable() {
         const tableBody = document.querySelector("#notasFiscaisTable tbody");
         if (!tableBody) return;
@@ -153,49 +153,65 @@ class NFeProcessor {
             const detailsRow = document.createElement("tr");
             detailsRow.classList.add("details-row");
             detailsRow.style.display = "none";
-            detailsRow.innerHTML = `
-                <td colspan="4">
-                    <div class="detalhes-nfe">
-                        <table class="table table-bordered">
-                            <tbody>
-                                ${this.generateDetailsHtml(nf)}
-                            </tbody>
-                        </table>
-                    </div>
-                </td>
-            `;
+            //  Usamos diretamente o this.generateDetailsHtml(nf)
+            detailsRow.innerHTML = `<td colspan="4"><div class="detalhes-nfe">${this.generateDetailsHtml(nf)}</div></td>`;
             tableBody.appendChild(detailsRow);
         });
 
         this.addDelegatedEventListeners();
         this.preencherCampos();
     }
-
     generateDetailsHtml(nf) {
-        return `
-            <tr><td><strong>Número NF-e:</strong></td><td>${nf.nNF}</td></tr>
-            <tr><td><strong>Série:</strong></td><td>${nf.serie}</td></tr>
-            <tr><td><strong>Data Emissão:</strong></td><td>${nf.dhEmi}</td></tr>
-            <tr><td><strong>Modalidade Frete:</strong></td><td>${nf.modFrete}</td></tr>
-            <tr><td><strong>Exportador:</strong></td><td>${nf.xNome}</td></tr>
-            <tr><td><strong>CNPJ Exportador:</strong></td><td>${nf.cnpjEmitente}</td></tr>
-            <tr><td><strong>Endereço Exportador:</strong></td><td>${nf.xLgr}</td></tr>
-            <tr><td colspan="2"><strong>Itens da DU-E</strong></td></tr>
-            ${nf.itens.map(item => `
-            <tr>
-                <td colspan="2">
-                    <strong>Item ${item.nItem}:</strong> ${item.xProd}<br>
-                    <strong>Código:</strong> ${item.cProd} | 
-                    <strong>NCM:</strong> ${item.NCM} | 
-                    <strong>CFOP:</strong> ${item.CFOP}<br>
-                    <strong>Quantidade:</strong> ${item.qCom} ${item.uCom} | 
-                    <strong>Valor Unitário:</strong> ${item.vUnCom} | 
-                    <strong>Total:</strong> ${item.vProd}
-                </td>
-            </tr>
-            `).join('')}
-        `;
+
+        let html = `<div class="card mb-3">
+                        <div class="card-header">
+                            <h5>Detalhes da NF-e: ${nf.chaveAcesso}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Número:</strong> ${nf.nNF}</p>
+                                    <p><strong>Série:</strong> ${nf.serie}</p>
+                                    <p><strong>Data Emissão:</strong> ${nf.dhEmi}</p>
+                                    <p><strong>Modalidade Frete:</strong> ${nf.modFrete}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Exportador:</strong> ${nf.xNome}</p>
+                                    <p><strong>CNPJ Exportador:</strong> ${nf.cnpjEmitente}</p>
+                                    <p><strong>Endereço Exportador:</strong> ${nf.xLgr}</p>
+                                </div>
+                            </div>
+                            <hr>
+                            <h6>Itens da NF-e</h6>`;  // Fim do cabeçalho, início dos itens
+
+        nf.itens.forEach(item => {
+            html += `
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Item ${item.nItem}: ${item.xProd}</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Item da Nota Fiscal:</strong> <input type="text" class="form-control form-control-sm" value="${item.nItem}" readonly></p>
+                                <p><strong>NCM:</strong> <input type="text" class="form-control form-control-sm" value="${item.NCM}" readonly></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Nota Fiscal:</strong> <input type="text" class="form-control form-control-sm" value="${nf.nNF}" readonly></p>
+                                 <p><strong>Quantidade Estatística:</strong> <input type="text" class="form-control form-control-sm" value="${item.qCom}" readonly></p>
+                            </div>
+
+                            <div class="col-md-4">
+                                <p><strong>Unidade Estatística:</strong> <input type="text" class="form-control form-control-sm" value="${item.uCom}" readonly></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div></div>`; // Fecha card-body e card principal
+        return html;
     }
+
 
     addDelegatedEventListeners() {
         const tableBody = document.querySelector("#notasFiscaisTable tbody");
@@ -226,10 +242,10 @@ class NFeProcessor {
         };
 
         if (this.notasFiscais.length === 0) {
-            ['cnpj-cpf-select', 'nomeCliente', 'pes-liq-ttl', 'ruc', 
-             'und-estatis', 'qdt-estatis', 'und-comerc', 'qdt-comerc', 'val'].forEach(id => {
-                safeSet(id, '');
-            });
+            ['cnpj-cpf-select', 'nomeCliente', 'pes-liq-ttl', 'ruc',
+                'und-estatis', 'qdt-estatis', 'und-comerc', 'qdt-comerc', 'val'].forEach(id => {
+                    safeSet(id, '');
+                });
             ['xNome', 'xLgr', 'xPaisImp'].forEach(id => {
                 safeSet(id, '', 'textContent');
             });
@@ -242,12 +258,12 @@ class NFeProcessor {
         // Aba: Importação de NFs
         safeSet('cnpj-cpf-select', primeiraNF.cnpjEmitente);
         safeSet('nomeCliente', primeiraNF.xNome);
-        
+
         // Aba: Dados da Declaração
         safeSet('xNome', primeiraNF.xNomeImportador, 'textContent');
         safeSet('xLgr', primeiraNF.xLgrImportador, 'textContent');
         safeSet('xPaisImp', primeiraNF.xPaisImportador, 'textContent');
-        
+
         safeSet('pes-liq-ttl', totais.pesoLiquido.toFixed(5));
         safeSet('und-estatis', 'KG');
         safeSet('qdt-estatis', totais.quantidadeEstatistica.toFixed(5));
