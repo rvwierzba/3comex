@@ -1,6 +1,87 @@
 <style>
 
-    #tabela-nfe {
+    /* Estilização dos radio buttons */
+.form-check-inline {
+    margin-right: 1rem;
+}
+
+.form-check-input {
+    margin-top: 0.3rem;
+}
+
+/* Alinhamento vertical */
+#notasFiscaisTable td {
+    vertical-align: middle;
+}
+
+/* Espaçamento interno */
+#notasFiscaisTable td:first-child {
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+    /* Garante que o cabeçalho permaneça visível */
+#notasFiscaisTable thead {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Estilização do cabeçalho */
+.thead-light th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    padding: 12px;
+    font-weight: 600;
+}
+
+/* Ajuste de alinhamento */
+#notasFiscaisTable td {
+    vertical-align: middle;
+}
+
+    /* Adicione no início do seu CSS existente */
+button[type="button"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+button.toggle-details {
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+}
+
+    /* Garante transição suave */
+.details-row {
+    transition: all 0.3s ease;
+    contain: content;
+}
+
+/* Evita colapso de layout */
+#notasFiscaisTable {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* Estilização consistente para botões */
+.btn.toggle-details {
+    min-width: 32px;
+    transition: transform 0.2s;
+}
+
+.btn.toggle-details:hover {
+    transform: scale(1.1);
+    background-color: #f8f9fa;
+}
+
+#tabela-nfe {
         width: 100%;
         border-collapse: collapse;
     }
@@ -35,24 +116,25 @@
         border-color: #dc3545;
     }
 
-    /* Estilos específicos para a coluna de ações */
-    #tabela-nfe td:nth-child(10) { /* Mudando para a 10ª coluna (índice 9) */
+    /* Estilos específicos para a coluna de ações (ajustado) */
+    #tabela-nfe td:nth-child(4) { /* Coluna de Ações */
         width: 150px;
         white-space: nowrap;
         text-align: center;
     }
 
-    /* Estilos para a linha de detalhes (oculta por padrão) */
+     /* Estilos para a linha de detalhes (oculta por padrão) */
     #tabela-nfe tr.details-row {
-        background-color: #f8f9fa;
+        background-color: #f8f9fa; /* Mantém o fundo cinza claro */
     }
 
+     /* Estilos para a linha de detalhes (oculta por padrão) */
     #tabela-nfe tr.details-row td {
-        padding: 16px;
-        border: none;
+       padding: 0px!important; /* Zera o padding para a tabela interna ocupar tudo */
+       border: none; /* Remove bordas */
     }
 
-    /* Estilos para os inputs dentro da linha de detalhes */
+    /* Estilos para os inputs dentro da linha de detalhes (agora dentro da tabela interna)*/
     #tabela-nfe tr.details-row input[type="text"],
     #tabela-nfe tr.details-row select {
         width: 100%;
@@ -60,9 +142,21 @@
         margin-bottom: 8px;
         border: 1px solid #ced4da;
         border-radius: 4px;
+        box-sizing: border-box; /* Importante para o width 100% incluir padding e border */
     }
 
-    /* Estilos para o botão de salvar dentro da linha de detalhes */
+    /* Estilo para tabela interna de detalhes */
+    .inner-table {
+      width: 100%; /* Ocupa toda a largura da célula */
+      border-collapse: collapse; /* Remove espaçamento entre células */
+    }
+      .inner-table th, .inner-table td {
+        padding: 8px; /* Espaçamento interno */
+        border: 1px solid #dee2e6; /* Bordas */
+        text-align: left; /* Alinhamento do texto */
+    }
+
+     /* Estilos para o botão de salvar dentro da linha de detalhes */
     #tabela-nfe tr.details-row .save-nf-btn {
         background-color: #28a745;
         border-color: #28a745;
@@ -70,15 +164,15 @@
         padding: 8px 16px;
         border-radius: 4px;
         cursor: pointer;
-    }
+     }
 
     #tabela-nfe tr.details-row .save-nf-btn:hover {
         background-color: #218838;
         border-color: #218838;
-    }
+     }
 
     .meus-botoes > button {
-    margin-right: 5px; /* Espaçamento de 5px à direita de cada botão */
+     margin-right: 5px; /* Espaçamento de 5px à direita de cada botão */
     }
 
 </style>
@@ -402,16 +496,7 @@
                         </div>
 
                         <br>
-
-                        <div class="form-group">
-                            <label for="condVenda">Condição de venda:</label>
-                            <select class="form-control">
-                                <option selected>Selecione...</option>
-                                
-                            </select>
-                        </div>
-
-                        <br>
+                
 
                         <div class="form-group">
                             <label for="tart-priori">Tratamento prioritário</label>
@@ -509,6 +594,34 @@
                                 <input type="hidden" id="lpcos-hidden" name="lpcos" value="">
                             </div>
 
+                            <br>
+
+                            <div class="form-group">
+                                <h4>Tratamento Tributário</h4>
+                                <p>Este item não possui tratamento tributário<p>
+                            </div>
+
+                            <br>
+
+                            <div class="form-group">
+                                <h4>Notas Fiscais Referenciadas Eletrônicas</h4>
+                                <button type="button" class="btn btn-outline-primary" id="btn-add-nfe-ref-eletro">Adicionar Nota Fiscal Referenciada Eletrônica</button>
+                            </div>
+
+                            <br>
+
+                            <div class="form-group">
+                                <h4>Notas Fiscais Referenciadas Formulário</h4>
+                                <button type="button" class="btn btn-outline-primary" id="btn-add-nfe-ref-form">Adicionar Nota Fiscal Referenciada Formulário</button>
+                            </div>
+
+                            <br>
+
+                            <div class="form-group">
+                                <h4>Notas Fiscais Complementares</h4>
+                                <button type="button" class="btn btn-outline-primary" id="btn-add-nf-compl">Adicionar Nota Fiscal Complementar</button>
+                            </div>
+
                         </div>
 
                         <input type="hidden" id="id-due" name="id_due">
@@ -521,11 +634,32 @@
         <div class="tab-pane fade" id="nfsInseridas" role="tabpanel" aria-labelledby="tab3">
     <form>
         <div class="card mb-4">
+            <div class="form-group" style="margin-left: 40%;">
+                <br>
+               <h4>CCPTC/CCROM</h4>
+               <label for="ccpt-ccrom">A mercadoria é amparada por: </label>
+                    <br>              
+
+                    <input type="radio" id="naoAmparada" name="ccpt-ccrom-op" value="Não amparada" />
+                    <label for="naoAmparada">Não Amparada</label>
+
+                    <br>
+            
+                    <input type="radio" id="ccptc" name="ccpt-ccrom-op" value="CCPTC" />
+                    <label for="ccptc">CCPTC</label>
+
+                    <br>
+            
+                    <input type="radio" id="ccrom" name="ccpt-ccrom-op" value="CCROM" />
+                    <label for="ccrom">CCROM</label>
+                       
+            </div>
+            <br>
             <div class="card-header">Lista de Notas Fiscais</div>
             <div class="card-body">
                 <div id="tabelaContainer" class="table-responsive">
                     <table class="table table-bordered" id="notasFiscaisTable">
-                        <thead>
+                        <thead class="thead-light">
                             <tr>
                                 <th>Chave de Acesso</th>
                                 <th>Nome Importador</th>
@@ -534,64 +668,14 @@
                             </tr>
                         </thead>
                         <tbody>
-
-                        <div id="detalhes-NFe-{{chaveAcesso}}">
-                            <table class="table table-bordered" hidden>
-                                <tr>
-                                <td><strong>Número da NF-e:</strong></td>
-                                <td id="nNF-{{chaveAcesso}}"></td>
-                                </tr>
-                                <tr>
-                                <td><strong>Série:</strong></td>
-                                <td id="serie-{{chaveAcesso}}"></td>
-                                </tr>
-                                <tr>
-                                <td><strong>Data de Emissão:</strong></td>
-                                <td id="dhEmi-{{chaveAcesso}}"></td>
-                                </tr>
-                                <tr>
-                                <td><strong>Modalidade do Frete:</strong></td>
-                                <td id="modFrete-{{chaveAcesso}}"></td>
-                                </tr>
-                                <tr>
-                                <td><strong>Exportador:</strong></td>
-                                <td id="xNome-{{chaveAcesso}}"></td>
-                                </tr>
-                                <tr>
-                                <td><strong>CNPJ do Exportador:</strong></td>
-                                <td id="cnpjEmitente-{{chaveAcesso}}"></td>
-                                </tr>
-                                <tr>
-                                <td><strong>Nome do Importador:</strong></td>
-                                <td id="xNomeImportador-{{chaveAcesso}}"></td>
-                                </tr>
-                                <tr>
-                                <td><strong>Endereço do Exportador:</strong></td>
-                                <td id="xLgr-{{chaveAcesso}}"></td>
-                                </tr>
-                                <tr>
-                                <td><strong>Endereço do Importador:</strong></td>
-                                <td id="xLgrImportador-{{chaveAcesso}}"></td>
-                                </tr>
-                                <tr>
-                                <td><strong>País do Importador:</strong></td>
-                                <td id="xPaisImportador-{{chaveAcesso}}"></td>
-                                </tr>
-                                <tr>
-                                <td colspan="2"><strong>Detalhes dos Itens da DU-E</strong></td>
-                                </tr>
-                                <tbody id="itens-{{chaveAcesso}}">
-                                </tbody>
-                            </table>
-                        </div>            
-
+                            <!-- As linhas serão populadas via JavaScript -->
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </form>
-</div>
+</div>                              
 
     </div>
 
@@ -604,230 +688,18 @@
     </div>
 </div>
 
-<script type="module" src="./due/js/due-upload.mjs"></script>
+
 <script src="./due/js/add-lpcos.js"></script>
 <script src="./due/js/due-generate-xml.js"></script>
+<script type="module">
+    // Importação CORRETA
+    import NFeProcessor from './due/js/due-upload.mjs'; // SEM CHAVES!
 
-<script>
-
-document.addEventListener('DOMContentLoaded', function() {
-
-const nfeProcessor = new NFeProcessor(); // Instancia a classe (já está no seu código)
-const fileInput = document.getElementById('xml-files');
-const tabelaNFs = document.querySelector("#notasFiscaisTable tbody");
-const detalhesContainer = document.getElementById("detalhesNFeContainer");
-const detalhesRow = document.querySelector(".details-row"); // Linha completa de detalhes
-
-
-fileInput.addEventListener('change', async (event) => {
-    const files = event.target.files;
-    if (files.length > 0) {
-        await nfeProcessor.processFiles(files);  // Processa os arquivos
-        updateTable(); // Atualiza a tabela *após* o processamento
-    }
-});
-
-
- function updateTable() {
-    tabelaNFs.innerHTML = ''; // Limpa o conteúdo atual da tabela
-    nfeProcessor.notasFiscais.forEach(nf => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${nf.chaveAcesso}</td>
-            <td>${nf.xNomeImportador}</td>
-            <td>${nf.xPaisImportador}</td>
-            <td class="meus-botoes">
-                <button class="btn btn-dark btn-sm toggle-details" data-chave="${nf.chaveAcesso}" type="button">+</button>
-                <button class="btn btn-danger btn-sm remove-nf" data-chave="${nf.chaveAcesso}" type="button">Remover</button>
-            </td>
-        `;
-        tabelaNFs.appendChild(row);
-    });
-
-     // Adiciona os event listeners *após* a criação das linhas
-     addEventListeners();
-     nfeProcessor.preencherCampos();
-}
-
-
-function addEventListeners() {
-    // Botão de mostrar/ocultar detalhes
-    document.querySelectorAll(".toggle-details").forEach(button => {
-        button.addEventListener("click", function() {
-            const chave = this.dataset.chave;
-            const nf = nfeProcessor.notasFiscais.find(n => n.chaveAcesso === chave);
-
-            if (nf) {
-                if (this.textContent === "+") {
-                    // Mostrar detalhes
-                    mostrarDetalhes(nf);
-                    this.textContent = "-"; // Muda o botão para "-"
-                } else {
-                  // Ocultar detalhes
-                    detalhesContainer.innerHTML = ''; // Limpa os detalhes
-                    detalhesRow.style.display = "none"; // Oculta a linha
-                    this.textContent = "+";  // Muda o botão para "+"
-
-                }
-            }
+    document.addEventListener('DOMContentLoaded', () => {
+        window.nfeProcessor = new NFeProcessor();
+        
+        document.getElementById('xml-files').addEventListener('change', async (e) => {
+            await window.nfeProcessor.processFiles(e.target.files);
         });
     });
-
-    // Botão de remover
-    document.querySelectorAll(".remove-nf").forEach(button => {
-       button.addEventListener("click", function() {
-            const chave = this.dataset.chave;
-            nfeProcessor.removeNotaFiscal(chave);
-            updateTable(); // Atualiza a tabela *após* remover
-            // Oculta os detalhes, se a NF-e removida for a que está sendo exibida
-            if (detalhesRow.style.display !== "none" && detalhesContainer.dataset.chave === chave) {
-                detalhesContainer.innerHTML = "";
-                detalhesRow.style.display = "none";
-            }
-        });
-    });
-}
-
-
-function mostrarDetalhes(nf) {
-    let htmlDetalhes = `
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Detalhes da NF-e: ${nf.chaveAcesso}</h5>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Número:</strong> ${nf.nNF}</p>
-                    <p><strong>Série:</strong> ${nf.serie}</p>
-                    <p><strong>Data de Emissão:</strong> ${nf.dhEmi}</p>
-                    <p><strong>Exportador:</strong> ${nf.xNome}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Importador:</strong> ${nf.xNomeImportador}</p>
-                     <p><strong>País do Importador:</strong> ${nf.xPaisImportador}</p>
-                    <p><strong>Modalidade do Frete:</strong> ${nf.modFrete}</p>
-
-                </div>
-            </div>
-            <hr>
-            <h6>Itens da NF-e</h6>
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Cód. Prod.</th>
-                            <th>Descrição</th>
-                            <th>NCM</th>
-                            <th>CFOP</th>
-                            <th>Qtd.</th>
-                            <th>Valor Unit.</th>
-                             <th>Valor Total</th>
-                            <th>Imagem</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${nf.itens.map(item => `
-                            <tr>
-                                <td>${item.nItem}</td>
-                                <td>${item.cProd}</td>
-                                <td>${item.xProd}</td>
-                                <td>${item.NCM}</td>
-                                <td>${item.CFOP}</td>
-                                <td>${item.qCom} ${item.uCom}</td>
-                                <td>${item.vUnCom}</td>
-                                 <td>${item.vProd}</td>
-                                <td>
-                                    ${nf.imagens.find(img => img.cProd === item.cProd) ? `<img src="${nf.imagens.find(img => img.cProd === item.cProd).path}" alt="Imagem do Produto ${item.cProd}" style="max-width: 100px; max-height: 100px;">` : 'Sem Imagem'}
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    `;
-
-    detalhesContainer.innerHTML = htmlDetalhes; // Insere o HTML no container
-    detalhesContainer.dataset.chave = nf.chaveAcesso; // *IMPORTANTE* Guarda a chave da NF-e atual
-    detalhesRow.style.display = ""; // Mostra a linha de detalhes (remove o display: none)
-}
-
-// Botão SALVAR (fora do loop, evento único)
-document.getElementById('gerarDUE').addEventListener('click', function() {
-//Coletar dados do formulario
-   const formData = {
-      action: 'salvarDUE', // Ação para o PHP saber o que fazer
-      id_due: document.getElementById('id-due').value,
-      forma_export: document.querySelector('input[name="forma-export"]:checked')?.value || '', // Radio buttons
-      export_cons: document.getElementById('export-cons').checked ? 1 : 0,  // Checkbox
-      situacao_espec_despacho: document.getElementById('situacao-espec-despacho').value,
-      tp_doc_amp_merc_export: document.querySelector('input[name="tp-doc-amp-merc-export"]:checked')?.value || '',
-      moeda: document.getElementById('moeda').value,
-      ruc: document.getElementById('ruc').value,
-      campo_de_pesquisa_unidades_rfb_d: document.getElementById('campo-de-pesquisa-unidades-rfb-d').value,
-      em_ra_d: document.querySelector('input[name="em-ra-d"]:checked')?.value || '',
-      campo_de_pesquisa_recinto_alfandegado_d: document.getElementById('campo-de-pesquisa-recinto-alfandegado-d').value,
-      campo_de_pesquisa_unidades_rfb_e: document.getElementById('campo-de-pesquisa-unidades-rfb-e').value,
-      em_ra_e: document.querySelector('input[name="em-ra-e"]:checked')?.value || '',
-      campo_de_pesquisa_recinto_alfandegado_e: document.getElementById('campo-de-pesquisa-recinto-alfandegado-e').value,
-      via_especial_transport: document.getElementById('via-especial-transport').value,
-      info_compl: document.getElementById('info-compl').value,
-      und_estatis: document.getElementById('und-estatis').value,
-      qdt_estatis: document.getElementById('qdt-estatis').value,
-      pes_liq_ttl: document.getElementById('pes-liq-ttl').value,
-      und_comerc: document.getElementById('und-comerc').value,
-      qdt_comerc: document.getElementById('qdt-comerc').value,
-      val: document.getElementById('val').value,
-      comiss_agnt: document.getElementById('comiss-agnt').value,
-      cond_vend: document.getElementById('cond-vend').value,
-      vmcv: document.getElementById('vmcv').value,
-      vmle: document.getElementById('vmle').value,
-      xPais: document.getElementById('xPais').value,
-      '1_enquadramento': document.getElementById('1-campo-de-pesquisa-enquadramento').value,
-      '2_enquadramento': document.getElementById('2-campo-de-pesquisa-enquadramento').value,
-      '3_enquadramento': document.getElementById('3-campo-de-pesquisa-enquadramento').value,
-      '4_enquadramento': document.getElementById('4-campo-de-pesquisa-enquadramento').value,
-      notasFiscais: JSON.stringify(nfeProcessor.notasFiscais) // Envia as NFs processadas
-
-  };
-
-
-    // Mostra o spinner e desabilita o botão
-    const spinner = document.getElementById('spinner');
-    const gerarDUEButton = document.getElementById('gerarDUE');
-    spinner.style.display = 'block';
-    gerarDUEButton.disabled = true;
-
-
-    // Envia a requisição AJAX
-    fetch('due.php', {  // Mesmo arquivo
-        method: 'POST',
-         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded', //  Importante para enviar dados de formulário
-        },
-        body: new URLSearchParams(formData) // Codifica os dados do formulário
-    })
-    .then(response => response.json())
-    .then(data => {
-        // Processa a resposta do servidor
-        if (data.error) {
-            alert('Erro ao salvar DUE: ' + data.error);
-        } else {
-            alert('DUE salva com sucesso!');
-            // Limpar os campos do formulário ou redirecionar, se necessário
-        }
-    })
-    .catch(error => {
-        console.error('Erro na requisição AJAX:', error);
-        alert('Erro ao salvar DUE. Verifique o console para detalhes.');
-    })
-    .finally(() => {
-        spinner.style.display = 'none'; // Oculta o spinner
-        gerarDUEButton.disabled = false; // Habilita o botão
-    });
-});
-});                                    
-
 </script>
