@@ -1,55 +1,59 @@
+<?php
+// Conexão com o banco (coloque *antes* de qualquer HTML, mas dentro do <html> se já existir)
+include_once '../conexao.php';  // Ajuste o caminho se necessário!
+?>
+
+
 <style>
 
-    /* Estilização dos radio buttons */
+    /* Estilos gerais para formulários */
+.form-group {
+    margin-bottom: 1rem; /* Espaçamento consistente entre grupos de formulário */
+}
+
 .form-check-inline {
     margin-right: 1rem;
 }
 
 .form-check-input {
-    margin-top: 0.3rem;
+    margin-top: 0.3rem; /* Ajuste fino, se necessário, mas geralmente .form-check resolve isso */
 }
 
-/* Alinhamento vertical */
-#notasFiscaisTable td {
+/* Estilos para a tabela principal de Notas Fiscais (#notasFiscaisTable) */
+#notasFiscaisTable {
+    width: 100%;
+    border-collapse: separate; /* Importante para espaçamento entre bordas */
+    border-spacing: 0;       /* Controla o espaçamento */
+}
+
+#notasFiscaisTable td,
+#notasFiscaisTable th {
     vertical-align: middle;
+    padding: 12px; /* Padding consistente */
+    border: 1px solid #dee2e6; /* Borda em todas as células */
 }
 
-/* Espaçamento interno */
-#notasFiscaisTable td:first-child {
-    padding-left: 12px;
-    padding-right: 12px;
-}
-
-    /* Garante que o cabeçalho permaneça visível */
 #notasFiscaisTable thead {
     position: sticky;
     top: 0;
     background: white;
     z-index: 100;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Estilização do cabeçalho */
 .thead-light th {
     background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-    padding: 12px;
+    border-bottom: 2px solid #dee2e6; /* Borda inferior mais forte no cabeçalho */
     font-weight: 600;
 }
 
-/* Ajuste de alinhamento */
-#notasFiscaisTable td {
-    vertical-align: middle;
-}
 
-    /* Adicione no início do seu CSS existente */
-button[type="button"] {
+/* Estilos para botões (geral e toggle-details) */
+button[type="button"], /* Reset de estilos nativos do navegador */
+button.toggle-details {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-}
-
-button.toggle-details {
     cursor: pointer;
     background: none;
     border: none;
@@ -58,19 +62,6 @@ button.toggle-details {
     color: inherit;
 }
 
-    /* Garante transição suave */
-.details-row {
-    transition: all 0.3s ease;
-    contain: content;
-}
-
-/* Evita colapso de layout */
-#notasFiscaisTable {
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-/* Estilização consistente para botões */
 .btn.toggle-details {
     min-width: 32px;
     transition: transform 0.2s;
@@ -78,102 +69,132 @@ button.toggle-details {
 
 .btn.toggle-details:hover {
     transform: scale(1.1);
-    background-color: #f8f9fa;
+    background-color: #f8f9fa; /* Leve destaque no hover */
 }
 
-#tabela-nfe {
-        width: 100%;
-        border-collapse: collapse;
-    }
+/* Estilos para a tabela interna (detalhes da NF) */
+.details-row {
+    transition: all 0.3s ease; /* Transição suave */
+     /*  contain: content;  Não é mais amplamente suportado, e pode causar problemas.  Removido. */
+}
 
-    #tabela-nfe th,
-    #tabela-nfe td {
-        padding: 8px;
-        text-align: left;
-        vertical-align: middle;
-        border: 1px solid #dee2e6;
-    }
+.inner-table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-    #tabela-nfe th {
-        font-weight: bold;
-        background-color: #f8f9fa;
-    }
+.inner-table th,
+.inner-table td {
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    text-align: left;
+}
 
-    #tabela-nfe td .btn {
-        margin: 2px;
-        display: inline-block;
-    }
+/* Estilos para inputs DENTRO da linha de detalhes */
+#tabela-nfe tr.details-row input[type="text"],
+#tabela-nfe tr.details-row select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-sizing: border-box; /* Fundamental para width: 100% */
+}
 
-    #tabela-nfe td .btn-info {
-        color: #fff;
-        background-color: #17a2b8;
-        border-color: #17a2b8;
-    }
+/* Botão "Salvar" na linha de detalhes */
+#tabela-nfe tr.details-row .save-nf-btn {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
 
-    #tabela-nfe td .btn-danger {
-        color: #fff;
-        background-color: #dc3545;
-        border-color: #dc3545;
-    }
+#tabela-nfe tr.details-row .save-nf-btn:hover {
+    background-color: #218838;
+    border-color: #218838;
+}
 
-    /* Estilos específicos para a coluna de ações (ajustado) */
-    #tabela-nfe td:nth-child(4) { /* Coluna de Ações */
-        width: 150px;
-        white-space: nowrap;
-        text-align: center;
-    }
+/* Espaçamento entre botões (se você tiver múltiplos botões lado a lado) */
+.meus-botoes > button {
+    margin-right: 5px;
+}
 
-     /* Estilos para a linha de detalhes (oculta por padrão) */
-    #tabela-nfe tr.details-row {
-        background-color: #f8f9fa; /* Mantém o fundo cinza claro */
-    }
+/* Outros estilos (menos relacionados a erros, mas para organização) */
 
-     /* Estilos para a linha de detalhes (oculta por padrão) */
-    #tabela-nfe tr.details-row td {
-       padding: 0px!important; /* Zera o padding para a tabela interna ocupar tudo */
-       border: none; /* Remove bordas */
-    }
+#tabela-nfe td .btn {  /* Botões dentro da tabela */
+    margin: 2px;
+    display: inline-block; /* Permite margens */
+}
 
-    /* Estilos para os inputs dentro da linha de detalhes (agora dentro da tabela interna)*/
-    #tabela-nfe tr.details-row input[type="text"],
-    #tabela-nfe tr.details-row select {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 8px;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        box-sizing: border-box; /* Importante para o width 100% incluir padding e border */
-    }
+/* Cores dos botões (exemplo) */
+#tabela-nfe td .btn-info {
+    color: #fff;
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+}
 
-    /* Estilo para tabela interna de detalhes */
-    .inner-table {
-      width: 100%; /* Ocupa toda a largura da célula */
-      border-collapse: collapse; /* Remove espaçamento entre células */
-    }
-      .inner-table th, .inner-table td {
-        padding: 8px; /* Espaçamento interno */
-        border: 1px solid #dee2e6; /* Bordas */
-        text-align: left; /* Alinhamento do texto */
-    }
+#tabela-nfe td .btn-danger {
+    color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+/* Estilos específicos para a coluna de ações (ajustado) */
+#tabela-nfe td:nth-child(4) {
+/* Coluna de Ações */
+    width: 150px;
+    white-space: nowrap;
+    text-align: center;
+}
 
-     /* Estilos para o botão de salvar dentro da linha de detalhes */
-    #tabela-nfe tr.details-row .save-nf-btn {
-        background-color: #28a745;
-        border-color: #28a745;
-        color: #fff;
-        padding: 8px 16px;
-        border-radius: 4px;
-        cursor: pointer;
-     }
+/* Estilos para a linha de detalhes (oculta por padrão) */
+#tabela-nfe tr.details-row {
+     background-color: #f8f9fa; /* Mantém o fundo cinza claro */
+}
 
-    #tabela-nfe tr.details-row .save-nf-btn:hover {
-        background-color: #218838;
-        border-color: #218838;
-     }
+/* Estilos para a linha de detalhes (oculta por padrão) */
+#tabela-nfe tr.details-row td {
+    padding: 0px!important; /* Zera o padding para a tabela interna ocupar tudo */
+     border: none; /* Remove bordas */
+}
 
-    .meus-botoes > button {
-     margin-right: 5px; /* Espaçamento de 5px à direita de cada botão */
-    }
+/* Estilos para os inputs dentro da linha de detalhes (agora dentro da tabela interna)*/
+ #tabela-nfe tr.details-row input[type="text"],
+#tabela-nfe tr.details-row select {
+    width: 100%;
+     padding: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+     box-sizing: border-box; /* Importante para o width 100% incluir padding e border */
+}
+
+/* Estilo para tabela interna de detalhes */
+.inner-table {
+    width: 100%; /* Ocupa toda a largura da célula */
+     border-collapse: collapse; /* Remove espaçamento entre células */
+}
+.inner-table th, .inner-table td {
+    padding: 8px; /* Espaçamento interno */
+     border: 1px solid #dee2e6; /* Bordas */
+    text-align: left; /* Alinhamento do texto */
+}
+
+ /* Estilos para o botão de salvar dentro da linha de detalhes */
+ #tabela-nfe tr.details-row .save-nf-btn {
+     background-color: #28a745;
+     border-color: #28a745;
+     color: #fff;
+     padding: 8px 16px;
+    border-radius: 4px;
+     cursor: pointer;
+}
+
+#tabela-nfe tr.details-row .save-nf-btn:hover {
+     background-color: #218838;
+     border-color: #218838;
+}
 
 </style>
 
@@ -213,8 +234,10 @@ button.toggle-details {
                 </div>
                 <div class="d-flex grid gap-3">
                     <div class="form-group">
-                        <label for="cnpj-cpf">CNPJ/CPF:</label>
-                        <input class="form-control" type="text" id="cnpj-cpf-select" name="cnpj-cpf">
+                        <label for="cnpj-cpf-select">CNPJ/CPF:</label>
+                        <input class="form-control" type="text" id="text-cnpj-cpf-select" name="cnpj-cpf" list="cnpj-cpf-list">
+                        <datalist id="cnpj-cpf-list"></datalist>
+                    </div>
                     </div>
                     <div class="form-group">
                         <label for="nomeCliente">Nome do Cliente</label>
@@ -267,15 +290,15 @@ button.toggle-details {
                 <br>
                 <div class="d-flex grid gap-3">
                     <div class="form-group">
-                        <label for="campo-de-pesquisa-moeda">Moeda:</label>
-                        <select class="form-control" id="moeda" name="moeda" required style="margin-rigth: 0.8%;">
-                            <option selected>Selecione...</option>
-                                    <?php
-                                        foreach($pdo->query('SELECT Codigo, Nome FROM moeda ORDER BY Nome') as $row){
-                                            echo '<option value="'.$row['Codigo'].'">'.$row['Nome'].'</option>';
-                                        }       
-                                    ?>
-                                </select>
+                        <label for="moeda">Moeda:</label>
+                        <input id="text-moeda" type="text" class="form-control" list="moeda" name="moeda" style="margin-rigth: 0.8%;">
+                        <datalist id="moeda">
+                            <?php
+                                foreach($pdo->query('SELECT Codigo, Nome FROM moeda ORDER BY Nome') as $row){
+                                    echo '<option value="'. $row['Codigo'] .'-'. $row['Nome'] .'">'.'</option>';
+                                    }       
+                               ?>
+                        </datalist>
                     </div>
                     <div class="form-group">
                         <label for="ruc">Referência Única de Carga (RUC):</label>
@@ -289,16 +312,15 @@ button.toggle-details {
                     <h4 id="lbl-local-despacho">Local de Despacho:</h4>
 
                     <div class="form-group">
-                        <label for="campo-de-pesquisa-unidades-rfb">Unidade da RFB:</label>
-                        <select type="text" class="form-control" id="campo-de-pesquisa-unidades-rfb-d"
-                               name="unidades_rfb" autocomplete="off">
-                                <option selected>Selecione...</option>
-                                 <?php
-                                         foreach($pdo->query('SELECT id, Nome FROM unidades_rfb ORDER BY Nome') as $row){
-                                              echo '<option value="'.$row['id'].'">'.$row['Nome'].'</option>';
-                                         }       
-                                    ?>
-                        </select>
+                        <label for="campo-de-pesquisa-unidades-rfb-d">Unidade da RFB:</label>
+                        <input id="text-campo-de-pesquisa-unidades-rfb-d" type="text" class="form-control" list="campo-de-pesquisa-unidades-rfb-d" name="campo-de-pesquisa-unidades-rfb-d">
+                        <datalist id="campo-de-pesquisa-unidades-rfb-d">
+                            <?php
+                                foreach($pdo->query('SELECT Codigo, Nome FROM unidades_rfb ORDER BY Nome') as $row){
+                                    echo '<option value="'. $row['Codigo'] .'-'. $row['Nome'] .'">'.'</option>';
+                                    }       
+                               ?>
+                        </datalist>
                     </div>
 
                     <br>
@@ -310,18 +332,15 @@ button.toggle-details {
                             <br><INPUT TYPE="RADIO" NAME="em-ra-d" id="sn" VALUE="nao"> Não
                         </div>
                         <div class="form-group">
-                            <label for="campo-de-pesquisa-recinto-alfandegado-d">Recinto Aduaneiro:</label>
-                            <select type="text" class="form-control" id="campo-de-pesquisa-recinto-alfandegado-d"
-                                   name="recinto_alfandegado" autocomplete="off">
-                                   <option selected>Selecione...</option>
-                                    <?php
-                                         foreach($pdo->query('SELECT id, Nome FROM recinto_aduaneiro ORDER BY Nome') as $row){
-                                              echo '<option value="'.$row['id'].'">'.$row['Nome'].'</option>';
-                                         }       
-                                    ?>
-                            </select>
-                            
-                        </div>
+                        <input id="txt-campo-de-pesquisa-recinto-alfandegado-d" type="text" class="form-control" list="campo-de-pesquisa-recinto-alfandegado-d" name="campo-de-pesquisa-recinto-alfandegado-d">
+                        <datalist id="campo-de-pesquisa-recinto-alfandegado-d">
+                            <?php
+                                foreach($pdo->query('SELECT codigo, Nome FROM recinto_aduaneiro ORDER BY Nome') as $row){
+                                    echo '<option value="'. $row['codigo'] .'-'. $row['Nome'] .'">'.'</option>';
+                                }       
+                            ?>
+                        </datalist>
+                         </div>
                     </div>
                     <br>
                 </div>
@@ -330,17 +349,16 @@ button.toggle-details {
                     <h4 id="lbl-local-embarque">Local de Embarque / Transposição de Fronteira:</h4>
 
                     <div class="form-group">
-                        <label for="campo-de-pesquisa-unidades-rfb">Unidade da RFB:</label>
-                            <select type="text" class="form-control" id="campo-de-pesquisa-unidades-rfb-e"
-                               name="unidades_rfb" autocomplete="off">
-                               <option selected>Selecione...</option>
-                                    <?php
-                                            foreach($pdo->query('SELECT id, Nome FROM unidades_rfb ORDER BY Nome') as $row){
-                                                echo '<option value="'.$row['id'].'">'.$row['Nome'].'</option>';
-                                            }       
-                                        ?>
-                            </select>
-                    </div>
+                        <label for="campo-de-pesquisa-unidades-rfb-e">Unidade da RFB:</label>
+                        <input id="text-campo-de-pesquisa-unidades-rfb-e" type="text" class="form-control" list="campo-de-pesquisa-unidades-rfb-e" name="campo-de-pesquisa-unidades-rfb-e">
+                        <datalist id="campo-de-pesquisa-unidades-rfb-e">
+                            <?php
+                                foreach($pdo->query('SELECT codigo, Nome FROM unidades_rfb ORDER BY Nome') as $row){
+                                    echo '<option value="'. $row['Codigo'] .'-'. $row['Nome'] .'">'.'</option>';
+                                }       
+                            ?>
+                        </datalist>
+                        </div>
 
                     <br>
 
@@ -352,15 +370,14 @@ button.toggle-details {
                         </div>
                         <div class="form-group">
                             <label for="campo-de-pesquisa-recinto-alfandegado-e">Recinto Aduaneiro:</label>
-                            <select type="text" class="form-control" id="campo-de-pesquisa-recinto-alfandegado-e"
-                                   name="recinto_alfandegado" autocomplete="off">
-                                   <option selected>Selecione...</option>
-                                   <?php
-                                            foreach($pdo->query('SELECT id, Nome FROM recinto_aduaneiro ORDER BY Nome') as $row){
-                                                echo '<option value="'.$row['id'].'">'.$row['Nome'].'</option>';
-                                            }       
-                                        ?>
-                            </select>
+                            <input id="text-campo-de-pesquisa-recinto-alfandegado-e" type="text" class="form-control" list="campo-de-pesquisa-recinto-alfandegado-e" name="campo-de-pesquisa-recinto-alfandegado-e">
+                            <datalist id="campo-de-pesquisa-recinto-alfandegado-e">
+                                <?php
+                                    foreach($pdo->query('SELECT codigo, Nome FROM recinto_aduaneiro ORDER BY Nome') as $row){
+                                        echo '<option value="'. $row['codigo'] .'-'. $row['Nome'] .'">'.'</option>';
+                                    }       
+                                ?>
+                            </datalist>
                         </div>
                     </div>
                 </div>
@@ -371,7 +388,7 @@ button.toggle-details {
                     <h4 id="lbl-complementos">Complementos</h4>
                     <div class="form-group">
                         <label>Via especial de transporte</label>
-                        <select type="text" class="form-control" id="via-especial-transport"
+                        <select class="form-control" id="via-especial-transport"
                                name="via-especial-transport">
                                <option selected>Selecione...</option>
                                <option value="MEIOS PRÓPRIOS">MEIOS PRÓPRIOS</option>
@@ -444,15 +461,15 @@ button.toggle-details {
                        
                             <div class="form-group">
                                 <label for="cond-vend">Condição da venda:</label>
-                                <select class="form-control" id="cond-vend" name="cond-vend" required>
-                                    <option selected>Selecione...</option>
+                                <input id="cond-vend" type="text" class="form-control" id="cond-vend" name="cond-vend">
+                                <datalist list="cond-vend">
                                     <?php
-                                        foreach($pdo->query('SELECT Codigo, Descricao FROM incoterms ORDER BY Codigo') as $row){
-                                            echo '<option value="'.$row['Codigo'].'">'.$row['Descricao'].'</option>';
+                                        foreach($pdo->query('SELECT sigla, Descricao FROM incoterms ORDER BY sigla') as $row){
+                                            echo '<option value="' . $row['sigla'] . '-' . $row['Descricao'] . '"></option>';
                                         }       
-                                    ?>
-                                </select>
-                            </div>
+                                        ?>
+                                </datalist>
+                              </div>
 
                         <br>
 
@@ -517,55 +534,49 @@ button.toggle-details {
                             <div class="d-flex grid gap-3">
                                 <div class="form-group">
                                     <label for="1-campo-de-pesquisa-enquadramento">Primeiro enquadramento</label>
-                                    <select class="form-control" id="1-campo-de-pesquisa-enquadramento"
-                                           name="1-enquadramento" autocomplete="off">
-                                        <option selected>Selecione...</option>
+                                    <input id="1-campo-de-pesquisa-enquadramento" type="text" class="form-control" id="1-campo-de-pesquisa-enquadramento" name="1-campo-de-pesquisa-enquadramento">
+                                    <datalist list="1-campo-de-pesquisa-enquadramento">
                                         <?php
                                             foreach($pdo->query('SELECT Codigo, Descricao FROM enquadramento ORDER BY Codigo') as $row){
-                                                echo '<option value="'.$row['Codigo'].'">'.$row['Descricao'].'</option>';
-                                            }       
-                                        ?>   
-                                    </select>
-                                  </div>
+                                                            echo '<option value="' . $row['Codigo'] . '-' . $row['Descricao'] . '"></option>';
+                                            }         
+                                        ?>
+                                    </datalist>
+                                 </div>
                                 <div class="form-group">
-                                    <label for="2-campo-de-pesquisa-enquadramento">Segundo enquadramento</label>
-                                    <select class="form-control" id="2-campo-de-pesquisa-enquadramento"
-                                           name="2-enquadramento" autocomplete="off">
-                                           <option selected>Selecione...</option>
+                                    <label for="2-campo-de-pesquisa-enquadramento">Primeiro enquadramento</label>
+                                    <input id="2-campo-de-pesquisa-enquadramento" type="text" class="form-control" id="2-campo-de-pesquisa-enquadramento" name="2-campo-de-pesquisa-enquadramento">
+                                    <datalist list="2-campo-de-pesquisa-enquadramento">
                                         <?php
                                             foreach($pdo->query('SELECT Codigo, Descricao FROM enquadramento ORDER BY Codigo') as $row){
-                                                echo '<option value="'.$row['Codigo'].'">'.$row['Descricao'].'</option>';
-                                            }       
-                                        ?>      
-                                    </select>
+                                                echo '<option value="' . $row['Codigo'] . '-' . $row['Descricao'] . '"></option>';
+                                            }         
+                                        ?>
+                                    </datalist>
                                 </div>
                             </div>
                             <br>
-                            <div class="d-flex grid gap-3">
-                                <div class="form-group">
-                                    <label for="3-campo-de-pesquisa-enquadramento">Terceiro enquadramento</label>
-                                    <select class="form-control" id="3-campo-de-pesquisa-enquadramento"
-                                           name="3-enquadramento" autocomplete="off">
-                                        <option selected>Selecione...</option>
+                            <div class="form-group">
+                                    <label for="3-campo-de-pesquisa-enquadramento">Primeiro enquadramento</label>
+                                    <input id="3-campo-de-pesquisa-enquadramento" type="text" class="form-control" id="3-campo-de-pesquisa-enquadramento" name="3-campo-de-pesquisa-enquadramento">
+                                    <datalist list="3-campo-de-pesquisa-enquadramento">
                                         <?php
                                             foreach($pdo->query('SELECT Codigo, Descricao FROM enquadramento ORDER BY Codigo') as $row){
-                                                echo '<option value="'.$row['Codigo'].'">'.$row['Descricao'].'</option>';
-                                            }       
-                                        ?>       
-                                    </select>
-                                </div>
+                                             echo '<option value="' . $row['Codigo'] . '-' . $row['Descricao'] . '"></option>';
+                                            }         
+                                        ?>
+                                    </datalist>
+                                   </div>
                                 <div class="form-group">
-                                    <label for="4-campo-de-pesquisa-enquadramento">Quarto enquadramento</label>
-                                    <select class="form-control" id="4-campo-de-pesquisa-enquadramento"
-                                           name="4-enquadramento" autocomplete="off">
-                                        <option selected>Selecione...</option>
+                                    <label for="4-campo-de-pesquisa-enquadramento">Primeiro enquadramento</label>
+                                    <input idt="4-campo-de-pesquisa-enquadramento" type="text" class="form-control" id="4-campo-de-pesquisa-enquadramento" name="4-campo-de-pesquisa-enquadramento">
+                                    <datalist list="4-campo-de-pesquisa-enquadramento">
                                         <?php
                                             foreach($pdo->query('SELECT Codigo, Descricao FROM enquadramento ORDER BY Codigo') as $row){
-                                                echo '<option value="'.$row['Codigo'].'">'.$row['Descricao'].'</option>';
-                                            }       
-                                        ?>      
-                                    </select>
-                                 
+                                                echo '<option value="' . $row['Codigo'] . '-' . $row['Descricao'] . '"></option>';
+                                            }         
+                                        ?>
+                                    </datalist>
                                 </div>
                             </div>
                         </div>
@@ -577,14 +588,14 @@ button.toggle-details {
                             <br>
                             <div class="form-group">
                                 <label for="add-lpcos">Número do LPCO: </label>
-                                <select id="add-lpcos" name="add-lpcos" class="form-control">
-                                    <option selected>Selecione...</option>
+                                <input id="add-lpcos" type="text" name="add-lpcos" id="add-lpcos">
+                                <datalist list="add-lpcos">
                                     <?php
                                        foreach($pdo->query('SELECT Codigo, Descricao FROM lpco ORDER BY Codigo') as $row){
-                                        echo '<option value="'.$row['Descricao'].'">'.$row['Codigo'].'</option>';
+                                            echo '<option value="' . $row['Codigo'] . '-' . $row['Nome'] . '"></option>';
                                     }        
                                     ?>
-                                </select>    
+                                </datalist>    
                             </div>
                              
                             <div class="form-group">
@@ -692,14 +703,68 @@ button.toggle-details {
 <script src="./due/js/add-lpcos.js"></script>
 <script src="./due/js/due-generate-xml.js"></script>
 <script type="module">
-    // Importação CORRETA
-    import NFeProcessor from './due/js/due-upload.mjs'; // SEM CHAVES!
 
-    document.addEventListener('DOMContentLoaded', () => {
-        window.nfeProcessor = new NFeProcessor();
-        
-        document.getElementById('xml-files').addEventListener('change', async (e) => {
-            await window.nfeProcessor.processFiles(e.target.files);
+document.addEventListener('DOMContentLoaded', () => {
+    const inputs = document.querySelectorAll('input[list]'); // Seleciona inputs com o atributo 'list'
+
+    inputs.forEach(input => {
+        const datalistId = input.getAttribute('list');
+        const datalist = document.getElementById(datalistId);
+
+        if (!datalist) {
+            console.error(`Datalist com ID "${datalistId}" não encontrado para o input "${input.id}".`);
+            return; // Sai do loop para este input
+        }
+
+        async function fetchDataOptions(inputValue) {
+            const encodedSearchTerm = encodeURIComponent(inputValue);
+            const url = `due/get_options.php?datalist=${datalistId}&search=${encodedSearchTerm}`;
+
+            try {
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    console.error('Erro na requisição:', response.status, response.statusText);
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    console.error('Erro do servidor:', data.error);
+                    return;
+                }
+
+                // Limpa as opções existentes
+                while (datalist.firstChild) {
+                    datalist.removeChild(datalist.firstChild);
+                }
+
+                // Adiciona as novas opções
+                data.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option.text; // Usa option.text, que contém o código e o nome
+                    datalist.appendChild(optionElement);
+                });
+
+            } catch (error) {
+                console.error('Erro na função fetchDataOptions:', error);
+            }
+        }
+
+        input.addEventListener('input', () => {
+            const inputValue = input.value.trim();
+            if (inputValue.length > 0) {
+                fetchDataOptions(inputValue);
+            } else {
+                // Limpa as opções quando o input estiver vazio
+                while (datalist.firstChild) {
+                    datalist.removeChild(datalist.firstChild);
+                }
+            }
         });
     });
+});
+
 </script>
+
