@@ -6,221 +6,215 @@ include_once '../conexao.php';  // Ajuste o caminho se necessário!
 
 <style>
 
-    /* Estilos gerais para formulários */
 .form-group {
-    margin-bottom: 1rem; /* Espaçamento consistente entre grupos de formulário */
-}
+        margin-bottom: 1rem;
+    }
+    .form-check-inline {
+        margin-right: 1rem;
+    }
+    .form-check-input {
+        margin-top: 0.3rem;
+    }
+    #notasFiscaisTable {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    #notasFiscaisTable td,
+    #notasFiscaisTable th {
+        vertical-align: middle;
+        padding: 12px;
+        border: 1px solid #dee2e6;
+    }
+    #notasFiscaisTable thead {
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 100;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .thead-light th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+    }
+    button[type="button"],
+    button.toggle-details {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0;
+        font: inherit;
+        color: inherit;
+    }
+    .btn.toggle-details {
+        min-width: 32px;
+        transition: transform 0.2s;
+    }
+    .btn.toggle-details:hover {
+        transform: scale(1.1);
+        background-color: #f8f9fa;
+    }
+    .details-row {
+        transition: all 0.3s ease;
+    }
+    .inner-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .inner-table th,
+    .inner-table td {
+        padding: 8px;
+        border: 1px solid #dee2e6;
+        text-align: left;
+    }
+    #tabela-nfe tr.details-row input[type="text"],
+    #tabela-nfe tr.details-row select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    #tabela-nfe tr.details-row .save-nf-btn {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    #tabela-nfe tr.details-row .save-nf-btn:hover {
+        background-color: #218838;
+        border-color: #218838;
+    }
+    .meus-botoes > button {
+        margin-right: 5px;
+    }
+    #tabela-nfe td .btn {
+        margin: 2px;
+        display: inline-block;
+    }
+    #tabela-nfe td .btn-info {
+        color: #fff;
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+    }
+    #tabela-nfe td .btn-danger {
+        color: #fff;
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    #tabela-nfe td:nth-child(4) {
+        width: 150px;
+        white-space: nowrap;
+        text-align: center;
+    }
+    #tabela-nfe tr.details-row {
+        background-color: #f8f9fa;
+    }
+    #tabela-nfe tr.details-row td {
+        padding: 0px!important;
+        border: none;
+    }
+    #tabela-nfe tr.details-row input[type="text"],
+    #tabela-nfe tr.details-row select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    .inner-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .inner-table th, .inner-table td {
+        padding: 8px;
+        border: 1px solid #dee2e6;
+        text-align: left;
+    }
+    #tabela-nfe tr.details-row .save-nf-btn {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    #tabela-nfe tr.details-row .save-nf-btn:hover {
+        background-color: #218838;
+        border-color: #218838;
+    }
 
-.form-check-inline {
-    margin-right: 1rem;
-}
-
-.form-check-input {
-    margin-top: 0.3rem; /* Ajuste fino, se necessário, mas geralmente .form-check resolve isso */
-}
-
-/* Estilos para a tabela principal de Notas Fiscais (#notasFiscaisTable) */
-#notasFiscaisTable {
-    width: 100%;
-    border-collapse: separate; /* Importante para espaçamento entre bordas */
-    border-spacing: 0;       /* Controla o espaçamento */
-}
-
-#notasFiscaisTable td,
-#notasFiscaisTable th {
-    vertical-align: middle;
-    padding: 12px; /* Padding consistente */
-    border: 1px solid #dee2e6; /* Borda em todas as células */
-}
-
-#notasFiscaisTable thead {
-    position: sticky;
-    top: 0;
-    background: white;
-    z-index: 100;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.thead-light th {
-    background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6; /* Borda inferior mais forte no cabeçalho */
-    font-weight: 600;
-}
-
-
-/* Estilos para botões (geral e toggle-details) */
-button[type="button"], /* Reset de estilos nativos do navegador */
-button.toggle-details {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    cursor: pointer;
-    background: none;
-    border: none;
-    padding: 0;
-    font: inherit;
-    color: inherit;
-}
-
-.btn.toggle-details {
-    min-width: 32px;
-    transition: transform 0.2s;
-}
-
-.btn.toggle-details:hover {
-    transform: scale(1.1);
-    background-color: #f8f9fa; /* Leve destaque no hover */
-}
-
-/* Estilos para a tabela interna (detalhes da NF) */
-.details-row {
-    transition: all 0.3s ease; /* Transição suave */
-     /*  contain: content;  Não é mais amplamente suportado, e pode causar problemas.  Removido. */
-}
-
-.inner-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.inner-table th,
-.inner-table td {
-    padding: 8px;
-    border: 1px solid #dee2e6;
-    text-align: left;
-}
-
-/* Estilos para inputs DENTRO da linha de detalhes */
-#tabela-nfe tr.details-row input[type="text"],
-#tabela-nfe tr.details-row select {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 8px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    box-sizing: border-box; /* Fundamental para width: 100% */
-}
-
-/* Botão "Salvar" na linha de detalhes */
-#tabela-nfe tr.details-row .save-nf-btn {
-    background-color: #28a745;
-    border-color: #28a745;
-    color: #fff;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-#tabela-nfe tr.details-row .save-nf-btn:hover {
-    background-color: #218838;
-    border-color: #218838;
-}
-
-/* Espaçamento entre botões (se você tiver múltiplos botões lado a lado) */
-.meus-botoes > button {
-    margin-right: 5px;
-}
-
-/* Outros estilos (menos relacionados a erros, mas para organização) */
-
-#tabela-nfe td .btn {  /* Botões dentro da tabela */
-    margin: 2px;
-    display: inline-block; /* Permite margens */
-}
-
-/* Cores dos botões (exemplo) */
-#tabela-nfe td .btn-info {
-    color: #fff;
-    background-color: #17a2b8;
-    border-color: #17a2b8;
-}
-
-#tabela-nfe td .btn-danger {
-    color: #fff;
-    background-color: #dc3545;
-    border-color: #dc3545;
-}
-/* Estilos específicos para a coluna de ações (ajustado) */
-#tabela-nfe td:nth-child(4) {
-/* Coluna de Ações */
-    width: 150px;
-    white-space: nowrap;
-    text-align: center;
-}
-
-/* Estilos para a linha de detalhes (oculta por padrão) */
-#tabela-nfe tr.details-row {
-     background-color: #f8f9fa; /* Mantém o fundo cinza claro */
-}
-
-/* Estilos para a linha de detalhes (oculta por padrão) */
-#tabela-nfe tr.details-row td {
-    padding: 0px!important; /* Zera o padding para a tabela interna ocupar tudo */
-     border: none; /* Remove bordas */
-}
-
-/* Estilos para os inputs dentro da linha de detalhes (agora dentro da tabela interna)*/
- #tabela-nfe tr.details-row input[type="text"],
-#tabela-nfe tr.details-row select {
-    width: 100%;
-     padding: 8px;
-    margin-bottom: 8px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-     box-sizing: border-box; /* Importante para o width 100% incluir padding e border */
-}
-
-/* Estilo para tabela interna de detalhes */
-.inner-table {
-    width: 100%; /* Ocupa toda a largura da célula */
-     border-collapse: collapse; /* Remove espaçamento entre células */
-}
-.inner-table th, .inner-table td {
-    padding: 8px; /* Espaçamento interno */
-     border: 1px solid #dee2e6; /* Bordas */
-    text-align: left; /* Alinhamento do texto */
-}
-
- /* Estilos para o botão de salvar dentro da linha de detalhes */
- #tabela-nfe tr.details-row .save-nf-btn {
-     background-color: #28a745;
-     border-color: #28a745;
-     color: #fff;
-     padding: 8px 16px;
-    border-radius: 4px;
-     cursor: pointer;
-}
-
-#tabela-nfe tr.details-row .save-nf-btn:hover {
-     background-color: #218838;
-     border-color: #218838;
-}
+     /* Adicione isso */
+     .nav-tabs .nav-link.active {
+            border-bottom: 3px solid #0d6efd !important;
+            background: #fff;
+        }
+        .tab-content {
+            border: 1px solid #dee2e6;
+            border-radius: 0 0 0.5rem 0.5rem;
+            padding: 20px;
+        }
 
 </style>
+
+<script>
+// Script de inicialização das abas (sem type="module")
+document.addEventListener('DOMContentLoaded', function () {
+    console.log("Script de inicialização executado!");
+    var tabList = [].slice.call(document.querySelectorAll('#dueTabs [data-bs-toggle="tab"]'))
+    tabList.forEach(function (tabEl) {
+        tabEl.addEventListener('click', function (event) {
+            event.preventDefault();
+            var tab = new bootstrap.Tab(tabEl);
+            tab.show();
+        });
+    });
+});
+</script>
 
 <!-- HTML -->
 
 <div class="container mt-4">
     <h2 class="mb-4 text-center">Gerar Declaração Única de Exportação (DU-E)</h2>
 
+         
     <ul class="nav nav-tabs" id="dueTabs" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link active" id="tab1" data-bs-toggle="tab" href="#importacaoNFs" role="tab"
-               aria-controls="importacaoNFs" aria-selected="true">Importação de NFs</a>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="tab1-tab" data-bs-toggle="tab" href="#tab1-tab" 
+            role="tab" aria-controls="importacaoNFs" aria-selected="true">
+                <i class="fas fa-file-import me-2"></i>
+                Importação de NFs
+            </a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link" id="tab2" data-bs-toggle="tab" href="#dadosImportacao" role="tab"
-               aria-controls="dadosImportacao" aria-selected="false">Dados da Declaração</a>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="tab2-tab" data-bs-toggle="tab" href="#tab2-tab" 
+            role="tab" aria-controls="dadosImportacao" aria-selected="false">
+                <i class="fas fa-database me-2"></i>
+                Dados da Declaração
+            </a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link" id="tab3" data-bs-toggle="tab" href="#nfsInseridas" role="tab"
-               aria-controls="nfsInseridas" aria-selected="false">NFs Inseridas</a>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="tab3-tab" data-bs-toggle="tab" href="#tab3-tab" 
+            role="tab" aria-controls="nfsInseridas" aria-selected="false">
+                <i class="fas fa-receipt me-2"></i>
+                NFs Inseridas
+            </a>
         </li>
     </ul>
 
-    <div class="tab-content" id="myTabContent">
+    
+
+    <div class="tab-content" id="dueTabsContent">
        
-        <div class="tab-pane fade show active" id="importacaoNFs" role="tabpanel" aria-labelledby="tab1">
+    <div class="tab-pane fade show active" id="importacaoNFs" role="tabpanel" aria-labelledby="tab1-tab">
             <form id="dueForm" enctype="multipart/form-data">
                 <div class="card mb-4">
                     <div class="card-header">Informações Gerais</div>
@@ -365,8 +359,9 @@ button.toggle-details {
                     <div class="d-flex grid gap-3">
                         <div class="form-group">
                             <label for="em-ra-e">Local de Despacho:</label>
-                            <br><INPUT TYPE="RADIO" NAME="em-ra-e" id="sd" VALUE="sim"> Sim
-                            <br><INPUT TYPE="RADIO" NAME="em-ra-e" id="sn" VALUE="nao"> Não
+                            <br><INPUT TYPE="RADIO" NAME="em-ra-e" id="sd-embarque" VALUE="sim"> Sim
+                            <br><INPUT TYPE="RADIO" NAME="em-ra-e" id="sn-embarque" VALUE="nao"> Não
+                            
                         </div>
                         <div class="form-group">
                             <label for="campo-de-pesquisa-recinto-alfandegado-e">Recinto Aduaneiro:</label>
@@ -408,8 +403,8 @@ button.toggle-details {
             </form>
         </div>
 
-        <!-- ABA Dados da Declaração -->
-        <div class="tab-pane fade" id="dadosImportacao" role="tabpanel" aria-labelledby="tab2">
+        <!-- ABA Dados da Importaçao -->
+        <div class="tab-pane fade" id="dadosImportacao" role="tabpanel" aria-labelledby="tab2-tab">
             <form id="declaracaoForm">
                 <div class="card mb-4">
                     <div class="card-header">Informações da Declaração</div>
@@ -642,51 +637,51 @@ button.toggle-details {
             </form>
         </div>
 
-        <div class="tab-pane fade" id="nfsInseridas" role="tabpanel" aria-labelledby="tab3">
-    <form>
-        <div class="card mb-4">
-            <div class="form-group" style="margin-left: 40%;">
+    <div class="tab-pane fade" id="nfsInseridas" role="tabpanel" aria-labelledby="tab3-tab">
+        <form>
+            <div class="card mb-4">
+                <div class="form-group" style="margin-left: 40%;">
+                    <br>
+                <h4>CCPTC/CCROM</h4>
+                <label for="ccpt-ccrom">A mercadoria é amparada por: </label>
+                        <br>              
+
+                        <input type="radio" id="naoAmparada" name="ccpt-ccrom-op" value="Não amparada" />
+                        <label for="naoAmparada">Não Amparada</label>
+
+                        <br>
+                
+                        <input type="radio" id="ccptc" name="ccpt-ccrom-op" value="CCPTC" />
+                        <label for="ccptc">CCPTC</label>
+
+                        <br>
+                
+                        <input type="radio" id="ccrom" name="ccpt-ccrom-op" value="CCROM" />
+                        <label for="ccrom">CCROM</label>
+                        
+                </div>
                 <br>
-               <h4>CCPTC/CCROM</h4>
-               <label for="ccpt-ccrom">A mercadoria é amparada por: </label>
-                    <br>              
-
-                    <input type="radio" id="naoAmparada" name="ccpt-ccrom-op" value="Não amparada" />
-                    <label for="naoAmparada">Não Amparada</label>
-
-                    <br>
-            
-                    <input type="radio" id="ccptc" name="ccpt-ccrom-op" value="CCPTC" />
-                    <label for="ccptc">CCPTC</label>
-
-                    <br>
-            
-                    <input type="radio" id="ccrom" name="ccpt-ccrom-op" value="CCROM" />
-                    <label for="ccrom">CCROM</label>
-                       
-            </div>
-            <br>
-            <div class="card-header">Lista de Notas Fiscais</div>
-            <div class="card-body">
-                <div id="tabelaContainer" class="table-responsive">
-                    <table class="table table-bordered" id="notasFiscaisTable">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Chave de Acesso</th>
-                                <th>Nome Importador</th>
-                                <th>País</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- As linhas serão populadas via JavaScript -->
-                        </tbody>
-                    </table>
+                <div class="card-header">Lista de Notas Fiscais</div>
+                <div class="card-body">
+                    <div id="tabelaContainer" class="table-responsive">
+                        <table class="table table-bordered" id="notasFiscaisTable">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Chave de Acesso</th>
+                                    <th>Nome Importador</th>
+                                    <th>País</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- As linhas serão populadas via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
-    </form>
-</div>                              
+        </form>
+    </div>                              
 
     </div>
 
@@ -702,7 +697,23 @@ button.toggle-details {
 
 <script src="./due/js/add-lpcos.js"></script>
 <script src="./due/js/due-generate-xml.js"></script>
-<script type="module">
+
+<script>
+    // Script de inicialização das abas
+    document.addEventListener('DOMContentLoaded', function () {
+    console.log("Script de inicialização executado!");
+    var tabList = [].slice.call(document.querySelectorAll('#dueTabs [data-bs-toggle="tab"]'))
+    tabList.forEach(function (tabEl) {
+        tabEl.addEventListener('click', function (event) {
+            event.preventDefault();
+            var tab = new bootstrap.Tab(tabEl);
+            tab.show();
+            });
+        });
+    });
+</script>
+
+<script>
 
 document.addEventListener('DOMContentLoaded', () => {
     const inputs = document.querySelectorAll('input[list]'); // Seleciona inputs com o atributo 'list'

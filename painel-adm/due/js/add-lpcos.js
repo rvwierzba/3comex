@@ -2,7 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    console.log('add-lpcos carregado com sucesso!');
+   //console.log('add-lpcos carregado com sucesso!'); - FOR TEST
 
     const selectLpco = document.getElementById('add-lpcos');
     const listaLpcos = document.getElementById('lista-lpcos');

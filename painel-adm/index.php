@@ -76,7 +76,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <meta name="description" content="">
     <link href="../img/logo.png" rel="shortcut icon" type="image/x-icon">
-    <title>3comex</title>
 
     <!--BOOTSTRAP V5.0-->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
@@ -85,6 +84,7 @@
 
     <!--JQUERY -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 
     <!--LOCAL CSS FILES-->
     <link rel="stylesheet" type="text/css" href="../DataTables/DataTables-1.10.23/datatable.css"/>
@@ -96,6 +96,9 @@
 
     <!--FLAGS-->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css"/>
+
+    <title>3comex</title>
+  
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
