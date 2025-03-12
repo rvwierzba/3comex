@@ -4,7 +4,7 @@
     require_once("verificar.php");
     $id_usuario = $_SESSION['id_usuario'];
     //RECUPERAR DADOS DO USUÁRIO
-    $query = $pdo->query("SELECT * from usuarios where id = '$id_usuario'");
+    $query = $pdo->query("SELECT * FROM usuarios WHERE id = '$id_usuario'");
     $res = $query->fetchAll(PDO::FETCH_ASSOC);
     $nome_usuario = $res[0]['nome'];
     $email_usuario = $res[0]['email'];
@@ -86,6 +86,9 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 
+    <!-- Mascaras JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.11/jquery.mask.min.js"></script>
+
     <!--LOCAL CSS FILES-->
     <link rel="stylesheet" type="text/css" href="../DataTables/DataTables-1.10.23/datatable.css"/>
     <link rel="stylesheet" type="text/css" href="../css/style.css"/>
@@ -96,6 +99,9 @@
 
     <!--FLAGS-->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css"/>
+
+    <!--LOCAL JS FILES-->
+    <script type="text/javascript" src="../DataTables/datatables.min.js"></script>
 
     <title>3comex</title>
   
@@ -228,9 +234,6 @@
         ?>
     </div>
 
-    <!--LOCAL JS FILES-->
-    <script type="text/javascript" src="../DataTables/datatables.min.js"></script>
-
     <!-- Modal -->
     <div class="modal fade" id="modalPerfil" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -264,9 +267,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Mascaras JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.11/jquery.mask.min.js"></script>
 
     <!-- Ajax para inserir ou editar dados -->
     <script type="text/javascript">

@@ -1,6 +1,6 @@
 <?php
 // Conexão com o banco (coloque *antes* de qualquer HTML, mas dentro do <html> se já existir)
-include_once '../conexao.php';  // Ajuste o caminho se necessário!
+include_once 'C:\\xampp\\htdocs\\3comex\\conexao.php';  // Ajuste o caminho se necessário!
 ?>
 
 
@@ -152,69 +152,55 @@ include_once '../conexao.php';  // Ajuste o caminho se necessário!
         border-color: #218838;
     }
 
-     /* Adicione isso */
-     .nav-tabs .nav-link.active {
-            border-bottom: 3px solid #0d6efd !important;
-            background: #fff;
-        }
-        .tab-content {
-            border: 1px solid #dee2e6;
-            border-radius: 0 0 0.5rem 0.5rem;
-            padding: 20px;
-        }
+     /* Garanta que apenas a aba ativa seja visível */
+     .tab-content > .tab-pane:not(.active) {
+        display: none !important; /* Força a ocultação */
+        opacity: 0; /* Adicione para transições suaves */
+    }
+
+    .tab-content > .tab-pane.active {
+        display: block !important; /* Garante a exibição */
+        opacity: 1;
+        transition: opacity 0.3s ease; /* Opcional: efeito de fade */
+    }
+
+    /* Mantenha o restante do seu CSS personalizado abaixo */
+    .nav-tabs .nav-link.active {
+        border-bottom: 3px solid #0d6efd !important;
+        background: #fff;
+    }
+
+    .tab-content {
+        border: 1px solid #dee2e6;
+        border-radius: 0 0 0.5rem 0.5rem;
+        padding: 20px;
+    }
 
 </style>
 
-<script>
-// Script de inicialização das abas (sem type="module")
-document.addEventListener('DOMContentLoaded', function () {
-    console.log("Script de inicialização executado!");
-    var tabList = [].slice.call(document.querySelectorAll('#dueTabs [data-bs-toggle="tab"]'))
-    tabList.forEach(function (tabEl) {
-        tabEl.addEventListener('click', function (event) {
-            event.preventDefault();
-            var tab = new bootstrap.Tab(tabEl);
-            tab.show();
-        });
-    });
-});
-</script>
+
 
 <!-- HTML -->
 
 <div class="container mt-4">
     <h2 class="mb-4 text-center">Gerar Declaração Única de Exportação (DU-E)</h2>
 
-         
-    <ul class="nav nav-tabs" id="dueTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <a class="nav-link active" id="tab1-tab" data-bs-toggle="tab" href="#tab1-tab" 
-            role="tab" aria-controls="importacaoNFs" aria-selected="true">
-                <i class="fas fa-file-import me-2"></i>
-                Importação de NFs
-            </a>
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link active" href="#aba1">Aba 1</a>
         </li>
-        <li class="nav-item" role="presentation">
-            <a class="nav-link" id="tab2-tab" data-bs-toggle="tab" href="#tab2-tab" 
-            role="tab" aria-controls="dadosImportacao" aria-selected="false">
-                <i class="fas fa-database me-2"></i>
-                Dados da Declaração
-            </a>
+        <li class="nav-item">
+            <a class="nav-link" href="#aba2">Aba 2</a>
         </li>
-        <li class="nav-item" role="presentation">
-            <a class="nav-link" id="tab3-tab" data-bs-toggle="tab" href="#tab3-tab" 
-            role="tab" aria-controls="nfsInseridas" aria-selected="false">
-                <i class="fas fa-receipt me-2"></i>
-                NFs Inseridas
-            </a>
+        <li class="nav-item">
+            <a class="nav-link" href="#aba3">Aba 3</a>
         </li>
-    </ul>
-
+    </ul>   
     
 
     <div class="tab-content" id="dueTabsContent">
-       
-    <div class="tab-pane fade show active" id="importacaoNFs" role="tabpanel" aria-labelledby="tab1-tab">
+    <!-- Tab Importação NFs -->
+    <div class="tab-pane fade show active" id="aba1">Conteúdo da Aba 1</div>
             <form id="dueForm" enctype="multipart/form-data">
                 <div class="card mb-4">
                     <div class="card-header">Informações Gerais</div>
@@ -404,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
 
         <!-- ABA Dados da Importaçao -->
-        <div class="tab-pane fade" id="dadosImportacao" role="tabpanel" aria-labelledby="tab2-tab">
+        <div class="tab-pane fade" id="aba2">Conteúdo da Aba 2</div>       
             <form id="declaracaoForm">
                 <div class="card mb-4">
                     <div class="card-header">Informações da Declaração</div>
@@ -637,7 +623,8 @@ document.addEventListener('DOMContentLoaded', function () {
             </form>
         </div>
 
-    <div class="tab-pane fade" id="nfsInseridas" role="tabpanel" aria-labelledby="tab3-tab">
+     <!-- Tab NFs Inseridas -->
+    <div class="tab-pane fade" id="aba3">Conteúdo da Aba 3</div>
         <form>
             <div class="card mb-4">
                 <div class="form-group" style="margin-left: 40%;">
@@ -698,20 +685,6 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="./due/js/add-lpcos.js"></script>
 <script src="./due/js/due-generate-xml.js"></script>
 
-<script>
-    // Script de inicialização das abas
-    document.addEventListener('DOMContentLoaded', function () {
-    console.log("Script de inicialização executado!");
-    var tabList = [].slice.call(document.querySelectorAll('#dueTabs [data-bs-toggle="tab"]'))
-    tabList.forEach(function (tabEl) {
-        tabEl.addEventListener('click', function (event) {
-            event.preventDefault();
-            var tab = new bootstrap.Tab(tabEl);
-            tab.show();
-            });
-        });
-    });
-</script>
 
 <script>
 

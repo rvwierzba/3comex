@@ -52,10 +52,5 @@ if($total_reg2 == 0){
         </div>
     </div>
 </div>
-
-    
-
-
-
 </body>
 </html>
