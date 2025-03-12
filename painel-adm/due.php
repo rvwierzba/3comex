@@ -176,6 +176,42 @@ include_once 'C:\\xampp\\htdocs\\3comex\\conexao.php';  // Ajuste o caminho se n
         padding: 20px;
     }
 
+    .details-row {
+    display: none; /* Oculta a linha de detalhes por padrão */
+    background-color: #f8f9fa; /* Cor de fundo opcional */
+}
+
+.details-content {
+    padding: 15px; /* Espaçamento interno */
+}
+
+.meus-botoes {
+  display: flex;
+  justify-content: center; /* Centraliza os botões */
+}
+.meus-botoes > button {
+    margin-right: 5px; /* Espaço entre os botões, se precisar de mais no futuro */
+}
+.toggle-details{
+  display: flex;
+}
+
+/* Estilo do botão de salvar dentro da linha de detalhes */
+#tabela-nfe tr.details-row .save-nf-btn {
+    /* ... (Seus estilos para o botão) ... */
+}
+
+/* Garante que a tabela interna não quebre o layout */
+.inner-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inner-table th, .inner-table td{
+  padding: 8px;
+  border: 1px solid #dee2e6;
+}
+
 </style>
 
 
@@ -187,444 +223,208 @@ include_once 'C:\\xampp\\htdocs\\3comex\\conexao.php';  // Ajuste o caminho se n
 
     <ul class="nav nav-tabs">
         <li class="nav-item">
-            <a class="nav-link active" href="#aba1">Aba 1</a>
+            <a class="nav-link active" href="#aba1">Dados gerais</a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#aba2">Aba 2</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#aba3">Aba 3</a>
+       <li class="nav-item">
+            <a class="nav-link" href="#aba3">NFE(s) inserida(s)</a>
         </li>
     </ul>   
     
 
     <div class="tab-content" id="dueTabsContent">
-    <!-- Tab Importação NFs -->
-    <div class="tab-pane fade show active" id="aba1">Conteúdo da Aba 1</div>
-            <form id="dueForm" enctype="multipart/form-data">
-                <div class="card mb-4">
-                    <div class="card-header">Informações Gerais</div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label for="xml-files">Selecionar Arquivos XML</label>
-                            <input type="file" id="xml-files" class="form-control" accept=".xml" multiple>
+             <!-- Tab Importação NFs -->
+            <div class="tab-pane fade show active" id="aba1">Conteúdo da Aba 1</div>
+                <form id="dueForm" enctype="multipart/form-data">
+                    <div class="card mb-4">
+                        <div class="card-header">Informações Gerais</div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="xml-files">Selecionar Arquivos XML</label>
+                                <input type="file" id="xml-files" class="form-control" accept=".xml" multiple>
+                            </div>
+                            <div id="uploadStatus" class="mt-2"></div>
                         </div>
-                        <div id="uploadStatus" class="mt-2"></div>
                     </div>
-                </div>
-                <div class="d-flex grid gap-3">
-                    <div class="form-group">
-                        <label for="cnpj-cpf-select">CNPJ/CPF:</label>
-                        <input class="form-control" type="text" id="text-cnpj-cpf-select" name="cnpj-cpf" list="cnpj-cpf-list">
-                        <datalist id="cnpj-cpf-list"></datalist>
-                    </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="nomeCliente">Nome do Cliente</label>
-                        <input type="text" id="nomeCliente" class="form-control" readonly>
-                    </div>
-                </div>
-                <br>
-                <div class="form-group">
-                    <h5>Forma de exportação</h5>
-                    <input type="radio" id="por-conta-propria" name="forma-export" value="Por conta própria">
-                    <label for="por-conta-propria">Por conta própria</label>
-                    <br>
-                    <input type="radio" id="p-conta-ordem-terceiros" name="forma-export"
-                           value="Por conta ou ordem de terceiros">
-                    <label for="p-conta-ordem-terceiros">Por conta ou ordem de terceiros</label>
-                    <br>
-                    <input type="radio" id="p-op-rm-post-ou-remss" name="forma-export"
-                           value="Por operador de remessa postal ou expressa">
-                    <label for="p-op-rm-post-ou-remss">Por operador de remessa postal ou expressa</label>
-                </div>
-                <br>
-
-                <div class="form-group d-flex grid gap-2">
-                   <label for="export-cons">Exportação Consosorciada: </label> 
-                   <input type="checkbox" id="export-cons" name="export-cons" value="Exportação Consosorciada">
-                </div>
-
-                <br>
-                <div class="form-group">
-                    <h5>Situação especial de despacho</h5>
-                    <select name="situacao-espec-despacho" class="form-control" id="situacao-espec-despacho">
-                        <option selected>Selecione...</option>   
-                        <option value="DU-E a posteriori">DU-E a posteriori</option>
-                        <option value="Embarque antecipado">Embarque antecipado</option>
-                        <option value="Exportação sem saída da mercadoria do país">Exportação sem saída da mercadoria do país</option>
-                    </select>
-                </div>
-                <br>
-                <div class="form-group">
-                    <h5>Tipo de documento fiscal que ampara as mercadorias a serem exportadas:</h5>
-                    <input type="radio" id="nfe" name="tp-doc-amp-merc-export" value="Nota fiscal eletronica">
-                    <label for="nfe">Nota Fiscal Eletrônica (NF-e)</label>
-                    <br>
-                    <input type="radio" id="nf-form" name="tp-doc-amp-merc-export" value="Nota fiscal formulario">
-                    <label for="nf-form">Nota Fiscal Formulário</label>
-                    <br>
-                    <input type="radio" id="s-nf" name="tp-doc-amp-merc-export" value="Sem nota fiscal">
-                    <label for="s-nf">Sem nota fiscal</label>
-                </div>
-                <br>
-                <div class="d-flex grid gap-3">
-                    <div class="form-group">
-                        <label for="moeda">Moeda:</label>
-                        <input id="text-moeda" type="text" class="form-control" list="moeda" name="moeda" style="margin-rigth: 0.8%;">
-                        <datalist id="moeda">
-                            <?php
-                                foreach($pdo->query('SELECT Codigo, Nome FROM moeda ORDER BY Nome') as $row){
-                                    echo '<option value="'. $row['Codigo'] .'-'. $row['Nome'] .'">'.'</option>';
-                                    }       
-                               ?>
-                        </datalist>
-                    </div>
-                    <div class="form-group">
-                        <label for="ruc">Referência Única de Carga (RUC):</label>
-                        <input type="text" class="form-control" id="ruc" name="ruc">
-                    </div>
-
-                </div>
-                <br>
-
-                <div>
-                    <h4 id="lbl-local-despacho">Local de Despacho:</h4>
-
-                    <div class="form-group">
-                        <label for="campo-de-pesquisa-unidades-rfb-d">Unidade da RFB:</label>
-                        <input id="text-campo-de-pesquisa-unidades-rfb-d" type="text" class="form-control" list="campo-de-pesquisa-unidades-rfb-d" name="campo-de-pesquisa-unidades-rfb-d">
-                        <datalist id="campo-de-pesquisa-unidades-rfb-d">
-                            <?php
-                                foreach($pdo->query('SELECT Codigo, Nome FROM unidades_rfb ORDER BY Nome') as $row){
-                                    echo '<option value="'. $row['Codigo'] .'-'. $row['Nome'] .'">'.'</option>';
-                                    }       
-                               ?>
-                        </datalist>
-                    </div>
-
-                    <br>
-
                     <div class="d-flex grid gap-3">
                         <div class="form-group">
-                            <label for="em-ra-d">Local de Despacho:</label>
-                            <br><INPUT TYPE="RADIO" NAME="em-ra-d" id="sd" VALUE="sim"> Sim
-                            <br><INPUT TYPE="RADIO" NAME="em-ra-d" id="sn" VALUE="nao"> Não
+                            <label for="cnpj-cpf-select">CNPJ/CPF:</label>
+                            <input class="form-control" type="text" id="text-cnpj-cpf-select" name="cnpj-cpf" list="cnpj-cpf-list">
+                            <datalist id="cnpj-cpf-list"></datalist>
+                        </div>
                         </div>
                         <div class="form-group">
-                        <input id="txt-campo-de-pesquisa-recinto-alfandegado-d" type="text" class="form-control" list="campo-de-pesquisa-recinto-alfandegado-d" name="campo-de-pesquisa-recinto-alfandegado-d">
-                        <datalist id="campo-de-pesquisa-recinto-alfandegado-d">
-                            <?php
-                                foreach($pdo->query('SELECT codigo, Nome FROM recinto_aduaneiro ORDER BY Nome') as $row){
-                                    echo '<option value="'. $row['codigo'] .'-'. $row['Nome'] .'">'.'</option>';
-                                }       
-                            ?>
-                        </datalist>
-                         </div>
+                            <label for="nomeCliente">Nome do Cliente</label>
+                            <input type="text" id="nomeCliente" class="form-control" readonly>
+                        </div>
                     </div>
                     <br>
-                </div>
-
-                <div>
-                    <h4 id="lbl-local-embarque">Local de Embarque / Transposição de Fronteira:</h4>
-
                     <div class="form-group">
-                        <label for="campo-de-pesquisa-unidades-rfb-e">Unidade da RFB:</label>
-                        <input id="text-campo-de-pesquisa-unidades-rfb-e" type="text" class="form-control" list="campo-de-pesquisa-unidades-rfb-e" name="campo-de-pesquisa-unidades-rfb-e">
-                        <datalist id="campo-de-pesquisa-unidades-rfb-e">
-                            <?php
-                                foreach($pdo->query('SELECT codigo, Nome FROM unidades_rfb ORDER BY Nome') as $row){
-                                    echo '<option value="'. $row['Codigo'] .'-'. $row['Nome'] .'">'.'</option>';
-                                }       
-                            ?>
-                        </datalist>
-                        </div>
-
+                        <h5>Forma de exportação</h5>
+                        <input type="radio" id="por-conta-propria" name="forma-export" value="Por conta própria">
+                        <label for="por-conta-propria">Por conta própria</label>
+                        <br>
+                        <input type="radio" id="p-conta-ordem-terceiros" name="forma-export"
+                            value="Por conta ou ordem de terceiros">
+                        <label for="p-conta-ordem-terceiros">Por conta ou ordem de terceiros</label>
+                        <br>
+                        <input type="radio" id="p-op-rm-post-ou-remss" name="forma-export"
+                            value="Por operador de remessa postal ou expressa">
+                        <label for="p-op-rm-post-ou-remss">Por operador de remessa postal ou expressa</label>
+                    </div>
                     <br>
 
+                    <div class="form-group d-flex grid gap-2">
+                    <label for="export-cons">Exportação Consosorciada: </label> 
+                    <input type="checkbox" id="export-cons" name="export-cons" value="Exportação Consosorciada">
+                    </div>
+
+                    <br>
+                    <div class="form-group">
+                        <h5>Situação especial de despacho</h5>
+                        <select name="situacao-espec-despacho" class="form-control" id="situacao-espec-despacho">
+                            <option selected>Selecione...</option>   
+                            <option value="DU-E a posteriori">DU-E a posteriori</option>
+                            <option value="Embarque antecipado">Embarque antecipado</option>
+                            <option value="Exportação sem saída da mercadoria do país">Exportação sem saída da mercadoria do país</option>
+                        </select>
+                    </div>
+                    <br>
+                    <div class="form-group">
+                        <h5>Tipo de documento fiscal que ampara as mercadorias a serem exportadas:</h5>
+                        <input type="radio" id="nfe" name="tp-doc-amp-merc-export" value="Nota fiscal eletronica">
+                        <label for="nfe">Nota Fiscal Eletrônica (NF-e)</label>
+                        <br>
+                        <input type="radio" id="nf-form" name="tp-doc-amp-merc-export" value="Nota fiscal formulario">
+                        <label for="nf-form">Nota Fiscal Formulário</label>
+                        <br>
+                        <input type="radio" id="s-nf" name="tp-doc-amp-merc-export" value="Sem nota fiscal">
+                        <label for="s-nf">Sem nota fiscal</label>
+                    </div>
+                    <br>
                     <div class="d-flex grid gap-3">
                         <div class="form-group">
-                            <label for="em-ra-e">Local de Despacho:</label>
-                            <br><INPUT TYPE="RADIO" NAME="em-ra-e" id="sd-embarque" VALUE="sim"> Sim
-                            <br><INPUT TYPE="RADIO" NAME="em-ra-e" id="sn-embarque" VALUE="nao"> Não
-                            
+                            <label for="moeda">Moeda:</label>
+                            <input id="text-moeda" type="text" class="form-control" list="moeda" name="moeda" style="margin-rigth: 0.8%;">
+                            <datalist id="moeda">
+                                <?php
+                                    foreach($pdo->query('SELECT Codigo, Nome FROM moeda ORDER BY Nome') as $row){
+                                        echo '<option value="'. $row['Codigo'] .'-'. $row['Nome'] .'">'.'</option>';
+                                        }       
+                                ?>
+                            </datalist>
                         </div>
                         <div class="form-group">
-                            <label for="campo-de-pesquisa-recinto-alfandegado-e">Recinto Aduaneiro:</label>
-                            <input id="text-campo-de-pesquisa-recinto-alfandegado-e" type="text" class="form-control" list="campo-de-pesquisa-recinto-alfandegado-e" name="campo-de-pesquisa-recinto-alfandegado-e">
-                            <datalist id="campo-de-pesquisa-recinto-alfandegado-e">
+                            <label for="ruc">Referência Única de Carga (RUC):</label>
+                            <input type="text" class="form-control" id="ruc" name="ruc">
+                        </div>
+
+                    </div>
+                    <br>
+
+                    <div>
+                        <h4 id="lbl-local-despacho">Local de Despacho:</h4>
+
+                        <div class="form-group">
+                            <label for="campo-de-pesquisa-unidades-rfb-d">Unidade da RFB:</label>
+                            <input id="text-campo-de-pesquisa-unidades-rfb-d" type="text" class="form-control" list="campo-de-pesquisa-unidades-rfb-d" name="campo-de-pesquisa-unidades-rfb-d">
+                            <datalist id="campo-de-pesquisa-unidades-rfb-d">
+                                <?php
+                                    foreach($pdo->query('SELECT Codigo, Nome FROM unidades_rfb ORDER BY Nome') as $row){
+                                        echo '<option value="'. $row['Codigo'] .'-'. $row['Nome'] .'">'.'</option>';
+                                        }       
+                                ?>
+                            </datalist>
+                        </div>
+
+                        <br>
+
+                        <div class="d-flex grid gap-3">
+                            <div class="form-group">
+                                <label for="em-ra-d">Local de Despacho:</label>
+                                <br><INPUT TYPE="RADIO" NAME="em-ra-d" id="sd" VALUE="sim"> Sim
+                                <br><INPUT TYPE="RADIO" NAME="em-ra-d" id="sn" VALUE="nao"> Não
+                            </div>
+                            <div class="form-group">
+                            <input id="txt-campo-de-pesquisa-recinto-alfandegado-d" type="text" class="form-control" list="campo-de-pesquisa-recinto-alfandegado-d" name="campo-de-pesquisa-recinto-alfandegado-d">
+                            <datalist id="campo-de-pesquisa-recinto-alfandegado-d">
                                 <?php
                                     foreach($pdo->query('SELECT codigo, Nome FROM recinto_aduaneiro ORDER BY Nome') as $row){
                                         echo '<option value="'. $row['codigo'] .'-'. $row['Nome'] .'">'.'</option>';
                                     }       
                                 ?>
                             </datalist>
-                        </div>
-                    </div>
-                </div>
-
-                <br>
-
-                <div id=complementos>
-                    <h4 id="lbl-complementos">Complementos</h4>
-                    <div class="form-group">
-                        <label>Via especial de transporte</label>
-                        <select class="form-control" id="via-especial-transport"
-                               name="via-especial-transport">
-                               <option selected>Selecione...</option>
-                               <option value="MEIOS PRÓPRIOS">MEIOS PRÓPRIOS</option>
-                               <option value="DUTOS">DUTOS</option>
-                               <option value="LINHAS DE TRANSMISSÃO">LINHAS DE TRANSMISSÃO</option>
-                               <option value="EM MÃO">EM MÃOS</option>
-                               <option value="POR REBOQUE">POR REBOQUE</option>
-                               <option value="TRANSPORTE VICINAL FRONTEIRIÇO">TRANSPORTE VICINAL FRONTEIRIÇO</option>
-                        </select>
-                    </div>
-                    <br>
-                    <div class="form-group">
-                        <label>Informações complementares</label>
-                        <textarea class="form-control" id="info-compl" name="info-compl"></textarea>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <!-- ABA Dados da Importaçao -->
-        <div class="tab-pane fade" id="aba2">Conteúdo da Aba 2</div>       
-            <form id="declaracaoForm">
-                <div class="card mb-4">
-                    <div class="card-header">Informações da Declaração</div>
-                    <div class="card-body">
-
-                        <div class="d-flex grid gap-3">
-                            <div class="form-group">
-                                <label for="und-estatis">Unidade estatística</label>
-                                <input type="text" id="und-estatis" name="und-estatis" class="form-control"
-                                       placeholder="KG">
-                            </div>
-                            <div class="form-group">
-                                <label for="qdt-estatis">Quantidade estatística</label>
-                                <input type="number" id="qdt-estatis" name="qdt-estatis" class="form-control"
-                                       placeholder="500.00000">
-                            </div>
-                            <div class="form-group">
-                                <label for="pes-liq-ttl">Peso líquido total (KG)</label>
-                                <input required type="number" id="pes-liq-ttl" name="pes-liq-ttl" class="form-control"
-                                       placeholder="KG">
                             </div>
                         </div>
+                        <br>
+                    </div>
+
+                    <div>
+                        <h4 id="lbl-local-embarque">Local de Embarque / Transposição de Fronteira:</h4>
+
+                        <div class="form-group">
+                            <label for="campo-de-pesquisa-unidades-rfb-e">Unidade da RFB:</label>
+                            <input id="text-campo-de-pesquisa-unidades-rfb-e" type="text" class="form-control" list="campo-de-pesquisa-unidades-rfb-e" name="campo-de-pesquisa-unidades-rfb-e">
+                            <datalist id="campo-de-pesquisa-unidades-rfb-e">
+                                <?php
+                                    foreach($pdo->query('SELECT codigo, Nome FROM unidades_rfb ORDER BY Nome') as $row){
+                                        echo '<option value="'. $row['Codigo'] .'-'. $row['Nome'] .'">'.'</option>';
+                                    }       
+                                ?>
+                            </datalist>
+                            </div>
 
                         <br>
 
                         <div class="d-flex grid gap-3">
                             <div class="form-group">
-                                <label for="und-comerc">Unidade comercializada</label>
-                                <input type="text" id="und-comerc" name="und-comerc" class="form-control"
-                                       placeholder="KG">
+                                <label for="em-ra-e">Local de Despacho:</label>
+                                <br><INPUT TYPE="RADIO" NAME="em-ra-e" id="sd-embarque" VALUE="sim"> Sim
+                                <br><INPUT TYPE="RADIO" NAME="em-ra-e" id="sn-embarque" VALUE="nao"> Não
+                                
                             </div>
                             <div class="form-group">
-                                <label for="qdt-comerc">Quantidade comercializada</label>
-                                <input type="number" id="qdt-comerc" name="qdt-comerc" class="form-control"
-                                       placeholder="500.00000">
-                            </div>
-                            <div class="form-group">
-                                <label for="val-merc">Valor (R$)</label>
-                                <input type="number" id="val" name="val" class="form-control"
-                                       placeholder="9.828,41">
-                            </div>
-                            <div class="form-group">
-                                <label for="comiss-agnt">Comissão do agente (%)</label>
-                                <input type="number" id="comiss-agnt" name="comiss-agnt" class="form-control">
-                            </div>
-                        </div>
-
-                        <br>
-                       
-                            <div class="form-group">
-                                <label for="cond-vend">Condição da venda:</label>
-                                <input id="cond-vend" type="text" class="form-control" id="cond-vend" name="cond-vend">
-                                <datalist list="cond-vend">
+                                <label for="campo-de-pesquisa-recinto-alfandegado-e">Recinto Aduaneiro:</label>
+                                <input id="text-campo-de-pesquisa-recinto-alfandegado-e" type="text" class="form-control" list="campo-de-pesquisa-recinto-alfandegado-e" name="campo-de-pesquisa-recinto-alfandegado-e">
+                                <datalist id="campo-de-pesquisa-recinto-alfandegado-e">
                                     <?php
-                                        foreach($pdo->query('SELECT sigla, Descricao FROM incoterms ORDER BY sigla') as $row){
-                                            echo '<option value="' . $row['sigla'] . '-' . $row['Descricao'] . '"></option>';
+                                        foreach($pdo->query('SELECT codigo, Nome FROM recinto_aduaneiro ORDER BY Nome') as $row){
+                                            echo '<option value="'. $row['codigo'] .'-'. $row['Nome'] .'">'.'</option>';
                                         }       
-                                        ?>
+                                    ?>
                                 </datalist>
-                              </div>
-
-                        <br>
-
-                        <div class="d-flex grid gap-3">
-                            <div class="form-group">
-                                <label for="vmcv">VMCV (USD)</label>
-                                <input type="number" id="vmcv" name="vmcv" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="vmle">VMLE (USD)</label>
-                                <input type="number" id="vmle" name="vmle" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <p>VMCV: Valor da mercadoria na condição de venda</p>
-                                <p>VMLE: Valor da mercadoria no local de embarque</p>
                             </div>
                         </div>
+                    </div>
 
-                        <br>
+                    <br>
 
-                        <div class="d-flex grid gap-3">
-                            <div class="form-group">
-                                <label for="xNome">Nome do importador:</label>
-                                <p id="xNome" name="xNome"></p>
-                            </div>
-                            <div class="form-group">
-                                <label for="xLgr">Endereço do importador:</label>
-                                <p id="xLgr" name="xLgr"></p>
-                            </div>
-                            <div class="form-group">
-                                <label for="xPais">País do importador:</label>
-                                <p id="xPaisImp" name="xPaisImp"></p>
-                            </div>
-                        </div>
-
-                        <br>
-
+                    <div id=complementos>
+                        <h4 id="lbl-complementos">Complementos</h4>
                         <div class="form-group">
-                            <label for="xPais">País de destino</label>
-                            <input type="text" id="xPais" name="xPais" class="form-control" required>
-                        </div>
-
-                        <br>
-                
-
-                        <div class="form-group">
-                            <label for="tart-priori">Tratamento prioritário</label>
-                            <select name="tart-priori" id="tart-priori" class="form-control">
+                            <label>Via especial de transporte</label>
+                            <select class="form-control" id="via-especial-transport"
+                                name="via-especial-transport">
                                 <option selected>Selecione...</option>
-                                <option>CARGA VIVA</option>
-                                <option>CARGA PERECÍVEL</option>
-                                <option>CARGA PERIGOSA</option>
-                                <option>PARTES/PEÇAS DE AERONAVES</option>
+                                <option value="MEIOS PRÓPRIOS">MEIOS PRÓPRIOS</option>
+                                <option value="DUTOS">DUTOS</option>
+                                <option value="LINHAS DE TRANSMISSÃO">LINHAS DE TRANSMISSÃO</option>
+                                <option value="EM MÃO">EM MÃOS</option>
+                                <option value="POR REBOQUE">POR REBOQUE</option>
+                                <option value="TRANSPORTE VICINAL FRONTEIRIÇO">TRANSPORTE VICINAL FRONTEIRIÇO</option>
                             </select>
                         </div>
-
                         <br>
-
-                        <div>
-                            <h4>Enquadramentos</h4>
-                            <br>
-                            <div class="d-flex grid gap-3">
-                                <div class="form-group">
-                                    <label for="1-campo-de-pesquisa-enquadramento">Primeiro enquadramento</label>
-                                    <input id="1-campo-de-pesquisa-enquadramento" type="text" class="form-control" id="1-campo-de-pesquisa-enquadramento" name="1-campo-de-pesquisa-enquadramento">
-                                    <datalist list="1-campo-de-pesquisa-enquadramento">
-                                        <?php
-                                            foreach($pdo->query('SELECT Codigo, Descricao FROM enquadramento ORDER BY Codigo') as $row){
-                                                            echo '<option value="' . $row['Codigo'] . '-' . $row['Descricao'] . '"></option>';
-                                            }         
-                                        ?>
-                                    </datalist>
-                                 </div>
-                                <div class="form-group">
-                                    <label for="2-campo-de-pesquisa-enquadramento">Primeiro enquadramento</label>
-                                    <input id="2-campo-de-pesquisa-enquadramento" type="text" class="form-control" id="2-campo-de-pesquisa-enquadramento" name="2-campo-de-pesquisa-enquadramento">
-                                    <datalist list="2-campo-de-pesquisa-enquadramento">
-                                        <?php
-                                            foreach($pdo->query('SELECT Codigo, Descricao FROM enquadramento ORDER BY Codigo') as $row){
-                                                echo '<option value="' . $row['Codigo'] . '-' . $row['Descricao'] . '"></option>';
-                                            }         
-                                        ?>
-                                    </datalist>
-                                </div>
-                            </div>
-                            <br>
-                            <div class="form-group">
-                                    <label for="3-campo-de-pesquisa-enquadramento">Primeiro enquadramento</label>
-                                    <input id="3-campo-de-pesquisa-enquadramento" type="text" class="form-control" id="3-campo-de-pesquisa-enquadramento" name="3-campo-de-pesquisa-enquadramento">
-                                    <datalist list="3-campo-de-pesquisa-enquadramento">
-                                        <?php
-                                            foreach($pdo->query('SELECT Codigo, Descricao FROM enquadramento ORDER BY Codigo') as $row){
-                                             echo '<option value="' . $row['Codigo'] . '-' . $row['Descricao'] . '"></option>';
-                                            }         
-                                        ?>
-                                    </datalist>
-                                   </div>
-                                <div class="form-group">
-                                    <label for="4-campo-de-pesquisa-enquadramento">Primeiro enquadramento</label>
-                                    <input idt="4-campo-de-pesquisa-enquadramento" type="text" class="form-control" id="4-campo-de-pesquisa-enquadramento" name="4-campo-de-pesquisa-enquadramento">
-                                    <datalist list="4-campo-de-pesquisa-enquadramento">
-                                        <?php
-                                            foreach($pdo->query('SELECT Codigo, Descricao FROM enquadramento ORDER BY Codigo') as $row){
-                                                echo '<option value="' . $row['Codigo'] . '-' . $row['Descricao'] . '"></option>';
-                                            }         
-                                        ?>
-                                    </datalist>
-                                </div>
-                            </div>
+                        <div class="form-group">
+                            <label>Informações complementares</label>
+                            <textarea class="form-control" id="info-compl" name="info-compl"></textarea>
                         </div>
-
-                        <br>
-
-                        <div>
-                            <h4>Lista de LPCO</h4>
-                            <br>
-                            <div class="form-group">
-                                <label for="add-lpcos">Número do LPCO: </label>
-                                <input id="add-lpcos" type="text" name="add-lpcos" id="add-lpcos">
-                                <datalist list="add-lpcos">
-                                    <?php
-                                       foreach($pdo->query('SELECT Codigo, Descricao FROM lpco ORDER BY Codigo') as $row){
-                                            echo '<option value="' . $row['Codigo'] . '-' . $row['Nome'] . '"></option>';
-                                    }        
-                                    ?>
-                                </datalist>    
-                            </div>
-                             
-                            <div class="form-group">
-                                <label for="lista-lpcos">LPCOs Adicionados:</label>
-                                <div id="lista-lpcos" class="border p-2" style="min-height: 50px;">
-                                    </div>
-                                <input type="hidden" id="lpcos-hidden" name="lpcos" value="">
-                            </div>
-
-                            <br>
-
-                            <div class="form-group">
-                                <h4>Tratamento Tributário</h4>
-                                <p>Este item não possui tratamento tributário<p>
-                            </div>
-
-                            <br>
-
-                            <div class="form-group">
-                                <h4>Notas Fiscais Referenciadas Eletrônicas</h4>
-                                <button type="button" class="btn btn-outline-primary" id="btn-add-nfe-ref-eletro">Adicionar Nota Fiscal Referenciada Eletrônica</button>
-                            </div>
-
-                            <br>
-
-                            <div class="form-group">
-                                <h4>Notas Fiscais Referenciadas Formulário</h4>
-                                <button type="button" class="btn btn-outline-primary" id="btn-add-nfe-ref-form">Adicionar Nota Fiscal Referenciada Formulário</button>
-                            </div>
-
-                            <br>
-
-                            <div class="form-group">
-                                <h4>Notas Fiscais Complementares</h4>
-                                <button type="button" class="btn btn-outline-primary" id="btn-add-nf-compl">Adicionar Nota Fiscal Complementar</button>
-                            </div>
-
-                        </div>
-
-                        <input type="hidden" id="id-due" name="id_due">
-
                     </div>
-                </div>
-            </form>
-        </div>
+                </form>
+            </div>
 
-     <!-- Tab NFs Inseridas -->
-    <div class="tab-pane fade" id="aba3">Conteúdo da Aba 3</div>
+        
+        <!-- Tab NFs Inseridas -->
+        <div class="tab-pane fade" id="aba3">Conteúdo da Aba 3</div>
         <form>
             <div class="card mb-4">
                 <div class="form-group" style="margin-left: 40%;">
@@ -684,71 +484,88 @@ include_once 'C:\\xampp\\htdocs\\3comex\\conexao.php';  // Ajuste o caminho se n
 
 <script src="./due/js/add-lpcos.js"></script>
 <script src="./due/js/due-generate-xml.js"></script>
+<script type="module" src="./due/js/campos-itens-nfe.mjs"></script>
 
+<!-- SCRIPT UNIFICADO (UM ÚNICO BLOCO type="module") -->
+<script type="module">
+    import NFeProcessor from './due/js/due-upload.mjs';
 
-<script>
+    document.addEventListener('DOMContentLoaded', async () => {
 
-document.addEventListener('DOMContentLoaded', () => {
-    const inputs = document.querySelectorAll('input[list]'); // Seleciona inputs com o atributo 'list'
+        // --- FUNÇÃO addSaveButtonListeners (DEFINIDA AQUI) ---
+        function addSaveButtonListeners() {
+            console.log("addSaveButtonListeners chamada!"); // Log para verificar
 
-    inputs.forEach(input => {
-        const datalistId = input.getAttribute('list');
-        const datalist = document.getElementById(datalistId);
+            // Adiciona event listeners aos botões de salvar de cada item:
+            const saveButtons = document.querySelectorAll('.btn-success'); // Seletor para os botões
+            saveButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Lógica para salvar os dados do item (ADAPTE PARA SUA NECESSIDADE)
+                    console.log("Botão salvar do item clicado!");
+                    const row = button.closest('tr'); // Encontra a linha do item
+                    const xProd = row.querySelector('.campo-xProd').value; // Exemplo
+                    const ncm = row.querySelector('.campo-ncm').value;     // Exemplo
+                    // ... Acesse os outros campos da mesma forma ...
 
-        if (!datalist) {
-            console.error(`Datalist com ID "${datalistId}" não encontrado para o input "${input.id}".`);
-            return; // Sai do loop para este input
-        }
+                    // Exemplo de como pegar os LPCOs adicionados (DENTRO da linha)
+                    const lpcoContainer = row.querySelector('.lpco-container');
+                    if (lpcoContainer) {
+                        const listaLpcos = lpcoContainer.querySelector('.lista-lpcos');
+                        if (listaLpcos) {
+                            const lpcos = Array.from(listaLpcos.children).map(span => span.dataset.codigo);
+                            console.log("LPCOs do item:", lpcos);
+                        }
+                    }
 
-        async function fetchDataOptions(inputValue) {
-            const encodedSearchTerm = encodeURIComponent(inputValue);
-            const url = `due/get_options.php?datalist=${datalistId}&search=${encodedSearchTerm}`;
-
-            try {
-                const response = await fetch(url);
-
-                if (!response.ok) {
-                    console.error('Erro na requisição:', response.status, response.statusText);
-                    return;
-                }
-
-                const data = await response.json();
-
-                if (data.error) {
-                    console.error('Erro do servidor:', data.error);
-                    return;
-                }
-
-                // Limpa as opções existentes
-                while (datalist.firstChild) {
-                    datalist.removeChild(datalist.firstChild);
-                }
-
-                // Adiciona as novas opções
-                data.forEach(option => {
-                    const optionElement = document.createElement('option');
-                    optionElement.value = option.text; // Usa option.text, que contém o código e o nome
-                    datalist.appendChild(optionElement);
+                    // ... Faça o que você precisa fazer para salvar os dados (AJAX, etc.) ...
                 });
-
-            } catch (error) {
-                console.error('Erro na função fetchDataOptions:', error);
-            }
+            });
         }
 
-        input.addEventListener('input', () => {
-            const inputValue = input.value.trim();
-            if (inputValue.length > 0) {
-                fetchDataOptions(inputValue);
-            } else {
-                // Limpa as opções quando o input estiver vazio
-                while (datalist.firstChild) {
-                    datalist.removeChild(datalist.firstChild);
+
+        const processor = new NFeProcessor();
+
+        // Upload de XMLs
+        const inputXML = document.getElementById('xml-files');
+        if (inputXML) {
+            inputXML.addEventListener('change', async (e) => {
+                try {
+                    await processor.processFiles(e.target.files);
+                    addSaveButtonListeners();  // Chama a função DEPOIS do processamento
+                } catch (error) {
+                    console.error('Falha no processamento:', error);
+                    alert(error.message || 'Erro ao processar arquivos');
                 }
+            });
+        }
+
+        // Delegation para elementos dinâmicos da tabela principal (toggle e remover)
+        document.querySelector('#notasFiscaisTable').addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+
+            if (btn.classList.contains('toggle-details')) {
+                processor.toggleDetails(btn);
+            }
+            if (btn.classList.contains('remove-nf')) {
+                processor.removeNota(btn);
             }
         });
-    });
-});
 
+        // Carregamento dinâmico dos scripts na aba 3
+        const aba3 = document.querySelector('a[href="#aba3"]');
+        aba3.addEventListener('shown.bs.tab', () => {
+            // Carrega campos-itens-nfe.mjs (como módulo)
+            const scriptCampos = document.createElement('script');
+            scriptCampos.type = 'module'; //  <---  IMPORTANTE!
+            scriptCampos.src = './due/js/campos-itens-nfe.mjs';
+            document.body.appendChild(scriptCampos);
+
+            // Carrega add-lpcos.js (normalmente, SEM type="module")
+            const scriptLpcos = document.createElement('script');
+            scriptLpcos.src = './due/js/add-lpcos.js';
+            document.body.appendChild(scriptLpcos);
+        });
+    });
 </script>
 

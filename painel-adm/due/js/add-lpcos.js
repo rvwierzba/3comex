@@ -1,45 +1,59 @@
-// due/js/add-lpcos.js
+// add-lpcos.js
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
 
-   //console.log('add-lpcos carregado com sucesso!'); - FOR TEST
+    //Usa o event delegation
+    document.body.addEventListener('click', function(event){
 
-    const selectLpco = document.getElementById('add-lpcos');
-    const listaLpcos = document.getElementById('lista-lpcos');
-    const lpcosHidden = document.getElementById('lpcos-hidden');
-    const lpcosAdicionados = new Set();
+       //Botão de adicionar
+       if(event.target.classList.contains('add-lpco-btn')){
+           const container = event.target.closest('.lpco-container'); //Acha o container do lpco
+           if(!container) {
+             console.error("lpco-container not found in add-lpcos.js"); // LOG
+             return;
+           }
 
-    function atualizarLpcosHidden() {
-        lpcosHidden.value = Array.from(lpcosAdicionados).join(',');
-    }
+           const select = container.querySelector('.lpco-select'); //Acha o select dentro do container.
+           const lista = container.querySelector('.lista-lpcos'); //Acha a lista dentro do container
 
-    selectLpco.addEventListener('change', function() {
-        const descricaoLpco = this.value; // Pega a DESCRIÇÃO do value
-        const textoLpco = this.options[this.selectedIndex].text; // Pega o texto (CÓDIGO)
-        const codigoLpco = textoLpco.split(' - ')[0]; // Extrai o CÓDIGO do texto.  MUITO IMPORTANTE!
+           // Adicione logs AQUI para verificar os seletores:
+           console.log("container:", container);
+           console.log("select:", select);
+           console.log("lista:", lista);
 
-        if (descricaoLpco && !lpcosAdicionados.has(codigoLpco)) { // Usa o CÓDIGO para verificar duplicatas
-            lpcosAdicionados.add(codigoLpco); // Adiciona o CÓDIGO ao Set
+           if(!select || !lista) {
+              console.error("select or lista not found in add-lpcos.js"); // LOG
+              return;
+           }
+               // ... (resto do seu código add-lpcos.js) ...
+           const descricaoLpco = select.value;
+           const textoLpco = select.options[select.selectedIndex].text;
+           const codigoLpco = textoLpco.split(' - ')[0];
 
-            const span = document.createElement('span');
-            span.classList.add('badge', 'bg-primary', 'me-1', 'mb-1');
-            span.textContent = textoLpco; //Exibe o texto
-            span.dataset.codigo = codigoLpco; // Armazena o CÓDIGO (não a descrição)
+           //Verifica se o LPCO já foi adicionado *nesta lista especifica*
+           const jaAdicionado = Array.from(lista.children).some(span => span.dataset.codigo === codigoLpco);
 
-            const removeButton = document.createElement('button');
-            removeButton.type = 'button';
-            removeButton.classList.add('btn-close');
-            removeButton.setAttribute('aria-label', 'Remover LPCO');
-            removeButton.addEventListener('click', function() {
-                lpcosAdicionados.delete(codigoLpco); // Remove o CÓDIGO do Set
-                span.remove();
-                atualizarLpcosHidden();
-            });
+           if (descricaoLpco && !jaAdicionado) {
+               const span = document.createElement('span');
+               span.classList.add('badge', 'bg-primary', 'me-1', 'mb-1');
+               span.textContent = textoLpco;
+               span.dataset.codigo = codigoLpco;
 
-            span.appendChild(removeButton);
-            listaLpcos.appendChild(span);
-            atualizarLpcosHidden();
-            this.value = ""; // Reset
-        }
+               const removeButton = document.createElement('button');
+               removeButton.type = 'button';
+               removeButton.classList.add('btn-close');
+               removeButton.setAttribute('aria-label', 'Remover LPCO');
+
+               removeButton.addEventListener('click', function() {
+                   span.remove();
+                   //atualizarLpcosHidden(); // Se você precisar atualizar um campo hidden, faça isso aqui.
+               });
+
+               span.appendChild(removeButton);
+               lista.appendChild(span);
+               //atualizarLpcosHidden(); // Se precisar, atualize aqui
+               select.value = ""; // Reset do select
+           }
+       }
     });
 });

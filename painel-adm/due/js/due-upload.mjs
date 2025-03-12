@@ -1,228 +1,264 @@
-// due-upload.mjs
+import { preencherCamposItem } from './campos-itens-nfe.mjs';
 
 class NFeProcessor {
     constructor() {
         this.notasFiscais = [];
-        this.nfeNS = 'http://www.portalfiscal.inf.br/nfe';
-        this.visibleDetails = new Set(); // Armazena chaves de acesso visíveis
-        this.initEventHandlers();
     }
 
-    // ========== [PROCESSAMENTO DE ARQUIVOS] ==========
     async processFiles(files) {
-        this.notasFiscais = [];
-        for (const file of files) {
-            await this.processFile(file);
+        if (!files || files.length === 0) {
+            throw new Error('Nenhum arquivo selecionado.');
         }
-        this.updateUI();
+
+        for (const file of files) {
+            await this.processSingleFile(file);
+        }
     }
 
-    async processFile(file) {
+    async processSingleFile(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = (e) => {
+
+            reader.onload = async (e) => {
                 try {
-                    const xmlDoc = new DOMParser().parseFromString(e.target.result, "text/xml");
-                    const nfData = this.extractCompleteData(xmlDoc);
-                    this.notasFiscais.push(nfData);
+                    const xmlText = e.target.result;
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+
+                    const infNFe = xmlDoc.querySelector('infNFe');
+                    if (!infNFe) {
+                        throw new Error('Elemento infNFe não encontrado no XML.');
+                    }
+                    const chaveAcesso = infNFe.getAttribute('Id').replace('NFe', '');
+
+                    this.populateFields(xmlDoc);
+
+                    const notaFiscal = {
+                        chaveAcesso: chaveAcesso,
+                        nomeImportador: this.getNomeImportador(xmlDoc),
+                        pais: this.getPais(xmlDoc),
+                        itens: this.extractItems(xmlDoc)
+                    };
+
+                    this.notasFiscais.push(notaFiscal);
+                    this.renderizarNotas();
                     resolve();
+
                 } catch (error) {
-                    reject(`Erro no arquivo ${file.name}: ${error}`);
+                    console.error('Erro ao processar arquivo:', error);
+                    reject(error);
                 }
             };
-            reader.onerror = () => reject(`Erro ao ler ${file.name}`);
+
+            reader.onerror = () => {
+                console.error('Erro ao ler o arquivo:');
+                reject(new Error('Erro ao ler o arquivo.'));
+            };
+
             reader.readAsText(file);
         });
     }
 
-    // ========== [EXTRAÇÃO DE DADOS] ==========
-    extractCompleteData(xmlDoc) {
-        const getVal = (tag, parent = xmlDoc) => 
-            parent.getElementsByTagNameNS(this.nfeNS, tag)[0]?.textContent?.trim() || '';
+    populateFields(xmlDoc) {
+        // Preenche os campos da aba 1 (DADOS GERAIS)
+        const emit = xmlDoc.querySelector('emit');
+        if (emit) {
+            const cnpj = emit.querySelector('CNPJ')?.textContent;
+            const cpf = emit.querySelector('CPF')?.textContent;
+            const xNome = emit.querySelector('xNome')?.textContent;
 
-        const ide = xmlDoc.getElementsByTagNameNS(this.nfeNS, 'ide')[0];
-        const emit = xmlDoc.getElementsByTagNameNS(this.nfeNS, 'emit')[0];
-        const dest = xmlDoc.getElementsByTagNameNS(this.nfeNS, 'dest')[0] || {};
-        
-        return {
-            chaveAcesso: xmlDoc.getElementsByTagNameNS(this.nfeNS, 'infNFe')[0]?.getAttribute('Id')?.replace('NFe', '') || '',
-            dadosGerais: {
-                nNF: getVal('nNF', ide),
-                serie: getVal('serie', ide),
-                dhEmi: getVal('dhEmi', ide)
-            },
-            emitente: {
-                xNome: getVal('xNome', emit),
-                CNPJ: getVal('CNPJ', emit)
-            },
-            destinatario: {
-                xNome: getVal('xNome', dest),
-                enderDest: {
-                    xPais: getVal('xPais', dest.getElementsByTagNameNS(this.nfeNS, 'enderDest')[0])
+            if (cnpj) {
+                document.getElementById('text-cnpj-cpf-select').value = cnpj;
+                 //Preenche o datalist com os dados do cliente.
+                const datalist = document.getElementById('cnpj-cpf-list');
+                datalist.innerHTML = ''; //Limpa o datalist
+
+                const option = document.createElement('option');
+                option.value = cnpj;
+                datalist.appendChild(option);
+
+            } else if (cpf) {
+                document.getElementById('text-cnpj-cpf-select').value = cpf;
+                 //Preenche o datalist com os dados do cliente.
+                const datalist = document.getElementById('cnpj-cpf-list');
+                datalist.innerHTML = ''; //Limpa o datalist
+                const option = document.createElement('option');
+                option.value = cpf;
+                datalist.appendChild(option);
+            }
+
+            document.getElementById('nomeCliente').value = xNome || '';
+
+
+        }
+
+        // Preenche a moeda:
+        const infNFe = xmlDoc.querySelector("infNFe");
+        const pag = infNFe.querySelector("pag");
+
+        if (pag) {
+            const detPag = pag.querySelector("detPag");
+            if (detPag) {
+                const tPag = detPag.querySelector("tPag");
+                if (tPag) {
+                    const codMoeda = this.getCodigoMoeda(tPag.textContent);
+                    document.getElementById("text-moeda").value = codMoeda;
+
+                    const datalistMoeda = document.getElementById('moeda');
+                    datalistMoeda.innerHTML = '';
+                    const optionMoeda = document.createElement('option');
+                    optionMoeda.value = codMoeda;
+                    datalistMoeda.appendChild(optionMoeda);
                 }
-            },
-            itens: Array.from(xmlDoc.getElementsByTagNameNS(this.nfeNS, 'det')).map(det => ({
-                nItem: det.getAttribute('nItem'),
-                xProd: getVal('xProd', det)
-            }))
-        };
+            }
+        }
+
+        //Outros campos aba1
     }
 
-    // ========== [ATUALIZAÇÃO DA UI] ==========
-    updateUI() {
-        this.updateTable();
-        this.fillFormFields();
+    getCodigoMoeda(tPag) {
+        switch (tPag) {
+            case '01': return '970-DOLAR DOS ESTADOS UNIDOS';
+            // ... outros casos ...
+            default: return '';
+        }
     }
 
-    updateTable() {
-        const table = document.querySelector("#notasFiscaisTable");
-        if (!table) return;
-    
-        // Mantém o cabeçalho existente
-        const thead = table.querySelector('thead') || document.createElement('thead');
-        
-        // Atualiza apenas o corpo da tabela
-        const tbody = table.querySelector('tbody') || document.createElement('tbody');
-        
-        tbody.innerHTML = this.notasFiscais.map(nf => `
-            <tr>
-                <td>${nf.chaveAcesso}</td>
-                <td>${nf.destinatario.xNome || 'N/A'}</td>
-                <td>${nf.destinatario.enderDest.xPais || 'N/A'}</td>
-                <td class="meus-botoes">
-                    <button type="button" 
-                            class="btn btn-dark btn-sm toggle-details" 
-                            data-chave="${nf.chaveAcesso}"
-                            aria-expanded="${this.visibleDetails.has(nf.chaveAcesso)}">
-                        ${this.visibleDetails.has(nf.chaveAcesso) ? '-' : '+'}
-                    </button>
-                    <button type="button" 
-                            class="btn btn-danger btn-sm remove-nf" 
-                            data-chave="${nf.chaveAcesso}">
-                        ×
-                    </button>
+    getNomeImportador(xmlDoc) {
+        const emit = xmlDoc.querySelector('emit');
+        return emit?.querySelector('xNome')?.textContent || '';
+    }
+
+    getPais(xmlDoc) {
+        const dest = xmlDoc.querySelector("dest");
+        const enderDest = dest?.querySelector("enderDest");
+        const cPais = enderDest?.querySelector("cPais")?.textContent;
+        const xPais = enderDest?.querySelector("xPais")?.textContent;
+        return (cPais && xPais) ? `${cPais}-${xPais}` : "";
+    }
+    extractItems(xmlDoc) {
+        const itens = [];
+        const detNodes = xmlDoc.querySelectorAll('det');
+
+        detNodes.forEach((detNode) => {
+            const prodNode = detNode.querySelector('prod');
+            itens.push({
+                nItem: detNode.getAttribute('nItem'),
+                xProd: prodNode?.querySelector('xProd')?.textContent || '',
+                ncm: prodNode?.querySelector('NCM')?.textContent || '',
+                cfop: prodNode?.querySelector('CFOP')?.textContent || '',
+                qCom: prodNode?.querySelector('qCom')?.textContent || '',
+                uCom: prodNode?.querySelector('uCom')?.textContent || '',
+                vUnCom: prodNode?.querySelector('vUnCom')?.textContent || '',
+                vProd: prodNode?.querySelector('vProd')?.textContent || '',
+                infAdProd: detNode?.querySelector('infAdProd')?.textContent || ''
+            });
+        });
+        return itens;
+    }
+    renderizarNotas() {
+        const tbody = document.querySelector('#notasFiscaisTable tbody');
+        if (!tbody) {
+            console.error("Elemento tbody não encontrado.");
+            return;
+        }
+        tbody.innerHTML = '';
+
+        this.notasFiscais.forEach(nota => {
+            const row = document.createElement('tr');
+            row.dataset.chave = nota.chaveAcesso;
+            row.innerHTML = `
+                <td>${nota.chaveAcesso}</td>
+                <td>${nota.nomeImportador}</td>
+                <td>${nota.pais}</td>
+                <td>
+                    <button type="button" class="btn btn-info btn-sm toggle-details" data-chave="${nota.chaveAcesso}">+</button>
+                    <button type="button" class="btn btn-danger btn-sm remove-nf" data-chave="${nota.chaveAcesso}">Remover</button>
                 </td>
-            </tr>
-            <tr class="details-row" 
-                data-chave="${nf.chaveAcesso}" 
-                style="display: ${this.visibleDetails.has(nf.chaveAcesso) ? 'table-row' : 'none'}">
+            `;
+            tbody.appendChild(row);
+
+            const detailsRow = document.createElement('tr');
+            detailsRow.classList.add('details-row');
+            detailsRow.dataset.chave = nota.chaveAcesso;
+            detailsRow.style.display = 'none';
+
+            // --- Construção da tabela interna (agora com a coluna LPCO) ---
+            let innerTableHTML = `
                 <td colspan="4">
-                    <div class="p-3 bg-light">
-                        ${this.generateDetailsHtml(nf)}
+                    <div class="details-content">
+                        <table class="inner-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Produto</th>
+                                    <th>NCM</th>
+                                    <th>CFOP</th>
+                                    <th>Qtd.</th>
+                                    <th>Un.</th>
+                                    <th>Valor Unit.</th>
+                                    <th>Valor Total</th>
+                                    <th>Inf. Ad.</th>
+                                    <th>LPCO</th>  <!--  Coluna para LPCO -->
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+            nota.itens.forEach(item => {
+                innerTableHTML += `
+                    <tr>
+                        <td>${item.nItem}</td>
+                        <td><input type="text" class="campo-xProd" value="${item.xProd || ''}"></td>
+                        <td><input type="text" class="campo-ncm" value="${item.ncm || ''}"></td>
+                        <td><input type="text" class="campo-cfop" value="${item.cfop || ''}"></td>
+                        <td><input type="text" class="campo-qCom" value="${item.qCom || ''}"></td>
+                        <td><input type="text" class="campo-uCom" value="${item.uCom || ''}"></td>
+                        <td><input type="text" class="campo-vUnCom" value="${item.vUnCom || ''}"></td>
+                        <td><input type="text" class="campo-vProd" value="${item.vProd || ''}"></td>
+                        <td><input type="text" class="campo-infAdProd" value="${item.infAdProd || ''}"></td>
+                        <td class="lpco-container">  <!--  Container para os elementos de LPCO -->
+
+                        </td>
+                        <td><button class='btn btn-success'>Salvar</button></td>
+                    </tr>
+                `;
+            });
+
+            innerTableHTML += `
+                            </tbody>
+                        </table>
                     </div>
                 </td>
-            </tr>
-        `).join('');
-    
-        // Garante a estrutura correta da tabela
-        if (!table.querySelector('thead')) {
-            table.prepend(thead);
-        }
-        if (!table.querySelector('tbody')) {
-            table.appendChild(tbody);
-        }
-    }
+            `;
+            detailsRow.innerHTML = innerTableHTML;
 
-    generateDetailsHtml(nf) {
-        return `
-            <div class="row">
-                <div class="col-md-6">
-                    <h6>Informações Básicas</h6>
-                    <p><strong>Número:</strong> ${nf.dadosGerais.nNF}</p>
-                    <p><strong>Série:</strong> ${nf.dadosGerais.serie}</p>
-                    <p><strong>Data Emissão:</strong> ${this.formatDate(nf.dadosGerais.dhEmi)}</p>
-                </div>
-                <div class="col-md-6">
-                    <h6>Emitente/Destinatário</h6>
-                    <p><strong>CNPJ Emitente:</strong> ${nf.emitente.CNPJ}</p>
-                    <p><strong>País Destino:</strong> ${nf.destinatario.enderDest.xPais}</p>
-                </div>
-            </div>
-            <div class="mt-3">
-                <h6>Itens (${nf.itens.length})</h6>
-                <ul class="list-group">
-                    ${nf.itens.map(item => `
-                        <li class="list-group-item">
-                            ${item.nItem} - ${item.xProd}
-                        </li>
-                    `).join('')}
-                </ul>
-            </div>
-        `;
-    }
 
-    // ========== [MANIPULAÇÃO DE EVENTOS] ==========
-    initEventHandlers() {
-        const tabela = document.querySelector('#notasFiscaisTable');
-        
-        tabela.addEventListener('click', (e) => {
-            e.preventDefault(); // Impede o comportamento padrão
-            e.stopPropagation();
-            
-            const target = e.target;
-            
-            if (target.classList.contains('toggle-details')) {
-                this.toggleDetails(target);
-            }
-            
-            if (target.classList.contains('remove-nf')) {
-                this.removeNota(target);
-            }
+            // --- Chamada para preencherCamposItem (AGORA ANTES de adicionar ao DOM) ---
+            nota.itens.forEach(item => {
+                preencherCamposItem(item, detailsRow); //  <---  IMPORTANTE!
+            });
+            tbody.appendChild(detailsRow);  // Agora sim, adiciona ao DOM
         });
-    }
+        if (typeof addSaveButtonListeners === 'function') { //Verifica se a função existe
+              addSaveButtonListeners();
+         }
 
+    }
     toggleDetails(button) {
         const chave = button.dataset.chave;
-        const detailsRow = document.querySelector(`.details-row[data-chave="${chave}"]`);
-        
-        if (!detailsRow) return;
-
-        const isVisible = detailsRow.style.display === 'none';
-        
-        // Atualiza o estado visual com transição
-        detailsRow.style.display = isVisible ? 'table-row' : 'none';
-        button.textContent = isVisible ? '-' : '+';
-        button.setAttribute('aria-expanded', isVisible);
-        
-        // Atualiza o controle de estado
-        if (isVisible) {
-            this.visibleDetails.add(chave);
-        } else {
-            this.visibleDetails.delete(chave);
+        const detailsRow = document.querySelector(`tr.details-row[data-chave="${chave}"]`);
+        if (detailsRow) {
+            detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
+            button.textContent = button.textContent === '+' ? '-' : '+';
         }
     }
 
-    removeNota(button) {
+    removeNota(button){
         const chave = button.dataset.chave;
         this.notasFiscais = this.notasFiscais.filter(nf => nf.chaveAcesso !== chave);
-        this.visibleDetails.delete(chave);
-        this.updateUI();
-    }
-
-    // ========== [PREENCHIMENTO DE CAMPOS] ==========
-    fillFormFields() {
-        const safeFill = (selector, value, prop = 'value') => {
-            const el = document.querySelector(selector);
-            if (el) el[prop] = value || '';
-        };
-
-        if (this.notasFiscais.length > 0) {
-            const nf = this.notasFiscais[0];
-            safeFill('#cnpj-cpf-select', nf.emitente.CNPJ);
-            safeFill('#nomeCliente', nf.emitente.xNome);
-            safeFill('#xNome', nf.destinatario.xNome, 'textContent');
-            safeFill('#xPais', nf.destinatario.enderDest.xPais);
-        }
-    }
-
-    // ========== [UTILITÁRIOS] ==========
-    formatDate(dateTime) {
-        try {
-            return new Date(dateTime).toLocaleString('pt-BR');
-        } catch {
-            return 'Data inválida';
-        }
+        //Usa o querySelectorAll, pois agora tem a linha principal e de detalhe.
+        document.querySelectorAll(`tr[data-chave="${chave}"]`).forEach(el => el.remove());
     }
 }
-
 export default NFeProcessor;
