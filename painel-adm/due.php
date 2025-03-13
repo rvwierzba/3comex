@@ -3,213 +3,48 @@
 include_once 'C:\\xampp\\htdocs\\3comex\\conexao.php';  // Ajuste o caminho se necessário!
 ?>
 
-
 <style>
 
-.form-group {
-        margin-bottom: 1rem;
-    }
-    .form-check-inline {
-        margin-right: 1rem;
-    }
-    .form-check-input {
-        margin-top: 0.3rem;
-    }
-    #notasFiscaisTable {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-    #notasFiscaisTable td,
-    #notasFiscaisTable th {
-        vertical-align: middle;
-        padding: 12px;
-        border: 1px solid #dee2e6;
-    }
-    #notasFiscaisTable thead {
-        position: sticky;
-        top: 0;
-        background: white;
-        z-index: 100;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    .thead-light th {
-        background-color: #f8f9fa;
-        border-bottom: 2px solid #dee2e6;
-        font-weight: 600;
-    }
-    button[type="button"],
-    button.toggle-details {
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        cursor: pointer;
-        background: none;
-        border: none;
-        padding: 0;
-        font: inherit;
-        color: inherit;
-    }
-    .btn.toggle-details {
-        min-width: 32px;
-        transition: transform 0.2s;
-    }
-    .btn.toggle-details:hover {
-        transform: scale(1.1);
-        background-color: #f8f9fa;
-    }
-    .details-row {
-        transition: all 0.3s ease;
-    }
-    .inner-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .inner-table th,
-    .inner-table td {
-        padding: 8px;
-        border: 1px solid #dee2e6;
-        text-align: left;
-    }
-    #tabela-nfe tr.details-row input[type="text"],
-    #tabela-nfe tr.details-row select {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 8px;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        box-sizing: border-box;
-    }
-    #tabela-nfe tr.details-row .save-nf-btn {
-        background-color: #28a745;
-        border-color: #28a745;
-        color: #fff;
-        padding: 8px 16px;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-    #tabela-nfe tr.details-row .save-nf-btn:hover {
-        background-color: #218838;
-        border-color: #218838;
-    }
-    .meus-botoes > button {
-        margin-right: 5px;
-    }
-    #tabela-nfe td .btn {
-        margin: 2px;
-        display: inline-block;
-    }
-    #tabela-nfe td .btn-info {
-        color: #fff;
-        background-color: #17a2b8;
-        border-color: #17a2b8;
-    }
-    #tabela-nfe td .btn-danger {
-        color: #fff;
-        background-color: #dc3545;
-        border-color: #dc3545;
-    }
-    #tabela-nfe td:nth-child(4) {
-        width: 150px;
-        white-space: nowrap;
-        text-align: center;
-    }
-    #tabela-nfe tr.details-row {
-        background-color: #f8f9fa;
-    }
-    #tabela-nfe tr.details-row td {
-        padding: 0px!important;
-        border: none;
-    }
-    #tabela-nfe tr.details-row input[type="text"],
-    #tabela-nfe tr.details-row select {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 8px;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        box-sizing: border-box;
-    }
-    .inner-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .inner-table th, .inner-table td {
-        padding: 8px;
-        border: 1px solid #dee2e6;
-        text-align: left;
-    }
-    #tabela-nfe tr.details-row .save-nf-btn {
-        background-color: #28a745;
-        border-color: #28a745;
-        color: #fff;
-        padding: 8px 16px;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-    #tabela-nfe tr.details-row .save-nf-btn:hover {
-        background-color: #218838;
-        border-color: #218838;
-    }
 
-     /* Garanta que apenas a aba ativa seja visível */
-     .tab-content > .tab-pane:not(.active) {
-        display: none !important; /* Força a ocultação */
-        opacity: 0; /* Adicione para transições suaves */
-    }
-
-    .tab-content > .tab-pane.active {
-        display: block !important; /* Garante a exibição */
-        opacity: 1;
-        transition: opacity 0.3s ease; /* Opcional: efeito de fade */
-    }
-
-    /* Mantenha o restante do seu CSS personalizado abaixo */
-    .nav-tabs .nav-link.active {
-        border-bottom: 3px solid #0d6efd !important;
-        background: #fff;
-    }
-
-    .tab-content {
-        border: 1px solid #dee2e6;
-        border-radius: 0 0 0.5rem 0.5rem;
-        padding: 20px;
-    }
-
-    .details-row {
-    display: none; /* Oculta a linha de detalhes por padrão */
-    background-color: #f8f9fa; /* Cor de fundo opcional */
-}
-
-.details-content {
-    padding: 15px; /* Espaçamento interno */
-}
-
-.meus-botoes {
-  display: flex;
-  justify-content: center; /* Centraliza os botões */
-}
-.meus-botoes > button {
-    margin-right: 5px; /* Espaço entre os botões, se precisar de mais no futuro */
-}
-.toggle-details{
-  display: flex;
-}
-
-/* Estilo do botão de salvar dentro da linha de detalhes */
-#tabela-nfe tr.details-row .save-nf-btn {
-    /* ... (Seus estilos para o botão) ... */
-}
-
-/* Garante que a tabela interna não quebre o layout */
-.inner-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.inner-table th, .inner-table td{
-  padding: 8px;
-  border: 1px solid #dee2e6;
+/* CAMPOS ITENS NFs */
+.form-group { margin-bottom: 1rem; }
+.form-check-inline { margin-right: 1rem; }
+.form-check-input { margin-top: 0.3rem; }
+#notasFiscaisTable { width: 100%; border-collapse: separate; border-spacing: 0; }
+#notasFiscaisTable td, #notasFiscaisTable th { vertical-align: middle; padding: 12px; border: 1px solid #dee2e6; }
+#notasFiscaisTable thead { position: sticky; top: 0; background: white; z-index: 100; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+.thead-light th { background-color: #f8f9fa; border-bottom: 2px solid #dee2e6; font-weight: 600; }
+button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-appearance: none; appearance: none; cursor: pointer; background: none; border: none; padding: 0; font: inherit; color: inherit; }
+.btn.toggle-details { min-width: 32px; transition: transform 0.2s; }
+.btn.toggle-details:hover { transform: scale(1.1); background-color: #f8f9fa; }
+/* Estilo MUITO IMPORTANTE para as linhas de detalhes */
+.details-row { display: none; /* Oculta por padrão */ background-color: #f8f9fa; /* Cor de fundo opcional */ }
+.inner-table { width: 100%; border-collapse: collapse; }
+.inner-table th, .inner-table td { padding: 8px; border: 1px solid #dee2e6; text-align: left; }
+#tabela-nfe tr.details-row .save-nf-btn { background-color: #28a745; border-color: #28a745; color: #fff; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+#tabela-nfe tr.details-row .save-nf-btn:hover { background-color: #218838; border-color: #218838; }
+.meus-botoes > button { margin-right: 5px; }
+#tabela-nfe td .btn { margin: 2px; display: inline-block; }
+#tabela-nfe td .btn-info { color: #fff; background-color: #17a2b8; border-color: #17a2b8; }
+#tabela-nfe td .btn-danger { color: #fff; background-color: #dc3545; border-color: #dc3545; }
+/* Estilos para os detalhes (já definidos e adaptados) */
+.item-details-table { width: 100%; border-collapse: collapse; }
+.item-details-table th, .item-details-table td { padding: 8px; border: 1px solid #dee2e6; text-align: left; }
+.item-details-table input[type="text"], .item-details-table select { width: 100%; padding: 6px; margin-bottom: 4px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;}
+.lpco-container { margin-top: 10px; }
+.lista-lpcos { display: flex; flex-wrap: wrap; gap: 5px; }
+.lpco-item { background-color: #e9ecef; padding: 2px 6px; border-radius: 4px; }
+/* Outros estilos (abas, etc. - já definidos) */
+.tab-content > .tab-pane:not(.active) { display: none !important; opacity: 0; }
+.tab-content > .tab-pane.active { display: block !important; opacity: 1; transition: opacity 0.3s ease; }
+.nav-tabs .nav-link.active { border-bottom: 3px solid #0d6efd !important; background: #fff; }
+.tab-content { border: 1px solid #dee2e6; border-radius: 0 0 0.5rem 0.5rem; padding: 20px; }
+.details-content { padding: 15px; }  /* Adicionado para espaçamento */
+.meus-botoes { display: flex; justify-content: center; }
+.meus-botoes > button { margin-right: 5px; }
+/* Ajuste para alinhar o botão "+" */
+.item-row td:last-child {  /* Última célula da linha (onde fica o botão) */
+    text-align: center; /* Centraliza o conteúdo */
 }
 
 </style>
@@ -331,7 +166,7 @@ include_once 'C:\\xampp\\htdocs\\3comex\\conexao.php';  // Ajuste o caminho se n
                                 <?php
                                     foreach($pdo->query('SELECT Codigo, Nome FROM unidades_rfb ORDER BY Nome') as $row){
                                         echo '<option value="'. $row['Codigo'] .'-'. $row['Nome'] .'">'.'</option>';
-                                        }       
+                                    }       
                                 ?>
                             </datalist>
                         </div>
@@ -367,7 +202,7 @@ include_once 'C:\\xampp\\htdocs\\3comex\\conexao.php';  // Ajuste o caminho se n
                             <datalist id="campo-de-pesquisa-unidades-rfb-e">
                                 <?php
                                     foreach($pdo->query('SELECT codigo, Nome FROM unidades_rfb ORDER BY Nome') as $row){
-                                        echo '<option value="'. $row['Codigo'] .'-'. $row['Nome'] .'">'.'</option>';
+                                        echo '<option value="'. $row['codigo'] .'-'. $row['Nome'] .'">'.'</option>';
                                     }       
                                 ?>
                             </datalist>
@@ -486,52 +321,187 @@ include_once 'C:\\xampp\\htdocs\\3comex\\conexao.php';  // Ajuste o caminho se n
 <script src="./due/js/due-generate-xml.js"></script>
 <script type="module" src="./due/js/campos-itens-nfe.mjs"></script>
 
-<!-- SCRIPT UNIFICADO (UM ÚNICO BLOCO type="module") -->
 <script type="module">
     import NFeProcessor from './due/js/due-upload.mjs';
 
-    document.addEventListener('DOMContentLoaded', async () => {
+    // Função para criar os campos de detalhes do item (MANTIDA e adaptada)
+    function createItemDetailsFields(itemData) {
+        // (Mesmo código da função createItemDetailsFields - Adaptado)
+        const {
+            xProd, ncm, condicaoVenda, vmcvMoeda, vmleMoeda, nomeImportador, enderecoImportador, paisImportador,
+            paisDestino, primeiroEnquadramento, segundoEnquadramento, terceiroEnquadramento, quartoEnquadramento,
+            listaLpco, tratamentoTributario,
+        } = itemData;
 
-        // --- FUNÇÃO addSaveButtonListeners (DEFINIDA AQUI) ---
-        function addSaveButtonListeners() {
-            console.log("addSaveButtonListeners chamada!"); // Log para verificar
+        const table = document.createElement('table');
+        table.classList.add('item-details-table');
+        const tbody = document.createElement('tbody');
 
-            // Adiciona event listeners aos botões de salvar de cada item:
-            const saveButtons = document.querySelectorAll('.btn-success'); // Seletor para os botões
-            saveButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    // Lógica para salvar os dados do item (ADAPTE PARA SUA NECESSIDADE)
-                    console.log("Botão salvar do item clicado!");
-                    const row = button.closest('tr'); // Encontra a linha do item
-                    const xProd = row.querySelector('.campo-xProd').value; // Exemplo
-                    const ncm = row.querySelector('.campo-ncm').value;     // Exemplo
-                    // ... Acesse os outros campos da mesma forma ...
+         function createRow(labelText, inputType, inputValue, inputName, datalistOptions = null, readOnly = false) {
+            const row = document.createElement('tr');
+            const labelCell = document.createElement('th');
+            labelCell.textContent = labelText;
+            const inputCell = document.createElement('td');
+            let input;
 
-                    // Exemplo de como pegar os LPCOs adicionados (DENTRO da linha)
-                    const lpcoContainer = row.querySelector('.lpco-container');
-                    if (lpcoContainer) {
-                        const listaLpcos = lpcoContainer.querySelector('.lista-lpcos');
-                        if (listaLpcos) {
-                            const lpcos = Array.from(listaLpcos.children).map(span => span.dataset.codigo);
-                            console.log("LPCOs do item:", lpcos);
+            if (inputType === 'select') {
+                input = document.createElement('select');
+                input.name = inputName;
+                if (datalistOptions) {
+                    const datalist = document.createElement('datalist');
+                    datalist.id = inputName + '-list';
+                    datalistOptions.forEach(option => {
+                        const opt = document.createElement('option');
+                        opt.value = option.value;
+                        opt.textContent = option.text;
+                        datalist.appendChild(opt);
+                    });
+                    input.setAttribute('list', datalist.id);
+                    inputCell.appendChild(datalist);
+                }
+                const defaultOption = document.createElement('option');
+                defaultOption.textContent = "Selecione...";
+                defaultOption.value = "";
+                input.appendChild(defaultOption);
+                if(datalistOptions){
+                    datalistOptions.forEach(option => {
+                        const opt = document.createElement('option');
+                        opt.value = option.value;
+                        opt.textContent = option.text;
+                        if (option.value === inputValue) {
+                            opt.selected = true;
                         }
-                    }
-
-                    // ... Faça o que você precisa fazer para salvar os dados (AJAX, etc.) ...
-                });
-            });
+                        input.appendChild(opt);
+                    });
+                }
+            } else {
+                input = document.createElement('input');
+                input.type = inputType;
+                input.name = inputName;
+                input.value = inputValue || '';
+                 if (readOnly) {
+                    input.readOnly = true;
+                }
+            }
+            inputCell.appendChild(input);
+            row.appendChild(labelCell);
+            row.appendChild(inputCell);
+            tbody.appendChild(row);
+            return row;
         }
 
+        // --- Criação das linhas (campos combinados) ---
+        createRow('Item da DU-E:', 'text', itemData.item, 'item', null, true);
+        createRow('Nota fiscal', 'text', itemData.chaveNF, 'chaveNF', null, true );
+        createRow('Item da Nota Fiscal', 'text', itemData.itemNF, 'itemNF', null, true);
+        createRow('Descrição da mercadoria:', 'text', xProd, 'xProd');
+        createRow('NCM:', 'text', ncm, 'ncm');
+        createRow('Unidade estatística:', 'text', itemData.uCom, 'uCom', null, true); //Reaproveitando
+        createRow('Quantidade estatística:', 'text', itemData.qCom, 'qCom', null, true); //Reaproveitando
+        createRow('Unidade comercializada:', 'text', itemData.uCom, 'uComercializada'); //Reaproveitando
+        createRow('Quantidade comercializada:', 'text', itemData.qCom, 'qComercializada');//Reaproveitando
+        createRow('Valor (R$):', 'text', itemData.vUnCom, 'vUnCom'); //Reaproveitando
+        createRow('Peso líquido total (KG):', 'text', itemData.pesoLiquido, 'pesoLiquido'); //Reaproveitando
+        createRow('Condição de venda:', 'select', condicaoVenda, 'condicaoVenda', [
+            { value: 'EXW', text: 'EXW - EX WORKS' },
+            { value: 'FCA', text: 'FCA - FREE CARRIER'}
+        ]);
+        createRow('VMCV (MGA):', 'text', vmcvMoeda, 'vmcvMoeda');
+        createRow('VMLE (MGA):', 'text', vmleMoeda, 'vmleMoeda');
+        createRow('Nome do importador:', 'text', nomeImportador, 'nomeImportador');
+        createRow('Endereço do importador:', 'text', enderecoImportador, 'enderecoImportador');
+        createRow('País do importador:', 'text', paisImportador, 'paisImportador');
+        createRow('País de destino:', 'select', paisDestino, 'paisDestino', [
+            { value: 'US', text: 'Estados Unidos' },
+            { value: 'CA', text: 'Canadá' },
+             { value: 'PY', text: 'Paraguai' },
+        ]);
+        createRow('Primeiro enquadramento:', 'select', primeiroEnquadramento, 'primeiroEnquadramento', [
+            {value: '1', text: 'Enquadramento 1'},
+            {value: '2', text: 'Enquadramento 2'}
+        ]);
+        createRow('Segundo enquadramento:', 'select', segundoEnquadramento, 'segundoEnquadramento', [
+            {value: '1', text: 'Enquadramento 1'},
+            {value: '2', text: 'Enquadramento 2'}
+        ]);
+        createRow('Terceiro enquadramento:', 'select', terceiroEnquadramento, 'terceiroEnquadramento', [
+            {value: '1', text: 'Enquadramento 1'},
+            {value: '2', text: 'Enquadramento 2'}
+        ]);
+        createRow('Quarto enquadramento:', 'select', quartoEnquadramento, 'quartoEnquadramento', [
+            {value: '1', text: 'Enquadramento 1'},
+            {value: '2', text: 'Enquadramento 2'}
+        ]);
 
+        const lpcoRow = createRow('Lista de LPCO:', 'text', '', 'lpco');
+        const lpcoInput = lpcoRow.querySelector('input[name="lpco"]');
+        const addButton = document.createElement('button');
+        addButton.textContent = 'Adicionar LPCO';
+        addButton.type = 'button';
+        addButton.addEventListener('click', () => {
+            const codigoLpco = lpcoInput.value.trim();
+            if (codigoLpco) {
+                const lpcoList = lpcoRow.querySelector('.lista-lpcos') || document.createElement('div');
+                lpcoList.classList.add('lista-lpcos');
+                const lpcoItem = document.createElement('span');
+                lpcoItem.classList.add('lpco-item');
+                lpcoItem.textContent = codigoLpco;
+                lpcoItem.dataset.codigo = codigoLpco;
+                lpcoList.appendChild(lpcoItem);
+                if (!lpcoRow.querySelector('.lista-lpcos')) {
+                    lpcoRow.querySelector('td').appendChild(lpcoList);
+                }
+                if (!itemData.listaLpco) {
+                    itemData.listaLpco = [];
+                }
+                if (!itemData.listaLpco.includes(codigoLpco)) {
+                    itemData.listaLpco.push(codigoLpco);
+                }
+            }
+        });
+        lpcoRow.querySelector('td').appendChild(addButton);
+        createRow('Tratamento Tributário:', 'text', tratamentoTributario, 'tratamentoTributario');
+
+        table.appendChild(tbody);
+        return table;
+    }
+
+    // Função para adicionar listeners aos botões de salvar (MANTIDA e adaptada)
+    function addSaveButtonListeners() {
+        const saveButtons = document.querySelectorAll('.save-item-btn');
+        saveButtons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                const detailsRow = event.target.closest('.details-row');
+                const itemDetailsTable = detailsRow.querySelector('.item-details-table');
+
+                const itemData = {};
+                itemDetailsTable.querySelectorAll('input, select').forEach(input => {
+                    itemData[input.name] = input.value;
+                });
+
+                itemData.listaLpco = [];
+                const lpcoContainer = detailsRow.querySelector('.lista-lpcos');
+                if (lpcoContainer) {
+                    Array.from(lpcoContainer.children).forEach(span => {
+                        itemData.listaLpco.push(span.dataset.codigo);
+                    });
+                }
+                console.log("Dados do item a serem salvos:", itemData);
+            });
+        });
+    }
+
+
+    document.addEventListener('DOMContentLoaded', async () => {
         const processor = new NFeProcessor();
 
-        // Upload de XMLs
+        // Upload de XMLs (MANTIDO)
         const inputXML = document.getElementById('xml-files');
         if (inputXML) {
             inputXML.addEventListener('change', async (e) => {
                 try {
                     await processor.processFiles(e.target.files);
-                    addSaveButtonListeners();  // Chama a função DEPOIS do processamento
+                    renderNotasFiscaisTable(); // Chama a função de renderização
                 } catch (error) {
                     console.error('Falha no processamento:', error);
                     alert(error.message || 'Erro ao processar arquivos');
@@ -539,33 +509,91 @@ include_once 'C:\\xampp\\htdocs\\3comex\\conexao.php';  // Ajuste o caminho se n
             });
         }
 
-        // Delegation para elementos dinâmicos da tabela principal (toggle e remover)
-        document.querySelector('#notasFiscaisTable').addEventListener('click', (e) => {
-            const btn = e.target.closest('button');
-            if (!btn) return;
+        // Função para RENDERIZAR a tabela (MODIFICADA)
+        function renderNotasFiscaisTable() {
+            const tbody = document.querySelector('#notasFiscaisTable tbody');
+            tbody.innerHTML = ''; // Limpa a tabela
 
-            if (btn.classList.contains('toggle-details')) {
-                processor.toggleDetails(btn);
-            }
-            if (btn.classList.contains('remove-nf')) {
-                processor.removeNota(btn);
-            }
-        });
+            processor.notasFiscais.forEach((nf, nfIndex) => {
+                nf.itens.forEach((item, itemIndex) => {
+                    // --- Linha principal do item ---
+                    const itemRow = document.createElement('tr');
+                    itemRow.classList.add('item-row'); // Classe para estilizar
 
-        // Carregamento dinâmico dos scripts na aba 3
-        const aba3 = document.querySelector('a[href="#aba3"]');
-        aba3.addEventListener('shown.bs.tab', () => {
-            // Carrega campos-itens-nfe.mjs (como módulo)
-            const scriptCampos = document.createElement('script');
-            scriptCampos.type = 'module'; //  <---  IMPORTANTE!
-            scriptCampos.src = './due/js/campos-itens-nfe.mjs';
-            document.body.appendChild(scriptCampos);
+                   const chaveCell = document.createElement('td');
+                    chaveCell.textContent = nf.chave;
+                    itemRow.appendChild(chaveCell);
 
-            // Carrega add-lpcos.js (normalmente, SEM type="module")
-            const scriptLpcos = document.createElement('script');
-            scriptLpcos.src = './due/js/add-lpcos.js';
-            document.body.appendChild(scriptLpcos);
-        });
+                    const itemCell = document.createElement('td');
+                    itemCell.textContent = item.item;
+                    itemRow.appendChild(itemCell);
+
+                    const descCell = document.createElement('td');
+                    descCell.textContent = item.xProd;
+                    itemRow.appendChild(descCell);
+
+                    const actionsCell = document.createElement('td');
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.type = 'button';
+                    toggleBtn.classList.add('btn', 'btn-info', 'btn-sm', 'toggle-details');
+                    toggleBtn.innerHTML = '+';
+                    toggleBtn.dataset.nfIndex = nfIndex;    // Índice da NF
+                    toggleBtn.dataset.itemIndex = itemIndex;  // Índice do item *dentro* da NF
+                    actionsCell.appendChild(toggleBtn);
+                    itemRow.appendChild(actionsCell);
+                    tbody.appendChild(itemRow);
+
+                    // --- Linha de detalhes (oculta por padrão) ---
+                    const detailsRow = document.createElement('tr');
+                    detailsRow.classList.add('details-row');
+                    const detailsCell = document.createElement('td');
+                    detailsCell.colSpan = 4; // Ocupa todas as colunas da tabela
+                    detailsCell.classList.add('details-content'); // Para espaçamento
+                    detailsRow.appendChild(detailsCell);
+                    tbody.appendChild(detailsRow); // Adiciona *após* a linha do item
+                });
+            });
+        }
+
+// --- Lógica do botão "+" (MODIFICADA) ---
+document.querySelector('#notasFiscaisTable').addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn || !btn.classList.contains('toggle-details')) {
+        return; // Sai se não for um clique no botão "+"
+    }
+
+    const itemRow = btn.closest('.item-row');
+    const detailsRow = itemRow.nextElementSibling;
+
+    // 1. Verifica se os detalhes JÁ foram criados
+    if (!detailsRow.querySelector('.item-details-table')) {
+        // 2. Obtém os índices CORRETOS
+        const nfIndex = parseInt(btn.dataset.nfIndex, 10);
+        const itemIndex = parseInt(btn.dataset.itemIndex, 10);
+
+        // 3. Acessa os dados CORRETOS do item
+        const nfData = processor.notasFiscais[nfIndex];
+        if (nfData && nfData.itens && nfData.itens[itemIndex]) {
+            const itemData = nfData.itens[itemIndex];
+
+            // 4. Cria os detalhes (e preenche!)
+            const detailsContent = createItemDetailsFields(itemData);
+            detailsRow.querySelector('.details-content').innerHTML = ''; // Limpa
+            detailsRow.querySelector('.details-content').appendChild(detailsContent);
+
+            // 5. Adiciona o botão de salvar
+            const saveButton = document.createElement('button');
+            saveButton.type = 'button';
+            saveButton.classList.add('btn', 'btn-success', 'save-item-btn');
+            saveButton.textContent = 'Salvar Item';
+            detailsRow.querySelector('.details-content').appendChild(saveButton);
+            addSaveButtonListeners();
+        }
+    }
+
+    // 6. Mostra ou oculta a linha de detalhes (toggle)
+      detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
+});
     });
 </script>
 
