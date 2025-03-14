@@ -316,6 +316,24 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
     </div>
 </div>
 
+<div class="modal fade" id="itemDetailsModal" tabindex="-1" aria-labelledby="itemDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg"> <!-- modal-lg para um modal maior -->
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="itemDetailsModalLabel">Detalhes do Item</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- A tabela de detalhes do item será inserida aqui via JavaScript -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-primary" id="saveItemDetails">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <script src="./due/js/add-lpcos.js"></script>
 <script src="./due/js/due-generate-xml.js"></script>
@@ -325,66 +343,6 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
     import NFeProcessor from './due/js/due-upload.mjs';
 
     let processor; // Declara o processor no escopo global
-
-    // Função auxiliar para obter o SÍMBOLO da moeda atual (DIRETAMENTE DO DATALIST) - AGORA NO ESCOPO GLOBAL
-    function getCurrentCurrencySymbol() {
-        const moedaInput = document.getElementById('text-moeda');
-        if (!moedaInput) {
-            return 'MGA'; // Campo não encontrado
-        }
-
-        const moedaValue = moedaInput.value; // Obtém o VALOR do INPUT
-        if (!moedaValue) {
-            return 'MGA'; // Nenhum valor no input
-        }
-
-        const datalist = document.getElementById('moeda'); // Obtém o DATALIST
-        if (!datalist) {
-            return 'MGA'; // Datalist não encontrado
-        }
-
-        // Itera pelas opções do DATALIST e procura a option com o value correspondente
-        for (let i = 0; i < datalist.options.length; i++) {
-            const option = datalist.options[i];
-            if (option.value === moedaValue) {
-                // Encontrou a opção correspondente! Retorna o data-simbolo
-                return option.dataset.simbolo || 'MGA'; // Retorna o símbolo, ou MGA se não houver
-            }
-        }
-
-        return 'MGA'; // Não encontrou nenhuma opção correspondente
-    }
-
-
-    // Função para atualizar UM par de campos VMCV/VMLE - AGORA NO ESCOPO GLOBAL
-    function updateCurrencyFields(vmcvInput, vmleInput) {
-        const simboloMoeda = getCurrentCurrencySymbol(); // Obtém o símbolo
-
-        if (vmcvInput) {
-            vmcvInput.value = vmcvInput.value.replace(/\(.*?\)/, `(${simboloMoeda})`);
-        }
-        if (vmleInput) {
-            vmleInput.value = vmleInput.value.replace(/\(.*?\)/, `(${simboloMoeda})`);
-        }
-    }
-
-    // Função para atualizar TODOS os campos VMCV/VMLE - AGORA NO ESCOPO GLOBAL
-    function updateAllCurrencyFields() {
-        const simboloMoeda = getCurrentCurrencySymbol(); // Obtém o símbolo
-
-        const allDetailsRows = document.querySelectorAll('#notasFiscaisTable .details-row');
-        allDetailsRows.forEach(detailsRow => {
-            const vmcvInput = detailsRow.querySelector('input[name="vmcvMoeda"]');
-            const vmleInput = detailsRow.querySelector('input[name="vmleMoeda"]');
-            if (vmcvInput) {
-                vmcvInput.value = vmcvInput.value.replace(/\(.*?\)/, `(${simboloMoeda})`);
-            }
-            if (vmleInput) {
-                vmleInput.value = vmleInput.value.replace(/\(.*?\)/, `(${simboloMoeda})`);
-            }
-        });
-    }
-
 
     function createItemDetailsFields(itemData) {
         const {
@@ -467,7 +425,36 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
             { value: 'FCA', text: 'FCA - FREE CARRIER'}
         ]);
 
-        // Cria os campos, usando a função auxiliar e o SÍMBOLO (agora getCurrentCurrencySymbol está acessível)
+       // Função auxiliar para obter o SÍMBOLO da moeda atual (DIRETAMENTE DO DATALIST)
+        function getCurrentCurrencySymbol() {
+            const moedaInput = document.getElementById('text-moeda');
+            if (!moedaInput) {
+                return 'MGA'; // Campo não encontrado
+            }
+
+            const moedaValue = moedaInput.value; // Obtém o VALOR do INPUT
+            if (!moedaValue) {
+                return 'MGA'; // Nenhum valor no input
+            }
+
+            const datalist = document.getElementById('moeda'); // Obtém o DATALIST
+            if (!datalist) {
+                return 'MGA'; // Datalist não encontrado
+            }
+
+            // Itera pelas opções do DATALIST e procura a option com o value correspondente
+            for (let i = 0; i < datalist.options.length; i++) {
+                const option = datalist.options[i];
+                if (option.value === moedaValue) {
+                    // Encontrou a opção correspondente! Retorna o data-simbolo
+                    return option.dataset.simbolo || 'MGA'; // Retorna o símbolo, ou MGA se não houver
+                }
+            }
+
+            return 'MGA'; // Não encontrou nenhuma opção correspondente
+        }
+
+        // Cria os campos, usando a função auxiliar e o SÍMBOLO
         const currentCurrency = getCurrentCurrencySymbol();
         const vmcvRow = createRow(`VMCV (${currentCurrency}):`, 'text', vmcvMoeda, 'vmcvMoeda');
         const vmleRow = createRow(`VMLE (${currentCurrency}):`, 'text', vmleMoeda, 'vmleMoeda');
@@ -527,31 +514,23 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
         createRow('Tratamento Tributário:', 'text', tratamentoTributario, 'tratamentoTributario');
 
         table.appendChild(tbody);
-        return { table, vmcvInput: vmcvRow.querySelector('input'), vmleInput: vmleRow.querySelector('input') }; // Retorna os inputs
+        return table; // Retorna apenas a tabela
     }
 
+    // Função para atualizar TODOS os campos VMCV/VMLE
+    function updateAllCurrencyFields() {
+        const simboloMoeda = getCurrentCurrencySymbol(); // Obtém o símbolo
 
-    function addSaveButtonListeners() {
-        const saveButtons = document.querySelectorAll('.save-item-btn');
-        saveButtons.forEach(button => {
-            button.addEventListener('click', (event) => {
-                const detailsRow = event.target.closest('.details-row');
-                const itemDetailsTable = detailsRow.querySelector('.item-details-table');
-
-                const itemData = {};
-                itemDetailsTable.querySelectorAll('input, select').forEach(input => {
-                    itemData[input.name] = input.value;
-                });
-
-                itemData.listaLpco = [];
-                const lpcoContainer = detailsRow.querySelector('.lista-lpcos');
-                if (lpcoContainer) {
-                    Array.from(lpcoContainer.children).forEach(span => {
-                        itemData.listaLpco.push(span.dataset.codigo);
-                    });
-                }
-                console.log("Dados do item a serem salvos:", itemData);
-            });
+        const allDetailsRows = document.querySelectorAll('#notasFiscaisTable .details-row');
+        allDetailsRows.forEach(detailsRow => {
+            const vmcvInput = detailsRow.querySelector('input[name="vmcvMoeda"]');
+            const vmleInput = detailsRow.querySelector('input[name="vmleMoeda"]');
+            if (vmcvInput) {
+                vmcvInput.value = vmcvInput.value.replace(/\(.*?\)/, `(${simboloMoeda})`);
+            }
+            if (vmleInput) {
+                vmleInput.value = vmleInput.value.replace(/\(.*?\)/, `(${simboloMoeda})`);
+            }
         });
     }
 
@@ -607,13 +586,14 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
                         itemRow.appendChild(actionsCell);
                         tbody.appendChild(itemRow);
 
-                        const detailsRow = document.createElement('tr');
-                        detailsRow.classList.add('details-row');
-                        const detailsCell = document.createElement('td');
-                        detailsCell.colSpan = 4;
-                        detailsCell.classList.add('details-content');
-                        detailsRow.appendChild(detailsCell);
-                        tbody.appendChild(detailsRow);
+                        //Mesmo apagando essa linha, o modal é aberto.
+                        // const detailsRow = document.createElement('tr');
+                        // detailsRow.classList.add('details-row');
+                        // const detailsCell = document.createElement('td');
+                        // detailsCell.colSpan = 4;
+                        // detailsCell.classList.add('details-content');
+                        // detailsRow.appendChild(detailsCell);
+                        // tbody.appendChild(detailsRow);
                     });
                 } else {
                     console.error('nf.itens não é um array:', nf.itens);
@@ -630,37 +610,96 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
             return;
         }
 
-        const itemRow = btn.closest('.item-row');
-        const detailsRow = itemRow.nextElementSibling;
+        // const itemRow = btn.closest('.item-row'); //Não vamos mais usar
+        // const detailsRow = itemRow.nextElementSibling; //Não vamos mais usar
 
-        if (!detailsRow.querySelector('.item-details-table')) {
+        // if (!detailsRow.querySelector('.item-details-table')) { //Não vamos mais usar
             const nfIndex = parseInt(btn.dataset.nfIndex, 10);
             const itemIndex = parseInt(btn.dataset.itemIndex, 10);
 
             const nfData = processor.notasFiscais[nfIndex];
             if (nfData && nfData.itens && nfData.itens[itemIndex]) {
                 const itemData = nfData.itens[itemIndex];
-                const { table, vmcvInput, vmleInput } = createItemDetailsFields(itemData);
-                detailsRow.querySelector('.details-content').innerHTML = '';
-                detailsRow.querySelector('.details-content').appendChild(table);
 
-                const saveButton = document.createElement('button');
-                saveButton.type = 'button';
-                saveButton.classList.add('btn', 'btn-success', 'save-item-btn');
-                saveButton.textContent = 'Salvar Item';
-                detailsRow.querySelector('.details-content').appendChild(saveButton);
-                addSaveButtonListeners();
+                // Chama createItemDetailsFields para obter a tabela de detalhes
+                const detailsTable = createItemDetailsFields(itemData);
 
+                // --- MODIFICAÇÕES AQUI ---
+                const modalBody = document.querySelector('#itemDetailsModal .modal-body');
+
+                //Verificação se achou o modal.
+                if (!modalBody) {
+                    console.error('Erro: Corpo do modal (#itemDetailsModal .modal-body) não encontrado.');
+                    return; // Sai se o corpo do modal não for encontrado
+                }
+
+                modalBody.innerHTML = ''; // Limpa qualquer conteúdo anterior
+                modalBody.appendChild(detailsTable); //Insere a tabela.
+
+                // Exibe o modal (usando a API do Bootstrap)
+                const itemDetailsModal = new bootstrap.Modal(document.getElementById('itemDetailsModal'));
+
+                 //Adicione isso para guardar os valores:
+                itemDetailsModal._element.dataset.nfIndex = nfIndex;
+                itemDetailsModal._element.dataset.itemIndex = itemIndex;
+
+                itemDetailsModal.show(); //Mostra o modal.
+                // --- FIM DAS MODIFICAÇÕES ---
             }
-        }
+        // } //Não vamos mais usar
 
-        detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
+        // detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none'; //Não vamos mais usar
     });
 
     // Adiciona o event listener para a mudança de moeda (global)
     const moedaSelect = document.getElementById('text-moeda');
-        if (moedaSelect) {
-            moedaSelect.addEventListener('change', updateAllCurrencyFields);  // Chama updateAllCurrencyFields diretamente
-        }
+    if (moedaSelect) {
+        moedaSelect.addEventListener('change', updateAllCurrencyFields);  // Chama updateAllCurrencyFields diretamente
+    }
+
+    // Adiciona o event listener para o botão de salvar do modal
+    document.getElementById('saveItemDetails').addEventListener('click', () => {
+    // 1. Obter os dados do modal
+    const modalBody = document.querySelector('#itemDetailsModal .modal-body');
+    const itemDetailsTable = modalBody.querySelector('.item-details-table');
+
+    const itemData = {};
+    itemDetailsTable.querySelectorAll('input, select').forEach(input => {
+        itemData[input.name] = input.value; // Armazena o valor de cada campo
     });
+
+     //Obter lista de LPCOs, agora dentro do modal.
+    itemData.listaLpco = [];
+    const lpcoContainer = modalBody.querySelector('.lista-lpcos');
+    if (lpcoContainer) {
+        Array.from(lpcoContainer.children).forEach(span => {
+            itemData.listaLpco.push(span.dataset.codigo);
+        });
+    }
+
+    // 2.  Obter os índices da NF e do item (você precisará armazená-los em algum lugar,
+    //     por exemplo, em atributos data- no botão "+" ou no próprio modal)
+    const nfIndex = document.querySelector('#itemDetailsModal').dataset.nfIndex;
+    const itemIndex = document.querySelector('#itemDetailsModal').dataset.itemIndex;
+
+    // 3. Atualizar os dados no objeto processor.notasFiscais
+    if (processor.notasFiscais[nfIndex] && processor.notasFiscais[nfIndex].itens[itemIndex]) {
+        // Atualiza os dados do item com os novos valores
+        Object.assign(processor.notasFiscais[nfIndex].itens[itemIndex], itemData);
+        console.log("Dados do item atualizados:", processor.notasFiscais[nfIndex].itens[itemIndex]);
+
+        // 4. (Opcional) Fechar o modal
+        const itemDetailsModal = bootstrap.Modal.getInstance(document.getElementById('itemDetailsModal'));
+        itemDetailsModal.hide();
+
+        // 5. (Opcional) Atualizar a linha da tabela principal (se necessário)
+        // ... (código para atualizar a linha da tabela principal) ...
+        //     Isso dependerá de como você quer que a interface se comporte.
+        //     Você pode, por exemplo, re-renderizar a tabela inteira,
+        //     ou apenas atualizar os campos relevantes na linha específica.
+    } else {
+        console.error('Índices da NF ou do item inválidos.'); //  Mensagem de erro
+    }
+});
+});
 </script>
