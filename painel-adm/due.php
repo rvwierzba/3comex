@@ -142,9 +142,9 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
                             <input id="text-moeda" type="text" class="form-control" list="moeda" name="moeda" style="margin-rigth: 0.8%;">
                             <datalist id="moeda">
                                 <?php
-                                    foreach($pdo->query('SELECT Codigo, Nome FROM moeda ORDER BY Nome') as $row){
-                                        echo '<option value="'. $row['Codigo'] .'-'. $row['Nome'] .'">'.'</option>';
-                                        }       
+                                    foreach($pdo->query('SELECT Codigo, Nome, Simbolo FROM moeda ORDER BY Nome') as $row){
+                                        echo '<option value="'. $row['Codigo'] .'-'. $row['Nome'] .'" data-simbolo="'. $row['Simbolo'] .'">'. $row['Nome'] .'</option>';
+                                 }       
                                 ?>
                             </datalist>
                         </div>
@@ -324,12 +324,73 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
 <script type="module">
     import NFeProcessor from './due/js/due-upload.mjs';
 
-    // Função para criar os campos de detalhes do item (MANTIDA e adaptada)
+    let processor; // Declara o processor no escopo global
+
+    // Função auxiliar para obter o SÍMBOLO da moeda atual (DIRETAMENTE DO DATALIST) - AGORA NO ESCOPO GLOBAL
+    function getCurrentCurrencySymbol() {
+        const moedaInput = document.getElementById('text-moeda');
+        if (!moedaInput) {
+            return 'MGA'; // Campo não encontrado
+        }
+
+        const moedaValue = moedaInput.value; // Obtém o VALOR do INPUT
+        if (!moedaValue) {
+            return 'MGA'; // Nenhum valor no input
+        }
+
+        const datalist = document.getElementById('moeda'); // Obtém o DATALIST
+        if (!datalist) {
+            return 'MGA'; // Datalist não encontrado
+        }
+
+        // Itera pelas opções do DATALIST e procura a option com o value correspondente
+        for (let i = 0; i < datalist.options.length; i++) {
+            const option = datalist.options[i];
+            if (option.value === moedaValue) {
+                // Encontrou a opção correspondente! Retorna o data-simbolo
+                return option.dataset.simbolo || 'MGA'; // Retorna o símbolo, ou MGA se não houver
+            }
+        }
+
+        return 'MGA'; // Não encontrou nenhuma opção correspondente
+    }
+
+
+    // Função para atualizar UM par de campos VMCV/VMLE - AGORA NO ESCOPO GLOBAL
+    function updateCurrencyFields(vmcvInput, vmleInput) {
+        const simboloMoeda = getCurrentCurrencySymbol(); // Obtém o símbolo
+
+        if (vmcvInput) {
+            vmcvInput.value = vmcvInput.value.replace(/\(.*?\)/, `(${simboloMoeda})`);
+        }
+        if (vmleInput) {
+            vmleInput.value = vmleInput.value.replace(/\(.*?\)/, `(${simboloMoeda})`);
+        }
+    }
+
+    // Função para atualizar TODOS os campos VMCV/VMLE - AGORA NO ESCOPO GLOBAL
+    function updateAllCurrencyFields() {
+        const simboloMoeda = getCurrentCurrencySymbol(); // Obtém o símbolo
+
+        const allDetailsRows = document.querySelectorAll('#notasFiscaisTable .details-row');
+        allDetailsRows.forEach(detailsRow => {
+            const vmcvInput = detailsRow.querySelector('input[name="vmcvMoeda"]');
+            const vmleInput = detailsRow.querySelector('input[name="vmleMoeda"]');
+            if (vmcvInput) {
+                vmcvInput.value = vmcvInput.value.replace(/\(.*?\)/, `(${simboloMoeda})`);
+            }
+            if (vmleInput) {
+                vmleInput.value = vmleInput.value.replace(/\(.*?\)/, `(${simboloMoeda})`);
+            }
+        });
+    }
+
+
     function createItemDetailsFields(itemData) {
-        // (Mesmo código da função createItemDetailsFields - Adaptado)
         const {
-            xProd, ncm, condicaoVenda, vmcvMoeda, vmleMoeda, nomeImportador, enderecoImportador, paisImportador,
-            paisDestino, primeiroEnquadramento, segundoEnquadramento, terceiroEnquadramento, quartoEnquadramento,
+            xProd, ncm, condicaoVenda, vmcvMoeda, vmleMoeda, nomeImportador,
+            enderecoImportador, paisImportador, paisDestino, primeiroEnquadramento,
+            segundoEnquadramento, terceiroEnquadramento, quartoEnquadramento,
             listaLpco, tratamentoTributario,
         } = itemData;
 
@@ -337,7 +398,7 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
         table.classList.add('item-details-table');
         const tbody = document.createElement('tbody');
 
-         function createRow(labelText, inputType, inputValue, inputName, datalistOptions = null, readOnly = false) {
+        function createRow(labelText, inputType, inputValue, inputName, datalistOptions = null, readOnly = false) {
             const row = document.createElement('tr');
             const labelCell = document.createElement('th');
             labelCell.textContent = labelText;
@@ -379,7 +440,7 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
                 input.type = inputType;
                 input.name = inputName;
                 input.value = inputValue || '';
-                 if (readOnly) {
+                if (readOnly) {
                     input.readOnly = true;
                 }
             }
@@ -390,24 +451,27 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
             return row;
         }
 
-        // --- Criação das linhas (campos combinados) ---
         createRow('Item da DU-E:', 'text', itemData.item, 'item', null, true);
         createRow('Nota fiscal', 'text', itemData.chaveNF, 'chaveNF', null, true );
         createRow('Item da Nota Fiscal', 'text', itemData.itemNF, 'itemNF', null, true);
         createRow('Descrição da mercadoria:', 'text', xProd, 'xProd');
         createRow('NCM:', 'text', ncm, 'ncm');
-        createRow('Unidade estatística:', 'text', itemData.uCom, 'uCom', null, true); //Reaproveitando
-        createRow('Quantidade estatística:', 'text', itemData.qCom, 'qCom', null, true); //Reaproveitando
-        createRow('Unidade comercializada:', 'text', itemData.uCom, 'uComercializada'); //Reaproveitando
-        createRow('Quantidade comercializada:', 'text', itemData.qCom, 'qComercializada');//Reaproveitando
-        createRow('Valor (R$):', 'text', itemData.vUnCom, 'vUnCom'); //Reaproveitando
-        createRow('Peso líquido total (KG):', 'text', itemData.pesoLiquido, 'pesoLiquido'); //Reaproveitando
+        createRow('Unidade estatística:', 'text', itemData.uCom, 'uCom', null, true);
+        createRow('Quantidade estatística:', 'text', itemData.qCom, 'qCom', null, true);
+        createRow('Unidade comercializada:', 'text', itemData.uCom, 'uComercializada');
+        createRow('Quantidade comercializada:', 'text', itemData.qCom, 'qComercializada');
+        createRow('Valor (R$):', 'text', itemData.vUnCom, 'vUnCom');
+        createRow('Peso líquido total (KG):', 'text', itemData.pesoLiquido, 'pesoLiquido');
         createRow('Condição de venda:', 'select', condicaoVenda, 'condicaoVenda', [
             { value: 'EXW', text: 'EXW - EX WORKS' },
             { value: 'FCA', text: 'FCA - FREE CARRIER'}
         ]);
-        createRow('VMCV (MGA):', 'text', vmcvMoeda, 'vmcvMoeda');
-        createRow('VMLE (MGA):', 'text', vmleMoeda, 'vmleMoeda');
+
+        // Cria os campos, usando a função auxiliar e o SÍMBOLO (agora getCurrentCurrencySymbol está acessível)
+        const currentCurrency = getCurrentCurrencySymbol();
+        const vmcvRow = createRow(`VMCV (${currentCurrency}):`, 'text', vmcvMoeda, 'vmcvMoeda');
+        const vmleRow = createRow(`VMLE (${currentCurrency}):`, 'text', vmleMoeda, 'vmleMoeda');
+
         createRow('Nome do importador:', 'text', nomeImportador, 'nomeImportador');
         createRow('Endereço do importador:', 'text', enderecoImportador, 'enderecoImportador');
         createRow('País do importador:', 'text', paisImportador, 'paisImportador');
@@ -463,10 +527,10 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
         createRow('Tratamento Tributário:', 'text', tratamentoTributario, 'tratamentoTributario');
 
         table.appendChild(tbody);
-        return table;
+        return { table, vmcvInput: vmcvRow.querySelector('input'), vmleInput: vmleRow.querySelector('input') }; // Retorna os inputs
     }
 
-    // Função para adicionar listeners aos botões de salvar (MANTIDA e adaptada)
+
     function addSaveButtonListeners() {
         const saveButtons = document.querySelectorAll('.save-item-btn');
         saveButtons.forEach(button => {
@@ -491,17 +555,15 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
         });
     }
 
-
     document.addEventListener('DOMContentLoaded', async () => {
-        const processor = new NFeProcessor();
+        processor = new NFeProcessor();
 
-        // Upload de XMLs (MANTIDO)
         const inputXML = document.getElementById('xml-files');
         if (inputXML) {
             inputXML.addEventListener('change', async (e) => {
                 try {
                     await processor.processFiles(e.target.files);
-                    renderNotasFiscaisTable(); // Chama a função de renderização
+                    renderNotasFiscaisTable();
                 } catch (error) {
                     console.error('Falha no processamento:', error);
                     alert(error.message || 'Erro ao processar arquivos');
@@ -509,91 +571,96 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
             });
         }
 
-        // Função para RENDERIZAR a tabela (MODIFICADA)
-        function renderNotasFiscaisTable() {
-            const tbody = document.querySelector('#notasFiscaisTable tbody');
-            tbody.innerHTML = ''; // Limpa a tabela
+      function renderNotasFiscaisTable() {
+        const tbody = document.querySelector('#notasFiscaisTable tbody');
+        tbody.innerHTML = ''; // Limpa a tabela
 
+        //Verifica se processor e processor.notasFiscais estão definidos
+        if (processor && Array.isArray(processor.notasFiscais)) {
             processor.notasFiscais.forEach((nf, nfIndex) => {
-                nf.itens.forEach((item, itemIndex) => {
-                    // --- Linha principal do item ---
-                    const itemRow = document.createElement('tr');
-                    itemRow.classList.add('item-row'); // Classe para estilizar
+              //Verifica se nf.itens é um array
+                if(Array.isArray(nf.itens)){
+                    nf.itens.forEach((item, itemIndex) => {
+                        const itemRow = document.createElement('tr');
+                        itemRow.classList.add('item-row');
 
-                   const chaveCell = document.createElement('td');
-                    chaveCell.textContent = nf.chave;
-                    itemRow.appendChild(chaveCell);
+                        const chaveCell = document.createElement('td');
+                        chaveCell.textContent = nf.chave;
+                        itemRow.appendChild(chaveCell);
 
-                    const itemCell = document.createElement('td');
-                    itemCell.textContent = item.item;
-                    itemRow.appendChild(itemCell);
+                        const itemCell = document.createElement('td');
+                        itemCell.textContent = item.item;
+                        itemRow.appendChild(itemCell);
 
-                    const descCell = document.createElement('td');
-                    descCell.textContent = item.xProd;
-                    itemRow.appendChild(descCell);
+                        const descCell = document.createElement('td');
+                        descCell.textContent = item.xProd;
+                        itemRow.appendChild(descCell);
 
-                    const actionsCell = document.createElement('td');
-                    const toggleBtn = document.createElement('button');
-                    toggleBtn.type = 'button';
-                    toggleBtn.classList.add('btn', 'btn-info', 'btn-sm', 'toggle-details');
-                    toggleBtn.innerHTML = '+';
-                    toggleBtn.dataset.nfIndex = nfIndex;    // Índice da NF
-                    toggleBtn.dataset.itemIndex = itemIndex;  // Índice do item *dentro* da NF
-                    actionsCell.appendChild(toggleBtn);
-                    itemRow.appendChild(actionsCell);
-                    tbody.appendChild(itemRow);
+                        const actionsCell = document.createElement('td');
+                        const toggleBtn = document.createElement('button');
+                        toggleBtn.type = 'button';
+                        toggleBtn.classList.add('btn', 'btn-info', 'btn-sm', 'toggle-details');
+                        toggleBtn.innerHTML = '+';
+                        toggleBtn.dataset.nfIndex = nfIndex;
+                        toggleBtn.dataset.itemIndex = itemIndex;
+                        actionsCell.appendChild(toggleBtn);
+                        itemRow.appendChild(actionsCell);
+                        tbody.appendChild(itemRow);
 
-                    // --- Linha de detalhes (oculta por padrão) ---
-                    const detailsRow = document.createElement('tr');
-                    detailsRow.classList.add('details-row');
-                    const detailsCell = document.createElement('td');
-                    detailsCell.colSpan = 4; // Ocupa todas as colunas da tabela
-                    detailsCell.classList.add('details-content'); // Para espaçamento
-                    detailsRow.appendChild(detailsCell);
-                    tbody.appendChild(detailsRow); // Adiciona *após* a linha do item
-                });
+                        const detailsRow = document.createElement('tr');
+                        detailsRow.classList.add('details-row');
+                        const detailsCell = document.createElement('td');
+                        detailsCell.colSpan = 4;
+                        detailsCell.classList.add('details-content');
+                        detailsRow.appendChild(detailsCell);
+                        tbody.appendChild(detailsRow);
+                    });
+                } else {
+                    console.error('nf.itens não é um array:', nf.itens);
+                }
             });
-        }
-
-// --- Lógica do botão "+" (MODIFICADA) ---
-document.querySelector('#notasFiscaisTable').addEventListener('click', (e) => {
-    const btn = e.target.closest('button');
-    if (!btn || !btn.classList.contains('toggle-details')) {
-        return; // Sai se não for um clique no botão "+"
-    }
-
-    const itemRow = btn.closest('.item-row');
-    const detailsRow = itemRow.nextElementSibling;
-
-    // 1. Verifica se os detalhes JÁ foram criados
-    if (!detailsRow.querySelector('.item-details-table')) {
-        // 2. Obtém os índices CORRETOS
-        const nfIndex = parseInt(btn.dataset.nfIndex, 10);
-        const itemIndex = parseInt(btn.dataset.itemIndex, 10);
-
-        // 3. Acessa os dados CORRETOS do item
-        const nfData = processor.notasFiscais[nfIndex];
-        if (nfData && nfData.itens && nfData.itens[itemIndex]) {
-            const itemData = nfData.itens[itemIndex];
-
-            // 4. Cria os detalhes (e preenche!)
-            const detailsContent = createItemDetailsFields(itemData);
-            detailsRow.querySelector('.details-content').innerHTML = ''; // Limpa
-            detailsRow.querySelector('.details-content').appendChild(detailsContent);
-
-            // 5. Adiciona o botão de salvar
-            const saveButton = document.createElement('button');
-            saveButton.type = 'button';
-            saveButton.classList.add('btn', 'btn-success', 'save-item-btn');
-            saveButton.textContent = 'Salvar Item';
-            detailsRow.querySelector('.details-content').appendChild(saveButton);
-            addSaveButtonListeners();
+        } else {
+            console.error('processor.notasFiscais não está definido ou não é um array:', processor.notasFiscais);
         }
     }
 
-    // 6. Mostra ou oculta a linha de detalhes (toggle)
-      detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
-});
+    document.querySelector('#notasFiscaisTable').addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn || !btn.classList.contains('toggle-details')) {
+            return;
+        }
+
+        const itemRow = btn.closest('.item-row');
+        const detailsRow = itemRow.nextElementSibling;
+
+        if (!detailsRow.querySelector('.item-details-table')) {
+            const nfIndex = parseInt(btn.dataset.nfIndex, 10);
+            const itemIndex = parseInt(btn.dataset.itemIndex, 10);
+
+            const nfData = processor.notasFiscais[nfIndex];
+            if (nfData && nfData.itens && nfData.itens[itemIndex]) {
+                const itemData = nfData.itens[itemIndex];
+                const { table, vmcvInput, vmleInput } = createItemDetailsFields(itemData);
+                detailsRow.querySelector('.details-content').innerHTML = '';
+                detailsRow.querySelector('.details-content').appendChild(table);
+
+                const saveButton = document.createElement('button');
+                saveButton.type = 'button';
+                saveButton.classList.add('btn', 'btn-success', 'save-item-btn');
+                saveButton.textContent = 'Salvar Item';
+                detailsRow.querySelector('.details-content').appendChild(saveButton);
+                addSaveButtonListeners();
+
+            }
+        }
+
+        detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
+    });
+
+    // Adiciona o event listener para a mudança de moeda (global)
+    const moedaSelect = document.getElementById('text-moeda');
+        if (moedaSelect) {
+            moedaSelect.addEventListener('change', updateAllCurrencyFields);  // Chama updateAllCurrencyFields diretamente
+        }
     });
 </script>
-
