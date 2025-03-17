@@ -340,269 +340,269 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
 <script type="module" src="./due/js/campos-itens-nfe.mjs"></script>
 
 <script type="module">
-    import NFeProcessor from './due/js/due-upload.mjs';
+  
+  import NFeProcessor from './due/js/due-upload.mjs';
 
-    let processor; // Declara o processor no escopo global
+let processor; // Declara o processor no escopo global
 
-    function createItemDetailsFields(itemData) {
-        const {
-            xProd, ncm, condicaoVenda, vmcvMoeda, vmleMoeda, nomeImportador,
-            enderecoImportador, paisImportador, paisDestino, primeiroEnquadramento,
-            segundoEnquadramento, terceiroEnquadramento, quartoEnquadramento,
-            listaLpco, tratamentoTributario,
-        } = itemData;
+function createItemDetailsFields(itemData) {
+    const {
+        xProd, ncm, condicaoVenda, vmcvMoeda, vmleMoeda, nomeImportador,
+        enderecoImportador, paisImportador, paisDestino, primeiroEnquadramento,
+        segundoEnquadramento, terceiroEnquadramento, quartoEnquadramento,
+        listaLpco, tratamentoTributario,
+    } = itemData;
 
-        const table = document.createElement('table');
-        table.classList.add('item-details-table');
-        const tbody = document.createElement('tbody');
+    const table = document.createElement('table');
+    table.classList.add('item-details-table');
+    const tbody = document.createElement('tbody');
 
-        function createRow(labelText, inputType, inputValue, inputName, datalistOptions = null, readOnly = false) {
-            const row = document.createElement('tr');
-            const labelCell = document.createElement('th');
-            labelCell.textContent = labelText;
-            const inputCell = document.createElement('td');
-            let input;
+    function createRow(labelText, inputType, inputValue, inputName, datalistOptions = null, readOnly = false) {
+        const row = document.createElement('tr');
+        const labelCell = document.createElement('th');
+        labelCell.textContent = labelText;
+        const inputCell = document.createElement('td');
+        let input;
 
-            if (inputType === 'select') {
-                input = document.createElement('select');
-                input.name = inputName;
-                if (datalistOptions) {
-                    const datalist = document.createElement('datalist');
-                    datalist.id = inputName + '-list';
-                    datalistOptions.forEach(option => {
-                        const opt = document.createElement('option');
-                        opt.value = option.value;
-                        opt.textContent = option.text;
-                        datalist.appendChild(opt);
-                    });
-                    input.setAttribute('list', datalist.id);
-                    inputCell.appendChild(datalist);
-                }
-                const defaultOption = document.createElement('option');
-                defaultOption.textContent = "Selecione...";
-                defaultOption.value = "";
-                input.appendChild(defaultOption);
-                if(datalistOptions){
-                    datalistOptions.forEach(option => {
-                        const opt = document.createElement('option');
-                        opt.value = option.value;
-                        opt.textContent = option.text;
-                        if (option.value === inputValue) {
-                            opt.selected = true;
-                        }
-                        input.appendChild(opt);
-                    });
-                }
-            } else {
-                input = document.createElement('input');
-                input.type = inputType;
-                input.name = inputName;
-                input.value = inputValue || '';
-                if (readOnly) {
-                    input.readOnly = true;
-                }
+        if (inputType === 'select') {
+            input = document.createElement('select');
+            input.name = inputName;
+            if (datalistOptions) {
+                const datalist = document.createElement('datalist');
+                datalist.id = inputName + '-list';
+                datalistOptions.forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option.value;
+                    opt.textContent = option.text;
+                    datalist.appendChild(opt);
+                });
+                input.setAttribute('list', datalist.id);
+                inputCell.appendChild(datalist);
             }
-            inputCell.appendChild(input);
-            row.appendChild(labelCell);
-            row.appendChild(inputCell);
-            tbody.appendChild(row);
-            return row;
-        }
-
-        createRow('Item da DU-E:', 'text', itemData.item, 'item', null, true);
-        createRow('Nota fiscal', 'text', itemData.chaveNF, 'chaveNF', null, true );
-        createRow('Item da Nota Fiscal', 'text', itemData.itemNF, 'itemNF', null, true);
-        createRow('Descrição da mercadoria:', 'text', xProd, 'xProd');
-        createRow('NCM:', 'text', ncm, 'ncm');
-        createRow('Unidade estatística:', 'text', itemData.uCom, 'uCom', null, true);
-        createRow('Quantidade estatística:', 'text', itemData.qCom, 'qCom', null, true);
-        createRow('Unidade comercializada:', 'text', itemData.uCom, 'uComercializada');
-        createRow('Quantidade comercializada:', 'text', itemData.qCom, 'qComercializada');
-        createRow('Valor (R$):', 'text', itemData.vUnCom, 'vUnCom');
-        createRow('Peso líquido total (KG):', 'text', itemData.pesoLiquido, 'pesoLiquido');
-        createRow('Condição de venda:', 'select', condicaoVenda, 'condicaoVenda', [
-            { value: 'EXW', text: 'EXW - EX WORKS' },
-            { value: 'FCA', text: 'FCA - FREE CARRIER'}
-        ]);
-
-       // Função auxiliar para obter o SÍMBOLO da moeda atual (DIRETAMENTE DO DATALIST)
-        function getCurrentCurrencySymbol() {
-            const moedaInput = document.getElementById('text-moeda');
-            if (!moedaInput) {
-                return 'MGA'; // Campo não encontrado
+            const defaultOption = document.createElement('option');
+            defaultOption.textContent = "Selecione...";
+            defaultOption.value = "";
+            input.appendChild(defaultOption);
+            if(datalistOptions){
+                datalistOptions.forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option.value;
+                    opt.textContent = option.text;
+                    if (option.value === inputValue) {
+                        opt.selected = true;
+                    }
+                    input.appendChild(opt);
+                });
             }
-
-            const moedaValue = moedaInput.value; // Obtém o VALOR do INPUT
-            if (!moedaValue) {
-                return 'MGA'; // Nenhum valor no input
+        } else if (inputType === 'textarea') { // Caso seja textarea
+            input = document.createElement('textarea');
+            input.name = inputName;
+            input.value = inputValue || '';  //Usa o valor, se existir
+            if (readOnly) {
+                input.readOnly = true;
             }
-
-            const datalist = document.getElementById('moeda'); // Obtém o DATALIST
-            if (!datalist) {
-                return 'MGA'; // Datalist não encontrado
-            }
-
-            // Itera pelas opções do DATALIST e procura a option com o value correspondente
-            for (let i = 0; i < datalist.options.length; i++) {
-                const option = datalist.options[i];
-                if (option.value === moedaValue) {
-                    // Encontrou a opção correspondente! Retorna o data-simbolo
-                    return option.dataset.simbolo || 'MGA'; // Retorna o símbolo, ou MGA se não houver
-                }
-            }
-
-            return 'MGA'; // Não encontrou nenhuma opção correspondente
-        }
-
-        // Cria os campos, usando a função auxiliar e o SÍMBOLO
-        const currentCurrency = getCurrentCurrencySymbol();
-        const vmcvRow = createRow(`VMCV (${currentCurrency}):`, 'text', vmcvMoeda, 'vmcvMoeda');
-        const vmleRow = createRow(`VMLE (${currentCurrency}):`, 'text', vmleMoeda, 'vmleMoeda');
-
-        createRow('Nome do importador:', 'text', nomeImportador, 'nomeImportador');
-        createRow('Endereço do importador:', 'text', enderecoImportador, 'enderecoImportador');
-        createRow('País do importador:', 'text', paisImportador, 'paisImportador');
-        createRow('País de destino:', 'select', paisDestino, 'paisDestino', [
-            { value: 'US', text: 'Estados Unidos' },
-            { value: 'CA', text: 'Canadá' },
-             { value: 'PY', text: 'Paraguai' },
-        ]);
-        createRow('Primeiro enquadramento:', 'select', primeiroEnquadramento, 'primeiroEnquadramento', [
-            {value: '1', text: 'Enquadramento 1'},
-            {value: '2', text: 'Enquadramento 2'}
-        ]);
-        createRow('Segundo enquadramento:', 'select', segundoEnquadramento, 'segundoEnquadramento', [
-            {value: '1', text: 'Enquadramento 1'},
-            {value: '2', text: 'Enquadramento 2'}
-        ]);
-        createRow('Terceiro enquadramento:', 'select', terceiroEnquadramento, 'terceiroEnquadramento', [
-            {value: '1', text: 'Enquadramento 1'},
-            {value: '2', text: 'Enquadramento 2'}
-        ]);
-        createRow('Quarto enquadramento:', 'select', quartoEnquadramento, 'quartoEnquadramento', [
-            {value: '1', text: 'Enquadramento 1'},
-            {value: '2', text: 'Enquadramento 2'}
-        ]);
-
-        const lpcoRow = createRow('Lista de LPCO:', 'text', '', 'lpco');
-        const lpcoInput = lpcoRow.querySelector('input[name="lpco"]');
-        const addButton = document.createElement('button');
-        addButton.textContent = 'Adicionar LPCO';
-        addButton.type = 'button';
-        addButton.addEventListener('click', () => {
-            const codigoLpco = lpcoInput.value.trim();
-            if (codigoLpco) {
-                const lpcoList = lpcoRow.querySelector('.lista-lpcos') || document.createElement('div');
-                lpcoList.classList.add('lista-lpcos');
-                const lpcoItem = document.createElement('span');
-                lpcoItem.classList.add('lpco-item');
-                lpcoItem.textContent = codigoLpco;
-                lpcoItem.dataset.codigo = codigoLpco;
-                lpcoList.appendChild(lpcoItem);
-                if (!lpcoRow.querySelector('.lista-lpcos')) {
-                    lpcoRow.querySelector('td').appendChild(lpcoList);
-                }
-                if (!itemData.listaLpco) {
-                    itemData.listaLpco = [];
-                }
-                if (!itemData.listaLpco.includes(codigoLpco)) {
-                    itemData.listaLpco.push(codigoLpco);
-                }
-            }
-        });
-        lpcoRow.querySelector('td').appendChild(addButton);
-        createRow('Tratamento Tributário:', 'text', tratamentoTributario, 'tratamentoTributario');
-
-        table.appendChild(tbody);
-        return table; // Retorna apenas a tabela
-    }
-
-    // Função para atualizar TODOS os campos VMCV/VMLE
-    function updateAllCurrencyFields() {
-        const simboloMoeda = getCurrentCurrencySymbol(); // Obtém o símbolo
-
-        const allDetailsRows = document.querySelectorAll('#notasFiscaisTable .details-row');
-        allDetailsRows.forEach(detailsRow => {
-            const vmcvInput = detailsRow.querySelector('input[name="vmcvMoeda"]');
-            const vmleInput = detailsRow.querySelector('input[name="vmleMoeda"]');
-            if (vmcvInput) {
-                vmcvInput.value = vmcvInput.value.replace(/\(.*?\)/, `(${simboloMoeda})`);
-            }
-            if (vmleInput) {
-                vmleInput.value = vmleInput.value.replace(/\(.*?\)/, `(${simboloMoeda})`);
-            }
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        processor = new NFeProcessor();
-
-        const inputXML = document.getElementById('xml-files');
-        if (inputXML) {
-            inputXML.addEventListener('change', async (e) => {
-                try {
-                    await processor.processFiles(e.target.files);
-                    renderNotasFiscaisTable();
-                } catch (error) {
-                    console.error('Falha no processamento:', error);
-                    alert(error.message || 'Erro ao processar arquivos');
-                }
-            });
-        }
-
-      function renderNotasFiscaisTable() {
-        const tbody = document.querySelector('#notasFiscaisTable tbody');
-        tbody.innerHTML = ''; // Limpa a tabela
-
-        //Verifica se processor e processor.notasFiscais estão definidos
-        if (processor && Array.isArray(processor.notasFiscais)) {
-            processor.notasFiscais.forEach((nf, nfIndex) => {
-              //Verifica se nf.itens é um array
-                if(Array.isArray(nf.itens)){
-                    nf.itens.forEach((item, itemIndex) => {
-                        const itemRow = document.createElement('tr');
-                        itemRow.classList.add('item-row');
-
-                        const chaveCell = document.createElement('td');
-                        chaveCell.textContent = nf.chave;
-                        itemRow.appendChild(chaveCell);
-
-                        const itemCell = document.createElement('td');
-                        itemCell.textContent = item.item;
-                        itemRow.appendChild(itemCell);
-
-                        const descCell = document.createElement('td');
-                        descCell.textContent = item.xProd;
-                        itemRow.appendChild(descCell);
-
-                        const actionsCell = document.createElement('td');
-                        const toggleBtn = document.createElement('button');
-                        toggleBtn.type = 'button';
-                        toggleBtn.classList.add('btn', 'btn-info', 'btn-sm', 'toggle-details');
-                        toggleBtn.innerHTML = '+';
-                        toggleBtn.dataset.nfIndex = nfIndex;
-                        toggleBtn.dataset.itemIndex = itemIndex;
-                        actionsCell.appendChild(toggleBtn);
-                        itemRow.appendChild(actionsCell);
-                        tbody.appendChild(itemRow);
-
-                        //Mesmo apagando essa linha, o modal é aberto.
-                        // const detailsRow = document.createElement('tr');
-                        // detailsRow.classList.add('details-row');
-                        // const detailsCell = document.createElement('td');
-                        // detailsCell.colSpan = 4;
-                        // detailsCell.classList.add('details-content');
-                        // detailsRow.appendChild(detailsCell);
-                        // tbody.appendChild(detailsRow);
-                    });
-                } else {
-                    console.error('nf.itens não é um array:', nf.itens);
-                }
-            });
         } else {
-            console.error('processor.notasFiscais não está definido ou não é um array:', processor.notasFiscais);
+            input = document.createElement('input');
+            input.type = inputType;
+            input.name = inputName;
+            input.value = inputValue || '';
+            if (readOnly) {
+                input.readOnly = true;
+            }
         }
+        inputCell.appendChild(input);
+        row.appendChild(labelCell);
+        row.appendChild(inputCell);
+        tbody.appendChild(row);
+        return row;
     }
+
+    createRow('Item da DU-E:', 'text', itemData.item, 'item', null, true);
+    createRow('Nota fiscal', 'text', itemData.chaveNF, 'chaveNF', null, true );
+    createRow('Item da Nota Fiscal', 'text', itemData.itemNF, 'itemNF', null, true);
+    createRow('Descrição da mercadoria:', 'textarea', xProd, 'xProd'); // Usando textarea aqui
+    createRow('NCM:', 'text', ncm, 'ncm');
+    createRow('Unidade estatística:', 'text', itemData.uCom, 'uCom', null, true);
+    createRow('Quantidade estatística:', 'text', itemData.qCom, 'qCom', null, true);
+    createRow('Unidade comercializada:', 'text', itemData.uCom, 'uComercializada');
+    createRow('Quantidade comercializada:', 'text', itemData.qCom, 'qComercializada');
+    createRow('Valor (R$):', 'text', itemData.vUnCom, 'vUnCom');
+    createRow('Peso líquido total (KG):', 'text', itemData.pesoLiquido, 'pesoLiquido');
+    createRow('Condição de venda:', 'select', condicaoVenda, 'condicaoVenda', [
+        { value: 'EXW', text: 'EXW - EX WORKS' },
+        { value: 'FCA', text: 'FCA - FREE CARRIER'}
+    ]);
+
+   // Função auxiliar para obter o SÍMBOLO da moeda atual (DIRETAMENTE DO DATALIST)
+    function getCurrentCurrencySymbol() {
+        const moedaInput = document.getElementById('text-moeda');
+        if (!moedaInput) {
+            return 'MGA'; // Campo não encontrado
+        }
+
+        const moedaValue = moedaInput.value; // Obtém o VALOR do INPUT
+        if (!moedaValue) {
+            return 'MGA'; // Nenhum valor no input
+        }
+
+        const datalist = document.getElementById('moeda'); // Obtém o DATALIST
+        if (!datalist) {
+            return 'MGA'; // Datalist não encontrado
+        }
+
+        // Itera pelas opções do DATALIST e procura a option com o value correspondente
+        for (let i = 0; i < datalist.options.length; i++) {
+            const option = datalist.options[i];
+            if (option.value === moedaValue) {
+                // Encontrou a opção correspondente! Retorna o data-simbolo
+                return option.dataset.simbolo || 'MGA'; // Retorna o símbolo, ou MGA se não houver
+            }
+        }
+
+        return 'MGA'; // Não encontrou nenhuma opção correspondente
+    }
+
+    // Cria os campos, usando a função auxiliar e o SÍMBOLO
+    const currentCurrency = getCurrentCurrencySymbol();
+    const vmcvRow = createRow(`VMCV (${currentCurrency}):`, 'text', vmcvMoeda, 'vmcvMoeda');
+    const vmleRow = createRow(`VMLE (${currentCurrency}):`, 'text', vmleMoeda, 'vmleMoeda');
+
+    createRow('Nome do importador:', 'text', nomeImportador, 'nomeImportador');
+    createRow('Endereço do importador:', 'text', enderecoImportador, 'enderecoImportador');
+    createRow('País do importador:', 'text', paisImportador, 'paisImportador');
+    createRow('País de destino:', 'select', paisDestino, 'paisDestino', [
+        { value: 'US', text: 'Estados Unidos' },
+        { value: 'CA', text: 'Canadá' },
+         { value: 'PY', text: 'Paraguai' },
+    ]);
+    createRow('Primeiro enquadramento:', 'select', primeiroEnquadramento, 'primeiroEnquadramento', [
+        {value: '1', text: 'Enquadramento 1'},
+        {value: '2', text: 'Enquadramento 2'}
+    ]);
+    createRow('Segundo enquadramento:', 'select', segundoEnquadramento, 'segundoEnquadramento', [
+        {value: '1', text: 'Enquadramento 1'},
+        {value: '2', text: 'Enquadramento 2'}
+    ]);
+    createRow('Terceiro enquadramento:', 'select', terceiroEnquadramento, 'terceiroEnquadramento', [
+        {value: '1', text: 'Enquadramento 1'},
+        {value: '2', text: 'Enquadramento 2'}
+    ]);
+    createRow('Quarto enquadramento:', 'select', quartoEnquadramento, 'quartoEnquadramento', [
+        {value: '1', text: 'Enquadramento 1'},
+        {value: '2', text: 'Enquadramento 2'}
+    ]);
+
+    const lpcoRow = createRow('Lista de LPCO:', 'text', '', 'lpco');
+    const lpcoInput = lpcoRow.querySelector('input[name="lpco"]');
+    const addButton = document.createElement('button');
+    addButton.textContent = 'Adicionar LPCO';
+    addButton.type = 'button';
+    addButton.addEventListener('click', () => {
+        const codigoLpco = lpcoInput.value.trim();
+        if (codigoLpco) {
+            const lpcoList = lpcoRow.querySelector('.lista-lpcos') || document.createElement('div');
+            lpcoList.classList.add('lista-lpcos');
+            const lpcoItem = document.createElement('span');
+            lpcoItem.classList.add('lpco-item');
+            lpcoItem.textContent = codigoLpco;
+            lpcoItem.dataset.codigo = codigoLpco;
+            lpcoList.appendChild(lpcoItem);
+            if (!lpcoRow.querySelector('.lista-lpcos')) {
+                lpcoRow.querySelector('td').appendChild(lpcoList);
+            }
+            if (!itemData.listaLpco) {
+                itemData.listaLpco = [];
+            }
+            if (!itemData.listaLpco.includes(codigoLpco)) {
+                itemData.listaLpco.push(codigoLpco);
+            }
+        }
+    });
+    lpcoRow.querySelector('td').appendChild(addButton);
+    createRow('Tratamento Tributário:', 'text', tratamentoTributario, 'tratamentoTributario');
+
+    table.appendChild(tbody);
+    return table; // Retorna apenas a tabela
+}
+
+// Função para atualizar TODOS os campos VMCV/VMLE
+function updateAllCurrencyFields() {
+    const simboloMoeda = getCurrentCurrencySymbol(); // Obtém o símbolo
+
+    const allDetailsRows = document.querySelectorAll('#notasFiscaisTable .details-row');
+    allDetailsRows.forEach(detailsRow => {
+        const vmcvInput = detailsRow.querySelector('input[name="vmcvMoeda"]');
+        const vmleInput = detailsRow.querySelector('input[name="vmleMoeda"]');
+        if (vmcvInput) {
+            vmcvInput.value = vmcvInput.value.replace(/\(.*?\)/, `(${simboloMoeda})`);
+        }
+        if (vmleInput) {
+            vmleInput.value = vmleInput.value.replace(/\(.*?\)/, `(${simboloMoeda})`);
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    processor = new NFeProcessor();
+
+    const inputXML = document.getElementById('xml-files');
+    if (inputXML) {
+        inputXML.addEventListener('change', async (e) => {
+            try {
+                await processor.processFiles(e.target.files);
+                renderNotasFiscaisTable();
+            } catch (error) {
+                console.error('Falha no processamento:', error);
+                alert(error.message || 'Erro ao processar arquivos');
+            }
+        });
+    }
+
+   function renderNotasFiscaisTable() {
+    const tbody = document.querySelector('#notasFiscaisTable tbody');
+    tbody.innerHTML = ''; // Limpa a tabela
+
+    //Verifica se processor e processor.notasFiscais estão definidos
+    if (processor && Array.isArray(processor.notasFiscais)) {
+        processor.notasFiscais.forEach((nf, nfIndex) => {
+         //Verifica se nf.itens é um array
+            if(Array.isArray(nf.itens)){
+                nf.itens.forEach((item, itemIndex) => {
+                    const itemRow = document.createElement('tr');
+                    itemRow.classList.add('item-row');
+
+                    const chaveCell = document.createElement('td');
+                    chaveCell.textContent = nf.chave;
+                    itemRow.appendChild(chaveCell);
+
+                    const itemCell = document.createElement('td');
+                    itemCell.textContent = item.item;
+                    itemRow.appendChild(itemCell);
+
+                    const descCell = document.createElement('td');
+                    descCell.textContent = item.xProd;
+                    itemRow.appendChild(descCell);
+
+                    const actionsCell = document.createElement('td');
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.type = 'button';
+                    toggleBtn.classList.add('btn', 'btn-info', 'btn-sm', 'toggle-details');
+                    toggleBtn.innerHTML = '+';
+                    toggleBtn.dataset.nfIndex = nfIndex;
+                    toggleBtn.dataset.itemIndex = itemIndex;
+                    actionsCell.appendChild(toggleBtn);
+                    itemRow.appendChild(actionsCell);
+                    tbody.appendChild(itemRow);
+
+                });
+            } else {
+                console.error('nf.itens não é um array:', nf.itens);
+            }
+        });
+    } else {
+        console.error('processor.notasFiscais não está definido ou não é um array:', processor.notasFiscais);
+    }
+}
 
     document.querySelector('#notasFiscaisTable').addEventListener('click', (e) => {
         const btn = e.target.closest('button');
@@ -610,10 +610,6 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
             return;
         }
 
-        // const itemRow = btn.closest('.item-row'); //Não vamos mais usar
-        // const detailsRow = itemRow.nextElementSibling; //Não vamos mais usar
-
-        // if (!detailsRow.querySelector('.item-details-table')) { //Não vamos mais usar
             const nfIndex = parseInt(btn.dataset.nfIndex, 10);
             const itemIndex = parseInt(btn.dataset.itemIndex, 10);
 
@@ -624,7 +620,6 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
                 // Chama createItemDetailsFields para obter a tabela de detalhes
                 const detailsTable = createItemDetailsFields(itemData);
 
-                // --- MODIFICAÇÕES AQUI ---
                 const modalBody = document.querySelector('#itemDetailsModal .modal-body');
 
                 //Verificação se achou o modal.
@@ -644,11 +639,9 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
                 itemDetailsModal._element.dataset.itemIndex = itemIndex;
 
                 itemDetailsModal.show(); //Mostra o modal.
-                // --- FIM DAS MODIFICAÇÕES ---
-            }
-        // } //Não vamos mais usar
 
-        // detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none'; //Não vamos mais usar
+            }
+
     });
 
     // Adiciona o event listener para a mudança de moeda (global)
@@ -664,11 +657,11 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
     const itemDetailsTable = modalBody.querySelector('.item-details-table');
 
     const itemData = {};
-    itemDetailsTable.querySelectorAll('input, select').forEach(input => {
+    itemDetailsTable.querySelectorAll('input, select, textarea').forEach(input => { // Inclui textarea
         itemData[input.name] = input.value; // Armazena o valor de cada campo
     });
 
-     //Obter lista de LPCOs, agora dentro do modal.
+      //Obter lista de LPCOs, agora dentro do modal.
     itemData.listaLpco = [];
     const lpcoContainer = modalBody.querySelector('.lista-lpcos');
     if (lpcoContainer) {
@@ -677,29 +670,34 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
         });
     }
 
-    // 2.  Obter os índices da NF e do item (você precisará armazená-los em algum lugar,
-    //     por exemplo, em atributos data- no botão "+" ou no próprio modal)
+    // 2.  Obter os índices da NF e do item
     const nfIndex = document.querySelector('#itemDetailsModal').dataset.nfIndex;
     const itemIndex = document.querySelector('#itemDetailsModal').dataset.itemIndex;
 
     // 3. Atualizar os dados no objeto processor.notasFiscais
     if (processor.notasFiscais[nfIndex] && processor.notasFiscais[nfIndex].itens[itemIndex]) {
-        // Atualiza os dados do item com os novos valores
+        // Atualiza os dados do item com os novos valores.  AGORA SIM!
         Object.assign(processor.notasFiscais[nfIndex].itens[itemIndex], itemData);
-        console.log("Dados do item atualizados:", processor.notasFiscais[nfIndex].itens[itemIndex]);
 
-        // 4. (Opcional) Fechar o modal
+        renderNotasFiscaisTable(); // Atualiza a tabela para refletir as mudanças
+        // Fecha o modal (usando a API do Bootstrap)
         const itemDetailsModal = bootstrap.Modal.getInstance(document.getElementById('itemDetailsModal'));
         itemDetailsModal.hide();
 
-        // 5. (Opcional) Atualizar a linha da tabela principal (se necessário)
-        // ... (código para atualizar a linha da tabela principal) ...
-        //     Isso dependerá de como você quer que a interface se comporte.
-        //     Você pode, por exemplo, re-renderizar a tabela inteira,
-        //     ou apenas atualizar os campos relevantes na linha específica.
     } else {
-        console.error('Índices da NF ou do item inválidos.'); //  Mensagem de erro
+        console.error('Índices de NF ou item inválidos:', nfIndex, itemIndex);
     }
 });
+
+//Fechamento modal, limpando campos.
+document.getElementById('itemDetailsModal').addEventListener('hidden.bs.modal', function () {
+    const modalBody = this.querySelector('.modal-body');
+    modalBody.innerHTML = ''; // Limpa o conteúdo do modal
+
+    // Limpa os data attributes, se necessário.
+    delete this.dataset.nfIndex;
+    delete this.dataset.itemIndex;
 });
+});
+
 </script>
