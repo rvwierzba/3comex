@@ -318,13 +318,13 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Edição Completa do Item</h5>
+                <h5 class="modal-title">Edição Completa do Item de DU-E</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="itemForm">
                     <!-- Seção 1: Dados Básicos -->
-                    <div class="card mb-3">
+                    <div class="card mb-4">
                         <div class="card-header">Detalhes do Item</div>
                         <div class="card-body row g-3">
                             <div class="col-md-4">
@@ -345,91 +345,104 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
                                 <input type="text" id="itemCFOP" class="form-control">
                             </div>
                             <div class="col-md-4">
-                            <label>CCPT/CCROM</label>
-                                <input type="text" id="ccpt_ccrom" class="form-control">
+                                <label>CCPT/CCROM</label>
+                                <select id="ccpt_ccrom" class="form-select">
+                                    <option value="">Selecione...</option>
+                                    <option value="CCPT-01">CCPT 01 - Operação Comercial</option>
+                                    <option value="CCPT-02">CCPT 02 - Amostra Grátis</option>
+                                    <option value="CCROM-A">CCROM A - Material de Propaganda</option>
+                                </select>
                             </div>
                             <div class="col-md-3">
                                 <label>Quantidade Estatística</label>
                                 <input type="text" id="quantidadeEstatistica" class="form-control">
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Seção 2: Dados Específicos das Imagens -->
+                    <div class="card mb-4">
+                        <div class="card-header">Dados Avaliários</div>
+                        <div class="card-body row g-3">
                             <div class="col-md-3">
-                                <label>Unidade Estatística</label>
-                                <input type="text" id="unidadeEstatistica" class="form-control">
+                                <label>Comissão Avaliária (%)</label>
+                                <input type="number" id="comissaoAvaliaria" class="form-control" step="0.01">
+                            </div>
+                            <div class="col-md-3">
+                                <label>LFCO</label>
+                                <input type="text" id="lfco" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label>Usador Avaliário</label>
+                                <input type="text" id="usuarioAvaliario" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label>Descrição Complementar</label>
+                                <textarea id="descricaoComplementar" class="form-control"></textarea>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Seção 2: Valores e Condições -->
-                    <div class="card mb-3">
-                        <div class="card-header">Valores Comerciais</div>
+                    <!-- Seção 3: Valores Comerciais -->
+                    <div class="card mb-4">
+                        <div class="card-header">Valores e Medidas</div>
                         <div class="card-body row g-3">
                             <div class="col-md-4">
-                                <label>VMCV (R$)</label>
-                                <input type="number" id="vmcv" class="form-control">
+                                <label>ValCV (MGA)</label>
+                                <input type="number" id="valcv" class="form-control">
                             </div>
                             <div class="col-md-4">
                                 <label>VAL.E (MGA)</label>
                                 <input type="number" id="valE" class="form-control">
                             </div>
                             <div class="col-md-4">
-                                <label>Condição de Venda</label>
-                                <select class="form-select">
-                                    <option>CIF</option>
-                                    <option>FOB</option>
-                                </select>
+                                <label>Peso Líquido Total (KG)</label>
+                                <input type="number" id="pesoLiquido" class="form-control">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Seção 3: LPCOs -->
-                    <div class="card mb-3">
-                        <div class="card-header">LPCOs</div>
+                    <!-- Seção 4: LPCOs -->
+                    <div class="card mb-4">
+                        <div class="card-header">Licenças e Permissões</div>
                         <div class="card-body">
                             <div class="lpcos-list mb-3"></div>
                             <div class="input-group">
-                                <input type="text" class="form-control" placeholder="Novo LPCO">
-                                <button class="btn btn-primary" type="button">Adicionar</button>
+                                <input type="text" id="novoLpco" class="form-control" placeholder="Número do LPCO">
+                                <button class="btn btn-primary" type="button" onclick="adicionarLPCO()">
+                                    <i class="fas fa-plus"></i> Adicionar
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Seção 4: Embalagens -->
-                    <div class="card mb-3">
-                        <div class="card-header">Empacotamento</div>
+                    <!-- Seção 5: Empacotamentos -->
+                    <div class="card mb-4">
+                        <div class="card-header">Empacotamentos</div>
                         <div class="card-body row g-3">
                             <div class="col-md-3">
-                                <select class="form-select" id="embalagens">
-                                    <option>Primeiro empacotamento</option>
-                                    <option>Segundo empacotamento</option>
+                                <label>Primeiro Empacotamento</label>
+                                <select class="form-select" id="empacotamento1">
+                                    <option value="">Selecione...</option>
+                                    <option value="Container">Container</option>
+                                    <option value="Palete">Palete</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <input type="number" class="form-control" placeholder="Quantidade">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Seção 5: Informações Adicionais -->
-                    <div class="card">
-                        <div class="card-header">Informações Complementares</div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label>Endereço do Importador</label>
-                                    <textarea class="form-control" rows="3">AVENIDA AVIADORES DEL CHACO 2351 - HERIB CAMPOS CERVERA - EXTERIOR - PARAGUAI</textarea>
-                                </div>
-                                <div class="col-md-6">
-                                    <label>Tratamento Tributário</label>
-                                    <textarea class="form-control" rows="3">Este item não possui tratamento tributário</textarea>
-                                </div>
+                                <label>Segundo Empacotamento</label>
+                                <select class="form-select" id="empacotamento2">
+                                    <option value="">Selecione...</option>
+                                    <option value="Caixas">Caixas</option>
+                                    <option value="Sacos">Sacos</option>
+                                </select>
                             </div>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                <button type="button" class="btn btn-primary">Salvar Alterações</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="salvarAlteracoes">Salvar Alterações</button>
             </div>
         </div>
     </div>
@@ -441,45 +454,44 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
 
 <script def>
 
-    $(document).ready(function() {
-        let nfeData = [];
-        let currentIndex = -1;
+$(document).ready(function() {
+    let nfeData = [];
+    let currentIndex = -1;
 
-        // Configuração do DataTable
-        const dataTable = $('#notasFiscaisTable').DataTable({
-            language: {
-                url: "https://cdn.datatables.net/plug-ins/2.0.3/i18n/pt-BR.json"
-            },
-            columns: [
-                { data: 'chave', title: 'Chave de Acesso' },
-                { data: 'importador', title: 'Importador' },
-                { data: 'pais', title: 'País' },
-                {
-                    data: null,
-                    title: 'Ações',
-                    orderable: false,
-                    searchable: false,
-                    render: function(data, type, row) {
-                        return `
-                            <button type="button" class="btn btn-sm btn-primary btn-editar me-2" 
-                                data-index="${row.index}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger btn-excluir" 
-                                data-index="${row.index}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        `;
-                    }
+    // Configuração do DataTable
+    const dataTable = $('#notasFiscaisTable').DataTable({
+        language: {
+            url: "https://cdn.datatables.net/plug-ins/2.0.3/i18n/pt-BR.json"
+        },
+        columns: [
+            { data: 'chave', title: 'Chave de Acesso' },
+            { data: 'importador.nome', title: 'Importador' },
+            { data: 'importador.pais', title: 'País' },
+            {
+                data: null,
+                title: 'Ações',
+                orderable: false,
+                searchable: false,
+                render: function(data, type, row) {
+                    return `
+                        <button type="button" class="btn btn-sm btn-primary btn-editar me-2" 
+                            data-index="${row.index}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-danger btn-excluir" 
+                            data-index="${row.index}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
                 }
-            ]
-        });
+            }
+        ]
+    });
 
-        // Processar XML
-        $('#xml-files').on('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
+    // Processar XML
+    $('#xml-files').on('change', function(e) {
+        const files = e.target.files;
+        Array.from(files).forEach(file => {
             const reader = new FileReader();
             reader.onload = function(e) {
                 const xml = new DOMParser().parseFromString(e.target.result, "text/xml");
@@ -487,96 +499,177 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
             };
             reader.readAsText(file);
         });
-
-        function processarNFe(xml) {
-            const ns = 'http://www.portalfiscal.inf.br/nfe';
-            const infNFe = xml.getElementsByTagNameNS(ns, 'infNFe')[0];
-            
-            // Processar dados gerais
-            const dest = xml.getElementsByTagNameNS(ns, 'dest')[0];
-            $('#text-cnpj-cpf-select').val(
-                getTextNS(dest, ns, 'CNPJ') || getTextNS(dest, ns, 'CPF')
-            );
-            $('#nomeCliente').val(getTextNS(dest, ns, 'xNome'));
-            $('#ruc').val(infNFe.getAttribute('Id').replace('NFe', ''));
-
-            // Processar itens
-            const itens = xml.getElementsByTagNameNS(ns, 'det');
-            nfeData = Array.from(itens).map((item, index) => {
-                const prod = item.getElementsByTagNameNS(ns, 'prod')[0];
-                return {
-                    index: index,
-                    chave: infNFe.getAttribute('Id'),
-                    importador: getTextNS(dest, ns, 'xNome'),
-                    pais: getTextNS(dest, ns, 'xPais'),
-                    codigo: getTextNS(prod, ns, 'cProd'),
-                    descricao: getTextNS(prod, ns, 'xProd'),
-                    ncm: getTextNS(prod, ns, 'NCM'),
-                    cfop: getTextNS(prod, ns, 'CFOP'),
-                    quantidade: getTextNS(prod, ns, 'qCom'),
-                    unidade: getTextNS(prod, ns, 'uCom'),
-                    valorUnitario: getTextNS(prod, ns, 'vUnCom'),
-                    valorTotal: getTextNS(prod, ns, 'vProd')
-                };
-            });
-
-            refreshDataTable();
-        }
-
-        function getTextNS(parent, ns, tagName) {
-            const element = parent?.getElementsByTagNameNS(ns, tagName)[0];
-            return element?.textContent?.trim() || '';
-        }
-
-        function refreshDataTable() {
-            dataTable.clear().rows.add(nfeData).draw();
-        }
-
-        // Evento para abrir modal
-        $('#notasFiscaisTable').on('click', '.btn-editar', function(e) {
-            e.preventDefault();
-            currentIndex = $(this).data('index');
-            const item = nfeData[currentIndex];
-            
-            // Preencher modal
-            $('#itemCodigo').val(item.codigo);
-            $('#itemDescricao').val(item.descricao);
-            $('#itemNCM').val(item.ncm);
-            $('#itemCFOP').val(item.cfop);
-            $('#itemQuantidade').val(item.quantidade);
-            $('#itemUnidade').val(item.unidade);
-            $('#itemValorUnitario').val(item.valorUnitario);
-            $('#itemValorTotal').val(item.valorTotal);
-            
-            // Abrir modal
-            $('#itemDetailsModal').modal('show');
-        });
-
-        // Evento para excluir item
-        $('#notasFiscaisTable').on('click', '.btn-excluir', function(e) {
-            const index = $(this).data('index');
-            nfeData = nfeData.filter((_, i) => i !== index);
-            refreshDataTable();
-        });
-
-        // Salvar alterações
-        $('#salvarAlteracoes').on('click', function() {
-            if (currentIndex > -1) {
-                nfeData[currentIndex] = {
-                    ...nfeData[currentIndex],
-                    codigo: $('#itemCodigo').val(),
-                    descricao: $('#itemDescricao').val(),
-                    ncm: $('#itemNCM').val(),
-                    cfop: $('#itemCFOP').val(),
-                    quantidade: $('#itemQuantidade').val(),
-                    unidade: $('#itemUnidade').val(),
-                    valorUnitario: $('#itemValorUnitario').val(),
-                    valorTotal: $('#itemValorTotal').val()
-                };
-                refreshDataTable();
-                $('#itemDetailsModal').modal('hide');
-            }
-        });
     });
+
+    function processarNFe(xml) {
+        const ns = 'http://www.portalfiscal.inf.br/nfe';
+        const infNFe = xml.getElementsByTagNameNS(ns, 'infNFe')[0];
+        const dest = xml.getElementsByTagNameNS(ns, 'dest')[0];
+        const ide = xml.getElementsByTagNameNS(ns, 'ide')[0];
+
+        // Processar dados gerais
+        $('#text-cnpj-cpf-select').val(
+            getTextNS(dest, ns, 'CNPJ') || getTextNS(dest, ns, 'CPF')
+        );
+        $('#nomeCliente').val(getTextNS(dest, ns, 'xNome'));
+        $('#ruc').val(infNFe.getAttribute('Id').replace('NFe', ''));
+
+        // Processar itens
+        const itens = xml.getElementsByTagNameNS(ns, 'det');
+        nfeData = Array.from(itens).map((item, index) => {
+            const prod = item.getElementsByTagNameNS(ns, 'prod')[0];
+            return {
+                index: index,
+                chave: infNFe.getAttribute('Id'),
+                importador: {
+                    nome: getTextNS(dest, ns, 'xNome'),
+                    pais: getTextNS(dest, ns, 'xPais'),
+                    endereco: montarEndereco(dest, ns)
+                },
+                codigo: getTextNS(prod, ns, 'cProd'),
+                descricao: getTextNS(prod, ns, 'xProd'),
+                ncm: getTextNS(prod, ns, 'NCM'),
+                cfop: getTextNS(prod, ns, 'CFOP'),
+                quantidadeEstatistica: getTextNS(prod, ns, 'qCom'),
+                unidadeEstatistica: getTextNS(prod, ns, 'uCom'),
+                pesoLiquido: parseFloat(getTextNS(prod, ns, 'nCM')) || 0,
+                condicaoVenda: 'CIF',
+                valcv: 0,
+                valE: 0,
+                lpcos: [],
+                empacotamentos: Array(4).fill(''),
+                ccpt_ccrom: '',
+                descricaoComplementar: '',
+                comissaoAvaliaria: 0,
+                lfco: '',
+                usuarioAvaliario: ''
+            };
+        });
+
+        refreshDataTable();
+    }
+
+    function montarEndereco(dest, ns) {
+        return [
+            getTextNS(dest, ns, 'xLgr'),
+            getTextNS(dest, ns, 'nro'),
+            getTextNS(dest, ns, 'xCpl'),
+            getTextNS(dest, ns, 'xBairro'),
+            getTextNS(dest, ns, 'xMun'),
+            getTextNS(dest, ns, 'UF')
+        ].filter(Boolean).join(', ');
+    }
+
+    function getTextNS(parent, ns, tagName) {
+        const element = parent?.getElementsByTagNameNS(ns, tagName)[0];
+        return element?.textContent?.trim() || '';
+    }
+
+    function refreshDataTable() {
+        dataTable.clear().rows.add(nfeData).draw();
+    }
+
+    // Abrir modal de edição
+    $('#notasFiscaisTable').on('click', '.btn-editar', function() {
+        currentIndex = $(this).data('index');
+        const item = nfeData[currentIndex];
+        
+        // Preencher campos do modal
+        $('#itemCodigo').val(item.codigo);
+        $('#itemDescricao').val(item.descricao);
+        $('#itemNCM').val(item.ncm);
+        $('#itemCFOP').val(item.cfop);
+        $('#quantidadeEstatistica').val(item.quantidadeEstatistica);
+        $('#unidadeEstatistica').val(item.unidadeEstatistica);
+        $('#pesoLiquido').val(item.pesoLiquido);
+        $('#condicaoVenda').val(item.condicaoVenda);
+        $('#valcv').val(item.valcv);
+        $('#valE').val(item.valE);
+        $('#importadorNome').val(item.importador.nome);
+        $('#importadorPais').val(item.importador.pais);
+        $('#importadorEndereco').val(item.importador.endereco);
+        $('#ccpt_ccrom').val(item.ccpt_ccrom);
+        $('#descricaoComplementar').val(item.descricaoComplementar);
+        $('#comissaoAvaliaria').val(item.comissaoAvaliaria);
+        $('#lfco').val(item.lfco);
+        $('#usuarioAvaliario').val(item.usuarioAvaliario);
+
+        // Preencher LPCOs
+        $('.lpcos-list').html(item.lpcos.map(lpco => `
+            <div class="lpco-item">
+                ${lpco}
+                <button type="button" class="btn-close" onclick="removerLPCO('${lpco}')"></button>
+            </div>
+        `).join(''));
+
+        // Preencher empacotamentos
+        item.empacotamentos.forEach((emp, idx) => {
+            $(`#empacotamento${idx + 1}`).val(emp);
+        });
+
+        $('#itemDetailsModal').modal('show');
+    });
+
+    // Salvar alterações
+    $('#salvarAlteracoes').on('click', function() {
+        if (currentIndex > -1) {
+            nfeData[currentIndex] = {
+                ...nfeData[currentIndex],
+                codigo: $('#itemCodigo').val(),
+                descricao: $('#itemDescricao').val(),
+                ncm: $('#itemNCM').val(),
+                cfop: $('#itemCFOP').val(),
+                quantidadeEstatistica: $('#quantidadeEstatistica').val(),
+                unidadeEstatistica: $('#unidadeEstatistica').val(),
+                pesoLiquido: parseFloat($('#pesoLiquido').val()) || 0,
+                condicaoVenda: $('#condicaoVenda').val(),
+                valcv: parseFloat($('#valcv').val()) || 0,
+                valE: parseFloat($('#valE').val()) || 0,
+                importador: {
+                    ...nfeData[currentIndex].importador,
+                    nome: $('#importadorNome').val(),
+                    pais: $('#importadorPais').val(),
+                    endereco: $('#importadorEndereco').val()
+                },
+                empacotamentos: Array.from($('.empacotamento')).map(input => input.value),
+                ccpt_ccrom: $('#ccpt_ccrom').val(),
+                descricaoComplementar: $('#descricaoComplementar').val(),
+                comissaoAvaliaria: parseFloat($('#comissaoAvaliaria').val()),
+                lfco: $('#lfco').val(),
+                usuarioAvaliario: $('#usuarioAvaliario').val()
+            };
+            
+            refreshDataTable();
+            $('#itemDetailsModal').modal('hide');
+        }
+    });
+
+    // Funções LPCO
+    window.adicionarLPCO = function() {
+        const novoLpco = $('#novoLpco').val();
+        if (novoLpco && !nfeData[currentIndex].lpcos.includes(novoLpco)) {
+            nfeData[currentIndex].lpcos.push(novoLpco);
+            $('.lpcos-list').append(`
+                <div class="lpco-item">
+                    ${novoLpco}
+                    <button type="button" class="btn-close" onclick="removerLPCO('${novoLpco}')"></button>
+                </div>
+            `);
+            $('#novoLpco').val('');
+        }
+    };
+
+    window.removerLPCO = function(lpco) {
+        nfeData[currentIndex].lpcos = nfeData[currentIndex].lpcos.filter(l => l !== lpco);
+        $(`button:contains('${lpco}')`).closest('.lpco-item').remove();
+    };
+
+    // Excluir item
+    $('#notasFiscaisTable').on('click', '.btn-excluir', function() {
+        const index = $(this).data('index');
+        nfeData = nfeData.filter((_, i) => i !== index);
+        refreshDataTable();
+    });
+});
    
 </script>
