@@ -47,24 +47,6 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
     text-align: center; /* Centraliza o conteúdo */
 }
 
-.modal-xl {
-    max-width: 1200px;
-}
-.card {
-    margin-bottom: 1rem;
-    border: 1px solid #dee2e6;
-}
-.card-header {
-    background-color: #f8f9fa;
-    font-weight: bold;
-}
-.input-group {
-    margin-bottom: 0.5rem;
-}
-.badge {
-    margin-right: 0.5rem;
-}
-
 </style>
 
 
@@ -127,8 +109,8 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
                     <br>
 
                     <div class="form-group d-flex grid gap-2">
-                    <label for="export-cons">Exportação Consosorciada: </label> 
-                    <input type="checkbox" id="export-cons" name="export-cons" value="Exportação Consosorciada">
+                        <label for="export-cons">Exportação Consosorciada: </label> 
+                        <input type="checkbox" id="export-cons" name="export-cons" value="Exportação Consosorciada">
                     </div>
 
                     <br>
@@ -314,362 +296,154 @@ button[type="button"], button.toggle-details { -webkit-appearance: none; -moz-ap
     </div>
 </div>
 
-<div class="modal fade" id="itemDetailsModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Edição Completa do Item de DU-E</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="itemForm">
-                    <!-- Seção 1: Dados Básicos -->
-                    <div class="card mb-4">
-                        <div class="card-header">Detalhes do Item</div>
-                        <div class="card-body row g-3">
-                            <div class="col-md-4">
-                                <label>Código do Item</label>
-                                <input type="text" id="itemCodigo" class="form-control">
-                            </div>
-                            <div class="col-md-8">
-                                <label>Descrição Completa</label>
-                                <textarea id="itemDescricao" class="form-control" rows="2"></textarea>
-                            </div>
-                            
-                            <div class="col-md-3">
-                                <label>NCM</label>
-                                <input type="text" id="itemNCM" class="form-control">
-                            </div>
-                            <div class="col-md-3">
-                                <label>CFOP</label>
-                                <input type="text" id="itemCFOP" class="form-control">
-                            </div>
-                            <div class="col-md-4">
-                                <label>CCPT/CCROM</label>
-                                <select id="ccpt_ccrom" class="form-select">
-                                    <option value="">Selecione...</option>
-                                    <option value="CCPT-01">CCPT 01 - Operação Comercial</option>
-                                    <option value="CCPT-02">CCPT 02 - Amostra Grátis</option>
-                                    <option value="CCROM-A">CCROM A - Material de Propaganda</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label>Quantidade Estatística</label>
-                                <input type="text" id="quantidadeEstatistica" class="form-control">
-                            </div>
-                        </div>
-                    </div>
+<div class="modal fade" id="itemDetailsModal" tabindex="-1" aria-labelledby="itemDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg"> <!-- modal-lg para um modal maior -->
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="itemDetailsModalLabel">Detalhes do Item</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- A tabela de detalhes do item será inserida aqui via JavaScript -->
+       
 
-                    <!-- Seção 2: Dados Específicos das Imagens -->
-                    <div class="card mb-4">
-                        <div class="card-header">Dados Avaliários</div>
-                        <div class="card-body row g-3">
-                            <div class="col-md-3">
-                                <label>Comissão Avaliária (%)</label>
-                                <input type="number" id="comissaoAvaliaria" class="form-control" step="0.01">
-                            </div>
-                            <div class="col-md-3">
-                                <label>LFCO</label>
-                                <input type="text" id="lfco" class="form-control">
-                            </div>
-                            <div class="col-md-3">
-                                <label>Usador Avaliário</label>
-                                <input type="text" id="usuarioAvaliario" class="form-control">
-                            </div>
-                            <div class="col-md-3">
-                                <label>Descrição Complementar</label>
-                                <textarea id="descricaoComplementar" class="form-control"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Seção 3: Valores Comerciais -->
-                    <div class="card mb-4">
-                        <div class="card-header">Valores e Medidas</div>
-                        <div class="card-body row g-3">
-                            <div class="col-md-4">
-                                <label>ValCV (MGA)</label>
-                                <input type="number" id="valcv" class="form-control">
-                            </div>
-                            <div class="col-md-4">
-                                <label>VAL.E (MGA)</label>
-                                <input type="number" id="valE" class="form-control">
-                            </div>
-                            <div class="col-md-4">
-                                <label>Peso Líquido Total (KG)</label>
-                                <input type="number" id="pesoLiquido" class="form-control">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Seção 4: LPCOs -->
-                    <div class="card mb-4">
-                        <div class="card-header">Licenças e Permissões</div>
-                        <div class="card-body">
-                            <div class="lpcos-list mb-3"></div>
-                            <div class="input-group">
-                                <input type="text" id="novoLpco" class="form-control" placeholder="Número do LPCO">
-                                <button class="btn btn-primary" type="button" onclick="adicionarLPCO()">
-                                    <i class="fas fa-plus"></i> Adicionar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Seção 5: Empacotamentos -->
-                    <div class="card mb-4">
-                        <div class="card-header">Empacotamentos</div>
-                        <div class="card-body row g-3">
-                            <div class="col-md-3">
-                                <label>Primeiro Empacotamento</label>
-                                <select class="form-select" id="empacotamento1">
-                                    <option value="">Selecione...</option>
-                                    <option value="Container">Container</option>
-                                    <option value="Palete">Palete</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label>Segundo Empacotamento</label>
-                                <select class="form-select" id="empacotamento2">
-                                    <option value="">Selecione...</option>
-                                    <option value="Caixas">Caixas</option>
-                                    <option value="Sacos">Sacos</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="salvarAlteracoes">Salvar Alterações</button>
-            </div>
+        <div class="form-group">
+            <label for="descricao-${itemId}">Descrição Detalhada do Item:</label>
+            <textarea id="descricao-${itemId}" name="descricao-${itemId}" class="form-control" rows="5"></textarea>
         </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-primary" id="saveItemDetails">Salvar</button>
+      </div>
     </div>
+  </div>
 </div>
 
-<script src="./due/js/add-lpcos.js"></script>
-<script src="./due/js/due-generate-xml.js"></script>
+<scrit src="./due/js/add-lpcos.js"></script>
+<scrippt src="./due/js/due-generate-xml.js"></script>
 <script type="module" src="./due/js/campos-itens-nfe.mjs"></script>
 
-<script def>
+//<script type="module"> // Ou apenas <script>
 
-$(document).ready(function() {
-    let nfeData = [];
-    let currentIndex = -1;
+    console.log("SCRIPT COM PARSER INICIADO");
 
-    // Configuração do DataTable
-    const dataTable = $('#notasFiscaisTable').DataTable({
-        language: {
-            url: "https://cdn.datatables.net/plug-ins/2.0.3/i18n/pt-BR.json"
-        },
-        columns: [
-            { data: 'chave', title: 'Chave de Acesso' },
-            { data: 'importador.nome', title: 'Importador' },
-            { data: 'importador.pais', title: 'País' },
-            {
-                data: null,
-                title: 'Ações',
-                orderable: false,
-                searchable: false,
-                render: function(data, type, row) {
-                    return `
-                        <button type="button" class="btn btn-sm btn-primary btn-editar me-2" 
-                            data-index="${row.index}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-danger btn-excluir" 
-                            data-index="${row.index}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    `;
-                }
+    // --- Funções Auxiliares ---
+    const getSafe = (obj, path, defaultValue = '') => { try { const value = path.split('.').reduce((o, k) => (o || {})[k], obj); return value ?? defaultValue; } catch { return defaultValue; } };
+    const getXmlValue = (el, tag) => el?.getElementsByTagName(tag)?.[0]?.textContent?.trim() ?? '';
+    const getXmlAttr = (el, attr) => el?.getAttribute(attr) ?? '';
+
+    // --- Variáveis Globais ---
+    let processedNFData = []; // Guarda NFs processadas {nf: {...}, items: [...]}
+    let itemDetailsModalInstance = null;
+
+    // --- Parser XML (Integrado) ---
+    const parseNFeXML = (xmlString, fileName = 'arquivo') => {
+        console.log(`[Parse XML] ${fileName}`);
+        try {
+            const parser = new DOMParser(); const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+            const parserError = xmlDoc.getElementsByTagName("parsererror");
+            if (parserError.length > 0) { console.error(`Erro PARSE XML ${fileName}:`, parserError[0].textContent); return null; }
+            const infNFe = xmlDoc.getElementsByTagName("infNFe")[0]; if (!infNFe) { console.error(`Tag <infNFe> não encontrada em ${fileName}`); return null; }
+            const chave = getXmlAttr(infNFe, 'Id').replace('NFe', ''); const emit = infNFe.getElementsByTagName("emit")[0]; const dest = infNFe.getElementsByTagName("dest")[0]; const enderDest = dest?.getElementsByTagName("enderDest")[0]; const exporta = infNFe.getElementsByTagName("exporta")[0]; const detElements = infNFe.getElementsByTagName("det");
+            const nfeData = {
+                chaveAcesso: chave, emitente: { cnpj: getXmlValue(emit, "CNPJ"), nome: getXmlValue(emit, "xNome") }, destinatario: { nome: getXmlValue(dest, "xNome"), idEstrangeiro: getXmlValue(dest, "idEstrangeiro"), endereco: { logradouro: getXmlValue(enderDest, "xLgr"), numero: getXmlValue(enderDest, "nro"), bairro: getXmlValue(enderDest, "xBairro"), municipio: getXmlValue(enderDest, "xMun"), uf: getXmlValue(enderDest, "UF"), paisNome: getXmlValue(enderDest, "xPais"), paisCodigo: getXmlValue(enderDest, "cPais") } }, exportacao: { ufSaidaPais: getXmlValue(exporta, "UFSaidaPais"), localExportacao: getXmlValue(exporta, "xLocExporta") }, items: []
+            };
+            for (let i = 0; i < detElements.length; i++) {
+                const det = detElements[i]; const prod = det.getElementsByTagName("prod")[0]; if (!prod) continue;
+                const uTrib = getXmlValue(prod, "uTrib"); const qTrib = getXmlValue(prod, "qTrib"); const vProd = getXmlValue(prod, "vProd");
+                nfeData.items.push({
+                    nItem: getXmlAttr(det, 'nItem'), cProd: getXmlValue(prod, "cProd"), xProd: getXmlValue(prod, "xProd"), ncm: getXmlValue(prod, "NCM"), cfop: getXmlValue(prod, "CFOP"), uCom: getXmlValue(prod, "uCom"), qCom: getXmlValue(prod, "qCom"), vUnCom: getXmlValue(prod, "vUnCom"), vProd: vProd, uTrib: uTrib, qTrib: qTrib, infAdProd: getXmlValue(det, "infAdProd"),
+                    // Campos editáveis
+                    descricaoNcm: "", atributosNcm: "", unidadeEstatistica: uTrib, quantidadeEstatistica: qTrib, pesoLiquidoItem: (uTrib.toUpperCase() === 'KG') ? qTrib : "", condicaoVenda: "", vmcv: "", vmle: vProd, paisDestino: nfeData.destinatario.endereco.paisNome,
+                    enquadramento1: "", enquadramento2: "", enquadramento3: "", enquadramento4: "", lpcos: [], nfsRefEletronicas: [], nfsRefFormulario: [], nfsComplementares: [], ccptCcrom: ""
+                });
             }
-        ]
-    });
-
-    // Processar XML
-    $('#xml-files').on('change', function(e) {
-        const files = e.target.files;
-        Array.from(files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const xml = new DOMParser().parseFromString(e.target.result, "text/xml");
-                processarNFe(xml);
-            };
-            reader.readAsText(file);
-        });
-    });
-
-    function processarNFe(xml) {
-        const ns = 'http://www.portalfiscal.inf.br/nfe';
-        const infNFe = xml.getElementsByTagNameNS(ns, 'infNFe')[0];
-        const dest = xml.getElementsByTagNameNS(ns, 'dest')[0];
-        const ide = xml.getElementsByTagNameNS(ns, 'ide')[0];
-
-        // Processar dados gerais
-        $('#text-cnpj-cpf-select').val(
-            getTextNS(dest, ns, 'CNPJ') || getTextNS(dest, ns, 'CPF')
-        );
-        $('#nomeCliente').val(getTextNS(dest, ns, 'xNome'));
-        $('#ruc').val(infNFe.getAttribute('Id').replace('NFe', ''));
-
-        // Processar itens
-        const itens = xml.getElementsByTagNameNS(ns, 'det');
-        nfeData = Array.from(itens).map((item, index) => {
-            const prod = item.getElementsByTagNameNS(ns, 'prod')[0];
-            return {
-                index: index,
-                chave: infNFe.getAttribute('Id'),
-                importador: {
-                    nome: getTextNS(dest, ns, 'xNome'),
-                    pais: getTextNS(dest, ns, 'xPais'),
-                    endereco: montarEndereco(dest, ns)
-                },
-                codigo: getTextNS(prod, ns, 'cProd'),
-                descricao: getTextNS(prod, ns, 'xProd'),
-                ncm: getTextNS(prod, ns, 'NCM'),
-                cfop: getTextNS(prod, ns, 'CFOP'),
-                quantidadeEstatistica: getTextNS(prod, ns, 'qCom'),
-                unidadeEstatistica: getTextNS(prod, ns, 'uCom'),
-                pesoLiquido: parseFloat(getTextNS(prod, ns, 'nCM')) || 0,
-                condicaoVenda: 'CIF',
-                valcv: 0,
-                valE: 0,
-                lpcos: [],
-                empacotamentos: Array(4).fill(''),
-                ccpt_ccrom: '',
-                descricaoComplementar: '',
-                comissaoAvaliaria: 0,
-                lfco: '',
-                usuarioAvaliario: ''
-            };
-        });
-
-        refreshDataTable();
-    }
-
-    function montarEndereco(dest, ns) {
-        return [
-            getTextNS(dest, ns, 'xLgr'),
-            getTextNS(dest, ns, 'nro'),
-            getTextNS(dest, ns, 'xCpl'),
-            getTextNS(dest, ns, 'xBairro'),
-            getTextNS(dest, ns, 'xMun'),
-            getTextNS(dest, ns, 'UF')
-        ].filter(Boolean).join(', ');
-    }
-
-    function getTextNS(parent, ns, tagName) {
-        const element = parent?.getElementsByTagNameNS(ns, tagName)[0];
-        return element?.textContent?.trim() || '';
-    }
-
-    function refreshDataTable() {
-        dataTable.clear().rows.add(nfeData).draw();
-    }
-
-    // Abrir modal de edição
-    $('#notasFiscaisTable').on('click', '.btn-editar', function() {
-        currentIndex = $(this).data('index');
-        const item = nfeData[currentIndex];
-        
-        // Preencher campos do modal
-        $('#itemCodigo').val(item.codigo);
-        $('#itemDescricao').val(item.descricao);
-        $('#itemNCM').val(item.ncm);
-        $('#itemCFOP').val(item.cfop);
-        $('#quantidadeEstatistica').val(item.quantidadeEstatistica);
-        $('#unidadeEstatistica').val(item.unidadeEstatistica);
-        $('#pesoLiquido').val(item.pesoLiquido);
-        $('#condicaoVenda').val(item.condicaoVenda);
-        $('#valcv').val(item.valcv);
-        $('#valE').val(item.valE);
-        $('#importadorNome').val(item.importador.nome);
-        $('#importadorPais').val(item.importador.pais);
-        $('#importadorEndereco').val(item.importador.endereco);
-        $('#ccpt_ccrom').val(item.ccpt_ccrom);
-        $('#descricaoComplementar').val(item.descricaoComplementar);
-        $('#comissaoAvaliaria').val(item.comissaoAvaliaria);
-        $('#lfco').val(item.lfco);
-        $('#usuarioAvaliario').val(item.usuarioAvaliario);
-
-        // Preencher LPCOs
-        $('.lpcos-list').html(item.lpcos.map(lpco => `
-            <div class="lpco-item">
-                ${lpco}
-                <button type="button" class="btn-close" onclick="removerLPCO('${lpco}')"></button>
-            </div>
-        `).join(''));
-
-        // Preencher empacotamentos
-        item.empacotamentos.forEach((emp, idx) => {
-            $(`#empacotamento${idx + 1}`).val(emp);
-        });
-
-        $('#itemDetailsModal').modal('show');
-    });
-
-    // Salvar alterações
-    $('#salvarAlteracoes').on('click', function() {
-        if (currentIndex > -1) {
-            nfeData[currentIndex] = {
-                ...nfeData[currentIndex],
-                codigo: $('#itemCodigo').val(),
-                descricao: $('#itemDescricao').val(),
-                ncm: $('#itemNCM').val(),
-                cfop: $('#itemCFOP').val(),
-                quantidadeEstatistica: $('#quantidadeEstatistica').val(),
-                unidadeEstatistica: $('#unidadeEstatistica').val(),
-                pesoLiquido: parseFloat($('#pesoLiquido').val()) || 0,
-                condicaoVenda: $('#condicaoVenda').val(),
-                valcv: parseFloat($('#valcv').val()) || 0,
-                valE: parseFloat($('#valE').val()) || 0,
-                importador: {
-                    ...nfeData[currentIndex].importador,
-                    nome: $('#importadorNome').val(),
-                    pais: $('#importadorPais').val(),
-                    endereco: $('#importadorEndereco').val()
-                },
-                empacotamentos: Array.from($('.empacotamento')).map(input => input.value),
-                ccpt_ccrom: $('#ccpt_ccrom').val(),
-                descricaoComplementar: $('#descricaoComplementar').val(),
-                comissaoAvaliaria: parseFloat($('#comissaoAvaliaria').val()),
-                lfco: $('#lfco').val(),
-                usuarioAvaliario: $('#usuarioAvaliario').val()
-            };
-            
-            refreshDataTable();
-            $('#itemDetailsModal').modal('hide');
-        }
-    });
-
-    // Funções LPCO
-    window.adicionarLPCO = function() {
-        const novoLpco = $('#novoLpco').val();
-        if (novoLpco && !nfeData[currentIndex].lpcos.includes(novoLpco)) {
-            nfeData[currentIndex].lpcos.push(novoLpco);
-            $('.lpcos-list').append(`
-                <div class="lpco-item">
-                    ${novoLpco}
-                    <button type="button" class="btn-close" onclick="removerLPCO('${novoLpco}')"></button>
-                </div>
-            `);
-            $('#novoLpco').val('');
-        }
+            console.log(`[Parse XML] ${fileName} OK - ${nfeData.items.length} itens.`);
+            return nfeData;
+        } catch (error) { console.error(`Erro GERAL Parse XML ${fileName}:`, error); return null; }
     };
 
-    window.removerLPCO = function(lpco) {
-        nfeData[currentIndex].lpcos = nfeData[currentIndex].lpcos.filter(l => l !== lpco);
-        $(`button:contains('${lpco}')`).closest('.lpco-item').remove();
-    };
+     // --- Função para Criar o Modal Detalhado ---
+    function createItemDetailsFields(itemData, nfData, nfIndex, itemIndex) {
+        const container = document.createElement('div'); container.classList.add('item-details-form-container');
+        const idPrefix = `modal-item-${nfIndex}-${itemIndex}-`; const val = (key, defaultValue = '') => getSafe(itemData, key, defaultValue);
+        // *** HTML Completo do Modal ***
+        container.innerHTML = `<h5>Item ${val('nItem', itemIndex + 1)} (NF: ...${getSafe(nfData, 'chaveAcesso', 'N/A').slice(-6)})</h5><div class="row g-3 mb-3"><div class="col-md-6"><label class="form-label">Exportador:</label><input type="text" class="form-control" value="${getSafe(nfData, 'emitente.nome', 'N/A')}" readonly></div><div class="col-md-6"><label for="${idPrefix}ncm" class="form-label">NCM:</label><input type="text" id="${idPrefix}ncm" name="ncm" class="form-control" value="${val('ncm')}" required></div><div class="col-md-6"><label for="${idPrefix}descricao_ncm" class="form-label">Descrição NCM:</label><input type="text" id="${idPrefix}descricao_ncm" name="descricao_ncm" class="form-control" value="${val('descricaoNcm')}" placeholder="Consulta externa"></div><div class="col-md-6"><label for="${idPrefix}atributos_ncm" class="form-label">Atributos NCM:</label><input type="text" id="${idPrefix}atributos_ncm" name="atributos_ncm" class="form-control" value="${val('atributosNcm')}" placeholder="Consulta/definição"></div></div><div class="mb-3"><label for="${idPrefix}descricao_mercadoria" class="form-label">Descrição Mercadoria (NF-e):</label><textarea id="${idPrefix}descricao_mercadoria" name="descricao_mercadoria" class="form-control" rows="3" required>${val('xProd')}</textarea></div><div class="mb-3"><label for="${idPrefix}descricao_complementar" class="form-label">Descrição Complementar (NF-e):</label><textarea id="${idPrefix}descricao_complementar" name="descricao_complementar" class="form-control" rows="3">${val('infAdProd')}</textarea></div><h5>Quantidades e Valores</h5><div class="row g-3 mb-3"><div class="col-md-4"><label for="${idPrefix}unidade_estatistica" class="form-label">Unid. Estatística:</label><input type="text" id="${idPrefix}unidade_estatistica" name="unidade_estatistica" class="form-control" value="${val('unidadeEstatistica', val('uTrib'))}" placeholder="Unid. NCM"></div><div class="col-md-4"><label for="${idPrefix}quantidade_estatistica" class="form-label">Qtd. Estatística:</label><input type="number" step="any" id="${idPrefix}quantidade_estatistica" name="quantidade_estatistica" class="form-control" value="${val('quantidadeEstatistica', val('qTrib'))}"></div><div class="col-md-4"><label for="${idPrefix}peso_liquido" class="form-label">Peso Líquido (KG):</label><input type="number" step="any" id="${idPrefix}peso_liquido" name="peso_liquido" class="form-control" value="${val('pesoLiquidoItem', (val('uTrib','').toUpperCase() === 'KG' ? val('qTrib') : ''))}" required></div><div class="col-md-4"><label for="${idPrefix}unidade_comercializada" class="form-label">Unid. Comercial.:</label><input type="text" id="${idPrefix}unidade_comercializada" name="unidade_comercializada" class="form-control" value="${val('uCom')}" required></div><div class="col-md-4"><label for="${idPrefix}quantidade_comercializada" class="form-label">Qtd. Comercial.:</label><input type="number" step="any" id="${idPrefix}quantidade_comercializada" name="quantidade_comercializada" class="form-control" value="${val('qCom')}" required></div><div class="col-md-4"><label for="${idPrefix}valor_unit_comercial" class="form-label">Vlr Unit. Com. (R$):</label><input type="number" step="any" id="${idPrefix}valor_unit_comercial" name="valor_unit_comercial" class="form-control" value="${val('vUnCom')}" required></div><div class="col-md-4"><label class="form-label">Vlr Total Item (R$):</label><input type="number" class="form-control" value="${val('vProd')}" readonly></div><div class="col-md-4"><label for="${idPrefix}vmle" class="form-label">VMLE (R$):</label><input type="number" step="any" id="${idPrefix}vmle" name="vmle" class="form-control" value="${val('vmle', val('vProd'))}"></div><div class="col-md-4"><label for="${idPrefix}vmcv" class="form-label">VMCV (Moeda Negoc.):</label><input type="number" step="any" id="${idPrefix}vmcv" name="vmcv" class="form-control" value="${val('vmcv')}"></div><div class="col-md-12"><label for="${idPrefix}condicao_venda" class="form-label">Condição Venda:</label><input type="text" id="${idPrefix}condicao_venda" name="condicao_venda" class="form-control" value="${val('condicaoVenda')}" placeholder="Ex: FOB, CIF..."></div></div><h5>Importador / Destino</h5><div class="row g-3 mb-3"><div class="col-md-6"><label class="form-label">Nome Importador:</label><input type="text" class="form-control" value="${getSafe(nfData, 'destinatario.nome', 'N/A')}" readonly></div><div class="col-md-6"><label class="form-label">País Importador:</label><input type="text" class="form-control" value="${getSafe(nfData, 'destinatario.endereco.paisNome', 'N/A')} (${getSafe(nfData, 'destinatario.endereco.paisCodigo', 'N/A')})" readonly></div><div class="col-12"><label class="form-label">Endereço Importador:</label><input type="text" class="form-control" value="${[getSafe(nfData, 'destinatario.endereco.logradouro'), getSafe(nfData, 'destinatario.endereco.numero'), getSafe(nfData, 'destinatario.endereco.bairro'), getSafe(nfData, 'destinatario.endereco.municipio'), getSafe(nfData, 'destinatario.endereco.uf')].filter(Boolean).join(', ') || '(Não encontrado)'}" readonly></div><div class="col-md-6"><label for="${idPrefix}pais_destino" class="form-label">País Destino Final:</label><input type="text" id="${idPrefix}pais_destino" name="pais_destino" class="form-control" value="${val('paisDestino', getSafe(nfData, 'destinatario.endereco.paisNome'))}"></div></div><h5>Enquadramentos</h5><div class="row g-3 mb-3">${[1, 2, 3, 4].map(num => `<div class="col-md-6"><label for="${idPrefix}enquadramento${num}" class="form-label">${num}º Enq.:</label><select id="${idPrefix}enquadramento${num}" name="enquadramento${num}" class="form-select"><option value="">Selecione...</option><option value="80101" ${val(`enquadramento${num}`) === '80101' ? 'selected' : ''}>80101</option><option value="80102" ${val(`enquadramento${num}`) === '80102' ? 'selected' : ''}>80102</option><option value="99999" ${val(`enquadramento${num}`) === '99999' ? 'selected' : ''}>99999</option></select></div>`).join('')}</div><h5>LPCO</h5><div class="lpco-container mb-3" id="${idPrefix}lpco-section"><div class="input-group"><select id="${idPrefix}lpco-select" class="form-select"><option value="">Selecione LPCO...</option><option value="LPCO-001">LPCO-001</option><option value="BR24/1234567">BR24/1234567</option></select><button type="button" class="btn btn-success add-lpco-btn">Add</button></div><div class="mt-2"><label class="form-label">Adicionados:</label><div class="border p-2 rounded bg-light lpco-list min-h-40px">${val('lpcos', []).map(lpco => `<span class="badge bg-secondary me-1 mb-1 lpco-item" data-value="${lpco}">${lpco} <button type="button" class="btn-close btn-close-white btn-sm remove-lpco"></button></span>`).join('')}</div><input type="hidden" class="lpcos-hidden" value="${val('lpcos', []).join(',')}"></div></div><h5>Tratamento Tributário / Refs</h5><div class="mb-3"><div class="border p-3 rounded mb-2" id="${idPrefix}nfe-ref-section"><label class="form-label fw-bold">NF-e Ref.:</label><div class="input-group mb-2"><input type="text" class="form-control nfe-ref-input" placeholder="Chave (44)"><button class="btn btn-outline-secondary add-nfe-ref-btn" type="button">Add</button></div><ul class="list-group nfe-ref-list">${val('nfsRefEletronicas', []).map(k => `<li class="list-group-item py-1 d-flex justify-content-between" data-value="${k}">${k}<button type="button" class="btn-close remove-ref"></button></li>`).join('')}</ul><input type="hidden" class="nfsRefEletronicas-hidden" value="${val('nfsRefEletronicas', []).join(',')}"></div><div class="border p-3 rounded mb-2" id="${idPrefix}nf_form-ref-section"><label class="form-label fw-bold">NF Form. Ref.:</label><div class="input-group mb-2"><input type="text" class="form-control nf_form-ref-input" placeholder="Detalhes"><button class="btn btn-outline-secondary add-nf_form-ref-btn" type="button">Add</button></div><ul class="list-group nf_form-ref-list">${val('nfsRefFormulario', []).map(d => `<li class="list-group-item py-1 d-flex justify-content-between" data-value="${d}">${d}<button type="button" class="btn-close remove-ref"></button></li>`).join('')}</ul><input type="hidden" class="nfsRefFormulario-hidden" value="${val('nfsRefFormulario', []).join(',')}"></div><div class="border p-3 rounded mb-2" id="${idPrefix}nfc-ref-section"><label class="form-label fw-bold">NF Comp. Ref.:</label><div class="input-group mb-2"><input type="text" class="form-control nfc-ref-input" placeholder="Chave (44)"><button class="btn btn-outline-secondary add-nfc-ref-btn" type="button">Add</button></div><ul class="list-group nfc-ref-list">${val('nfsComplementares', []).map(k => `<li class="list-group-item py-1 d-flex justify-content-between" data-value="${k}">${k}<button type="button" class="btn-close remove-ref"></button></li>`).join('')}</ul><input type="hidden" class="nfsComplementares-hidden" value="${val('nfsComplementares', []).join(',')}"></div></div><div class="mb-3"><h6>CCPT/CCROM</h6><div class="form-check"><input class="form-check-input" type="radio" name="${idPrefix}ccpt_ccrom" id="${idPrefix}ccpt_ccrom_none" value="" ${val('ccptCcrom') === '' ? 'checked' : ''}><label class="form-check-label" for="${idPrefix}ccpt_ccrom_none">N/A</label></div><div class="form-check"><input class="form-check-input" type="radio" name="${idPrefix}ccpt_ccrom" id="${idPrefix}ccpt" value="CCPT" ${val('ccptCcrom') === 'CCPT' ? 'checked' : ''}><label class="form-check-label" for="${idPrefix}ccpt">CCPT</label></div><div class="form-check"><input class="form-check-input" type="radio" name="${idPrefix}ccpt_ccrom" id="${idPrefix}ccrom" value="CCROM" ${val('ccptCcrom') === 'CCROM' ? 'checked' : ''}><label class="form-check-label" for="${idPrefix}ccrom">CCROM</label></div></div>`;
+        // --- Listeners Dinâmicos ---
+        container.addEventListener('click', (e) => { if (e.target.classList.contains('remove-lpco')) { const b = e.target.closest('.lpco-item'); const h = b?.closest('.lpco-container')?.querySelector('.lpcos-hidden'); if (b && h) { const v = b.dataset.value; h.value = (h.value || '').split(',').filter(i => i && i !== v).join(','); b.remove(); } return; } if (e.target.classList.contains('remove-ref')) { const li = e.target.closest('li[data-value]'); const h = li?.closest('.border')?.querySelector('input[type="hidden"]'); if (li && h) { const v = li.dataset.value; h.value = (h.value || '').split(',').filter(i => i && i !== v).join(','); li.remove(); } return; } if (e.target.classList.contains('add-lpco-btn')) { const s = e.target.closest('.lpco-container'); const sel = s?.querySelector('select'); const l = s?.querySelector('.lpco-list'); const h = s?.querySelector('.lpcos-hidden'); if (sel && l && h) { const v = sel.value; const t = sel.options[sel.selectedIndex]?.text || v; if (v && !(h.value || '').split(',').includes(v)) { l.insertAdjacentHTML('beforeend', `<span class="badge bg-secondary me-1 mb-1 lpco-item" data-value="${v}">${t} <button type="button" class="btn-close btn-close-white btn-sm remove-lpco"></button></span>`); h.value = [...(h.value || '').split(','), v].filter(Boolean).join(','); sel.value = ''; } } return; } if (e.target.classList.contains('add-nfe-ref-btn')) { const s = e.target.closest('.border'); const i = s?.querySelector('.nfe-ref-input'); const u = s?.querySelector('.nfe-ref-list'); const h = s?.querySelector('.nfsRefEletronicas-hidden'); if (i && u && h) { const k = i.value.trim().replace(/\D/g, ''); if (k.length === 44 && !(h.value || '').split(',').includes(k)) { u.insertAdjacentHTML('beforeend', `<li class="list-group-item py-1 d-flex justify-content-between" data-value="${k}">${k}<button type="button" class="btn-close remove-ref"></button></li>`); h.value = [...(h.value || '').split(','), k].filter(Boolean).join(','); i.value = ''; } else if (k.length !== 44) alert('Chave NF-e inválida.'); else alert('NF-e já adicionada.'); } return; } if (e.target.classList.contains('add-nf_form-ref-btn')) { const s = e.target.closest('.border'); const i = s?.querySelector('.nf_form-ref-input'); const u = s?.querySelector('.nf_form-ref-list'); const h = s?.querySelector('.nfsRefFormulario-hidden'); if (i && u && h) { const d = i.value.trim(); if (d && !(h.value || '').split(',').includes(d)) { u.insertAdjacentHTML('beforeend', `<li class="list-group-item py-1 d-flex justify-content-between" data-value="${d}">${d}<button type="button" class="btn-close remove-ref"></button></li>`); h.value = [...(h.value || '').split(','), d].filter(Boolean).join(','); i.value = ''; } else if (!d) alert('Insira detalhes.'); else alert('Ref. já adicionada.'); } return; } if (e.target.classList.contains('add-nfc-ref-btn')) { const s = e.target.closest('.border'); const i = s?.querySelector('.nfc-ref-input'); const u = s?.querySelector('.nfc-ref-list'); const h = s?.querySelector('.nfsComplementares-hidden'); if (i && u && h) { const k = i.value.trim().replace(/\D/g, ''); if (k.length === 44 && !(h.value || '').split(',').includes(k)) { u.insertAdjacentHTML('beforeend', `<li class="list-group-item py-1 d-flex justify-content-between" data-value="${k}">${k}<button type="button" class="btn-close remove-ref"></button></li>`); h.value = [...(h.value || '').split(','), k].filter(Boolean).join(','); i.value = ''; } else if (k.length !== 44) alert('Chave NF Comp. inválida.'); else alert('NF Comp. já adicionada.'); } return; } });
+        return container;
+    }
 
-    // Excluir item
-    $('#notasFiscaisTable').on('click', '.btn-excluir', function() {
-        const index = $(this).data('index');
-        nfeData = nfeData.filter((_, i) => i !== index);
-        refreshDataTable();
-    });
-});
-   
-</script>
+    // --- Renderização da Tabela ---
+    function renderNotasFiscaisTable() {
+        console.log("[Render Tabela]"); const tbody = document.querySelector('#notasFiscaisTable tbody'); if (!tbody) { console.error("tbody?"); return; } tbody.innerHTML = ''; let hasItems = false;
+        if (processedNFData.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="text-center">Nenhuma NF-e carregada.</td></tr>'; return; }
+        processedNFData.forEach((nfEntry, nfIndex) => {
+            const nf = nfEntry.nf; const items = nfEntry.items; const chaveNFe = getSafe(nf, 'chaveAcesso', 'N/A'); const nomeDest = getSafe(nf, 'destinatario.nome', 'N/A'); const paisDest = getSafe(nf, 'destinatario.endereco.paisNome', 'N/A');
+            if (!items || items.length === 0) { tbody.insertAdjacentHTML('beforeend', `<tr><td colspan="4" class="text-muted fst-italic">NF ${chaveNFe} s/ itens.</td></tr>`); return; }
+            items.forEach((item, itemIndex) => { hasItems = true; const row = document.createElement('tr'); row.classList.add('item-row'); row.innerHTML = `<td>${chaveNFe}</td><td>${nomeDest}</td><td>${paisDest}</td><td class="text-center"><button type="button" class="btn btn-info btn-sm toggle-details" title="Detalhes Item ${getSafe(item, 'nItem', itemIndex + 1)}" data-nf-index="${nfIndex}" data-item-index="${itemIndex}">+</button></td>`; tbody.appendChild(row); });
+        });
+        if (!hasItems) { tbody.innerHTML = '<tr><td colspan="4" class="text-center">Nenhum item encontrado.</td></tr>'; } console.log("[Render Tabela] FIM.");
+    }
+
+    // --- Preencher Aba 1 ---
+    const populateMainForm = (nfData) => { const elCNPJ = document.getElementById('text-cnpj-cpf-select'); const elNome = document.getElementById('nomeCliente'); if (elCNPJ) elCNPJ.value = getSafe(nfData, 'emitente.cnpj'); if (elNome) elNome.value = getSafe(nfData, 'emitente.nome'); console.log(`[Aba 1] Emitente.`); };
+
+    // --- Código Principal ---
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("DOM Carregado.");
+        const inputXML = document.getElementById('xml-files'); const uploadStatus = document.getElementById('uploadStatus'); const spinner = document.getElementById('spinner'); const notasTable = document.querySelector('#notasFiscaisTable'); const modalElement = document.getElementById('itemDetailsModal'); const saveButtonModal = document.getElementById('saveItemDetails');
+        if (!inputXML || !uploadStatus || !spinner || !notasTable || !modalElement || !saveButtonModal) { console.error("ERRO Interface!"); alert("Erro Interface."); return; }
+
+        try { itemDetailsModalInstance = new bootstrap.Modal(modalElement); modalElement.addEventListener('hidden.bs.modal', () => { const sb = document.getElementById('saveItemDetails'); if (sb) { delete sb.dataset.nfIndex; delete sb.dataset.itemIndex; } const mb = modalElement.querySelector('.modal-body'); if (mb) mb.innerHTML = ''; }); console.log("Modal OK."); }
+        catch (e) { console.error("Falha Modal:", e); }
+
+        renderNotasFiscaisTable(); // Tabela vazia
+
+        // Input XML Listener (COM PARSER INTEGRADO)
+        inputXML.addEventListener('change', async (event) => {
+            console.log("[Input XML] 'change'"); const files = event.target.files; if (!files || files.length === 0) { uploadStatus.textContent = 'Nenhum.'; processedNFData = []; renderNotasFiscaisTable(); populateMainForm(null); return; }
+            uploadStatus.textContent = `Processando ${files.length}...`; spinner.style.display = 'inline-block'; inputXML.disabled = true; processedNFData = []; let promises = [];
+            for (const file of files) { if (file.name.toLowerCase().endsWith('.xml')) { promises.push( file.text().then(xml => { const data = parseNFeXML(xml, file.name); if (data) { processedNFData.push({ nf: data, items: data.items }); } }).catch(err => console.error(`Erro LER ${file.name}:`, err)) ); } else { console.warn(`Ignorado: ${file.name}`); } }
+            try { await Promise.all(promises); } catch (err) { console.error("Erro GERAL:", err); }
+            finally { spinner.style.display = 'none'; inputXML.disabled = false; event.target.value = null; const totalItems = processedNFData.reduce((s, e) => s + e.items.length, 0); uploadStatus.textContent = `OK: ${totalItems} itens em ${processedNFData.length} NF(s).`; populateMainForm(processedNFData[0]?.nf); renderNotasFiscaisTable(); console.log("[Input XML] FIM."); }
+        });
+
+        // Abrir Modal Listener
+        notasTable.addEventListener('click', (e) => {
+            const btn = e.target.closest('button.toggle-details'); if (!btn) return;
+            const nfIndex = parseInt(btn.dataset.nfIndex, 10); const itemIndex = parseInt(btn.dataset.itemIndex, 10); console.log(`[Abrir Modal] NF ${nfIndex}, Item ${itemIndex}`);
+            if (isNaN(nfIndex) || isNaN(itemIndex) || !processedNFData[nfIndex]?.items?.[itemIndex]) { console.error("Dados inválidos."); return; }
+            try {
+                const nfData = processedNFData[nfIndex].nf; const itemData = processedNFData[nfIndex].items[itemIndex]; const modalBody = modalElement.querySelector('.modal-body'); const modalTitle = modalElement.querySelector('.modal-title'); if (!modalBody || !modalTitle || !itemDetailsModalInstance) { console.error("Modal elems/instância?"); return; }
+                modalTitle.textContent = `Detalhes Item ${getSafe(itemData, 'nItem', itemIndex + 1)}`; modalBody.innerHTML = '<div class="text-center p-3"><div class="spinner-border spinner-border-sm"></div></div>'; saveButtonModal.dataset.nfIndex = nfIndex; saveButtonModal.dataset.itemIndex = itemIndex;
+                setTimeout(() => { try { modalBody.innerHTML = ''; modalBody.appendChild(createItemDetailsFields(itemData, nfData, nfIndex, itemIndex)); itemDetailsModalInstance.show(); console.log("[Abrir Modal] Exibido."); } catch (err) { console.error("Erro criar/mostrar modal:", err); modalBody.innerHTML = `<div class="alert alert-danger">Erro.</div>`; itemDetailsModalInstance.show(); } }, 50);
+            } catch (err) { console.error("Erro geral abrir modal:", err); }
+        });
+
+        // Salvar Modal Listener
+        saveButtonModal.addEventListener('click', () => {
+            console.log("[Salvar Modal]"); const nfIndex = parseInt(saveButtonModal.dataset.nfIndex, 10); const itemIndex = parseInt(saveButtonModal.dataset.itemIndex, 10); if (isNaN(nfIndex) || isNaN(itemIndex) || !processedNFData[nfIndex]?.items?.[itemIndex]) { console.error("Ref. inválida."); alert("Erro salvar."); return; }
+            const itemData = processedNFData[nfIndex].items[itemIndex]; const idPrefix = `modal-item-${nfIndex}-${itemIndex}-`; const modalContent = modalElement.querySelector('.modal-body'); if (!modalContent) { console.error("Corpo modal?"); return; }
+            try {
+                const getModalValue = (sel) => modalContent.querySelector(`#${idPrefix}${sel}`)?.value ?? null; const getRadioValue = (n) => modalContent.querySelector(`input[name="${idPrefix}${n}"]:checked`)?.value ?? ""; const getHidden = (sec, cls) => modalContent.querySelector(`${sec} .${cls}`)?.value ?? "";
+                // Atualiza o objeto itemData diretamente
+                itemData.ncm = getModalValue('ncm'); itemData.descricaoNcm = getModalValue('descricao_ncm'); itemData.atributosNcm = getModalValue('atributos_ncm'); itemData.xProd = getModalValue('descricao_mercadoria'); itemData.infAdProd = getModalValue('descricao_complementar'); itemData.unidadeEstatistica = getModalValue('unidade_estatistica'); itemData.quantidadeEstatistica = getModalValue('quantidade_estatistica'); itemData.pesoLiquidoItem = getModalValue('peso_liquido'); itemData.uCom = getModalValue('unidade_comercializada'); itemData.qCom = getModalValue('quantidade_comercializada'); itemData.vUnCom = getModalValue('valor_unit_comercial'); itemData.vmle = getModalValue('vmle'); itemData.vmcv = getModalValue('vmcv'); itemData.condicaoVenda = getModalValue('condicao_venda'); itemData.paisDestino = getModalValue('pais_destino');
+                for (let i = 1; i <= 4; i++) itemData[`enquadramento${i}`] = getModalValue(`enquadramento${i}`);
+                itemData.lpcos = (getHidden(`#${idPrefix}lpco-section`, 'lpcos-hidden') || '').split(',').filter(Boolean);
+                itemData.nfsRefEletronicas = (getHidden(`#${idPrefix}nfe-ref-section`, 'nfsRefEletronicas-hidden') || '').split(',').filter(Boolean);
+                itemData.nfsRefFormulario = (getHidden(`#${idPrefix}nf_form-ref-section`, 'nfsRefFormulario-hidden') || '').split(',').filter(Boolean);
+                itemData.nfsComplementares = (getHidden(`#${idPrefix}nfc-ref-section`, 'nfsComplementares-hidden') || '').split(',').filter(Boolean);
+                itemData.ccptCcrom = getRadioValue('ccpt_ccrom');
+                console.log("[Salvar Modal] OK:", JSON.parse(JSON.stringify(itemData))); alert("Dados atualizados."); if (itemDetailsModalInstance) itemDetailsModalInstance.hide();
+            } catch (saveErr) { console.error("Erro salvar:", saveErr); alert("Erro ao salvar."); }
+        });
+
+        // Config Tabs
+        const tabLinks = document.querySelectorAll('.nav-tabs .nav-link'); if (tabLinks.length > 0 && typeof bootstrap !== 'undefined' && bootstrap.Tab) { tabLinks.forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); try { new bootstrap.Tab(link).show(); } catch (tabErr) { console.error("Erro Tabs:", tabErr); } })); console.log("Tabs OK."); } else { console.warn("Tabs não OK."); }
+
+        console.log("DOMContentLoaded FIM.");
+    }); // --- FIM DOMContentLoaded ---
+
+//</script>
