@@ -129,6 +129,7 @@ try {
         <div class="tab-pane fade show active" id="aba1" role="tabpanel" aria-labelledby="tab-link-1">
             <form id="dueForm" enctype="multipart/form-data">
                 <div class="card mb-4">
+                <input type="hidden" id="due_id_hidden" name="due_id">
                     <div class="card-header">Upload de NF-e (XML)</div>
                     <div class="card-body">
                         <div class="form-group mb-0"> <label for="xml-files" class="form-label">Selecionar Arquivos XML</label>
@@ -147,7 +148,7 @@ try {
                                 <datalist id="cnpj-cpf-list"></datalist> </div>
                             <div class="col-md-6 form-group">
                                 <label for="nomeCliente" class="form-label">Nome Exportador:</label>
-                                <input type="text" id="nomeCliente" class="form-control" readonly>
+                                <input type="text" id="nomeCliente" name="nomeCliente" class="form-control" readonly>
                             </div>
                          </div>
 
@@ -350,7 +351,22 @@ try {
                      </div>
                  </div>
              </div>
-        </div> </div> <div class="form-group mt-4 text-center"> <button type="button" id="gerarDUE" class="btn btn-primary w-50">Salvar e Gerar DU-E</button> </div>
+        </div> </div> 
+          
+        <div class="form-group mt-4 text-center">
+        <button type="button" id="salvarDUE" class="btn btn-success me-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-save me-1" viewBox="0 0 16 16">
+                <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v4.5h2a.5.5 0 0 1 .354.854l-2.5 2.5a.5.5 0 0 1-.708 0l-2.5-2.5A.5.5 0 0 1 5.5 6.5h2V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1z"/>
+            </svg>
+            Salvar DU-E
+        </button>
+        <button type="button" id="enviarDUE" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-send me-1" viewBox="0 0 16 16">
+                <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z"/>
+            </svg>
+            Enviar DU-E (Siscomex)
+        </button>
+    </div>
 
     <div id="spinner" class="spinner-border text-primary" role="status" style="display: none;">
         <span class="visually-hidden">Carregando...</span> </div>
