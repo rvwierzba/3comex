@@ -8,7 +8,6 @@ echo <<<HTML
 <tr>
 <th>{$campo1}</th>
 <th>{$campo2}</th>
-<th>{$campo3}</th>	
 <th>{$campo4}</th>									
 <th>Ações</th>
 </tr>
@@ -17,7 +16,7 @@ echo <<<HTML
 HTML;
 
 
-$query = $pdo->query("SELECT * from $pagina order by id desc ");
+$query = $pdo->query("SELECT * from $pagina order by id desc");
 $res = $query->fetchAll(PDO::FETCH_ASSOC);
 for($i=0; $i < @count($res); $i++){
 	foreach ($res[$i] as $key => $value){
@@ -34,11 +33,13 @@ echo <<<HTML
 	<tr>
 	<td>{$cp1}</td>		
 	<td>{$cp2}</td>	
-	<td>{$cp3}</td>	
 	<td>{$cp4}</td>									
 	<td>
 	<a href="#" onclick="editar('{$id}', '{$cp1}', '{$cp2}', '{$cp3}', '{$cp4}')" title="Editar Registro">	<i class="bi bi-pencil-square text-primary"></i> </a>
-	<a href="#" onclick="excluir('{$id}' , '{$cp1}')" title="Excluir Registro">	<i class="bi bi-trash text-danger"></i> </a>
+
+	<a href="#" onclick="excluir('{$id}', '{$cp1}')" data-toggle="modal"
+	  	data-target="#modalExcluir" data-id="<?=$id?>" data-name="<?=$cp1?>">
+		<i class="bi bi-trash text-danger"></i></a>
 	</td>
 	</tr>
 	HTML;

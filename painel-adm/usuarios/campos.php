@@ -1,9 +1,10 @@
 <?php 
-$pagina = 'usuarios';
-//VARIAVEIS DOS INPUTS
-$campo1 = 'Nome';
-$campo2 = 'Email';
-$campo3 = 'Senha';
-$campo4 = 'Nivel';
+
+    $pagina = 'usuarios';
+    //VARIAVEIS DOS INPUTS
+    $campo1 = 'nome';
+    $campo2 = 'email';
+    $campo3 = 'senha';
+    $campo4 = 'nivel';
 
 ?>

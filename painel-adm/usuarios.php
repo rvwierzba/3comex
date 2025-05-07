@@ -1,9 +1,9 @@
 <?php 
-require_once("../conexao.php");
-require_once("verificar.php");
-$pagina = 'usuarios';
 
-require_once($pagina."/campos.php");
+	require_once("../conexao.php");
+	require_once("verificar.php");
+	require_once("../painel-adm/usuarios/campos.php");
+
 
 ?>
 
@@ -12,9 +12,7 @@ require_once($pagina."/campos.php");
 </div>
 
 <small>
-	<div class="tabela bg-light" id="listar">
-
-	</div>
+	<div class="tabela bg-light" id="listar"></div>
 </small>
 
 
@@ -42,7 +40,7 @@ require_once($pagina."/campos.php");
 
 					<div class="mb-3">
 						<label for="exampleFormControlInput1" class="form-label"><?php echo $campo3 ?></label>
-						<input type="text" class="form-control" name="<?php echo $campo3 ?>" placeholder="<?php echo $campo3 ?>" id="<?php echo $campo3 ?>" required>
+						<input type="password" class="form-control" name="<?php echo htmlspecialchars($campo3); ?>" placeholder="Senha" id="<?php echo htmlspecialchars($campo3); ?>" required>
 					</div>
 
 					
@@ -55,7 +53,7 @@ require_once($pagina."/campos.php");
 							for($i=0; $i < @count($res); $i++){
 								foreach ($res[$i] as $key => $value){	}
 									$id_item = $res[$i]['id'];
-								$nome_item = $res[$i]['nivel'];
+									$nome_item = $res[$i]['nivel'];
 								?>
 								<option value="<?php echo $nome_item ?>"><?php echo $nome_item ?></option>
 
@@ -114,5 +112,33 @@ require_once($pagina."/campos.php");
 <script src="../js/ajax.js"></script>
 
 
+<script type="text/javascript">
+$(document).ready(function() {
+    // Tentativa de garantir que o preventDefault seja chamado para este formulário específico,
+    // independentemente de como o ajax.js compartilhado o trata.
+    $("#form").on('submit', function(event) {
+        console.log("Handler de submit ADICIONAL (em usuarios.php) foi chamado.");
+
+        if (event.isDefaultPrevented && event.isDefaultPrevented()) { // Verifica se já foi prevenido
+            console.log("Comportamento padrão do formulário JÁ foi prevenido (provavelmente pelo ajax.js ou outro script).");
+        } else {
+            console.log("Comportamento padrão do formulário NÃO foi prevenido ainda. Prevenindo agora em usuarios.php...");
+            event.preventDefault();
+        }
+        // Este handler apenas tenta garantir o preventDefault.
+        // A chamada AJAX em si ainda será feita pelo seu ajax.js compartilhado.
+    });
+
+	// Garante que o comportamento padrão de submit seja prevenido para o formulário de exclusão
+    $("#form-excluir").on('submit', function(event) {
+        // console.log("Handler de submit adicional (em usuarios.php) para #form-excluir."); // Para debug
+        if (!(event.isDefaultPrevented && event.isDefaultPrevented())) { // Se não foi prevenido ainda
+            // console.log("Prevenindo default para #form-excluir em usuarios.php..."); // Para debug
+            event.preventDefault();
+        }
+    });
+
+});
+</script>
 
 

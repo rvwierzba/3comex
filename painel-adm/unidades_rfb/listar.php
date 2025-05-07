@@ -17,19 +17,19 @@ echo <<<HTML
 HTML;
 
 
-$query = $pdo->query("SELECT * from $pagina order by id desc ");
+$query = $pdo->query("SELECT * from $pagina order by id desc");
 $res = $query->fetchAll(PDO::FETCH_ASSOC);
 for($i=0; $i < @count($res); $i++){
 	foreach ($res[$i] as $key => $value){
 
-		$id =$res[$i]['id'];
+		$id = $res[$i]['id'];
 		$cp1 = $res[$i]['sigla'];
 		$cp2 = $res[$i]['codigo'];
-    $cp3 = $res[$i]['nome'];
-    $cp4 = $res[$i]['regiao_fiscal'];
-    $cp5 = $res[$i]['nome_curto'];
-    $cp6 = $res[$i]['data_inicio'];
-    $cp7 = $res[$i]['data_fim'];
+		$cp3 = $res[$i]['nome'];
+		$cp4 = $res[$i]['regiao_fiscal'];
+		$cp5 = $res[$i]['nome_curto'];
+		$cp6 = $res[$i]['data_inicio'];
+		$cp7 = $res[$i]['data_fim'];
 		$cp8 = $res[$i]['interno_versao'];
 
 	} 

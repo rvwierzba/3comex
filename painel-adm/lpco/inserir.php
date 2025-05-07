@@ -2,7 +2,7 @@
 	require_once("../../conexao.php");
 	require_once("campos.php");
 
-	$id = @$_POST['id'];
+  $id = @$_POST['id'];
   $codigo = $_POST['codigo'];
   $descricao = $_POST['descricao'];
 	
