@@ -231,6 +231,12 @@ $labelsCabecalho = [
     //         // "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json" }
     //     });
     // });
+
+
+
+
+
+
 </script>
 
 <?php
@@ -242,4 +248,7 @@ $labelsCabecalho = [
 // mas o main.mjs só fará a busca AJAX de países quando a função createItemDetailsFields for chamada.
 
 error_log("[" . NOME_FICHEIRO_ATUAL_LISTAGEM_DUE . "] FIM DA EXECUÇÃO @ " . date("Y-m-d H:i:s"));
+
+
 ?>
+

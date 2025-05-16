@@ -6,6 +6,7 @@ document.getElementById('gerarDUE').addEventListener('click', function() {
     const nomeCliente = document.getElementById('nomeCliente').value;
     const declarantId = document.getElementById('declarant-id').value;
     const undRFBDesp = document.getElementById('und-rfb-desp').value;
+    const undRFB = document.getElementById('und-rfb').value;
     const recAdu = document.getElementById('rec-adu').value;
     const categoriaDoc = document.getElementById('categoria-doc').value;
     const hsClassification = document.getElementById('hs-classification').value;
@@ -70,7 +71,8 @@ document.getElementById('gerarDUE').addEventListener('click', function() {
     formData.append('nomeCliente', nomeCliente);
     formData.append('declarantId', declarantId);
     formData.append('undRFBDesp', undRFBDesp);
-    formData.append('recAdu', recAdu);
+    formData.append('undRFB', undRFB);
+    formData.append('recAdu', recAdu); 
     formData.append('categoriaDoc', categoriaDoc);
     formData.append('hsClassification', hsClassification);
     formData.append('drawbackRecipientId', drawbackRecipientId);

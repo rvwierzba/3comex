@@ -20,16 +20,7 @@
             $sql = 'SELECT CONCAT(Codigo, " - ", Nome) AS text FROM moeda WHERE Codigo LIKE :searchTerm OR Nome LIKE :searchTerm';
             break;
 
-        case 'campo-de-pesquisa-unidades-rfb-d':
-        case 'campo-de-pesquisa-unidades-rfb-e':
-            $sql = 'SELECT CONCAT(Codigo, " - ", Nome) AS text FROM unidades_rfb WHERE Codigo LIKE :searchTerm OR Nome LIKE :searchTerm';
-            break;
-
-        case 'campo-de-pesquisa-recinto-alfandegado-d':
-        case 'campo-de-pesquisa-recinto-alfandegado-e':
-            $sql = 'SELECT CONCAT(codigo, " - ", Nome) AS text FROM recinto_aduaneiro WHERE codigo LIKE :searchTerm OR Nome LIKE :searchTerm';
-            break;
-
+       
         // Adicione outros cases aqui, se você adicionar mais datalists no futuro.
 
         default:

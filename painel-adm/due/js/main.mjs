@@ -1,629 +1,478 @@
 // --- Arquivo: due/js/main.mjs ---
 
-console.log('[main.mjs INÍCIO GLOBAL] Script main.mjs carregado e a iniciar execução global.');
-// Com a abordagem AJAX, não esperamos que window.paisesData seja preenchido aqui.
-// Estes logs confirmarão isso.
-if (typeof window.paisesData !== 'undefined' && window.paisesData !== null && Array.isArray(window.paisesData)) {
-    console.log('[main.mjs INÍCIO GLOBAL] Verificação de window.paisesData (legado/injeção direta): ENCONTRADO e é um array. Número de países:', window.paisesData.length);
-    if (window.paisesData.length === 0) {
-        console.warn('[main.mjs INÍCIO GLOBAL] window.paisesData (legado/injeção direta) é um array VAZIO.');
-    }
-} else {
-    console.log('[main.mjs INÍCIO GLOBAL] window.paisesData (legado/injeção direta) NÃO ESTÁ DEFINIDO ou não é um array, como esperado com a abordagem AJAX pura.');
-}
+console.log('[main.mjs] Script carregado. VERSÃO: CORRECAO_IDS_FORM_PRINCIPAL');
 
-// Variável para cache dos dados dos países carregados via AJAX
-let _paisesDataCache = null;
-let _paisesDataFetchPromise = null;
+// --- Estado do Módulo e Cache de Dados ---
+const moduleState = {
+    itemDetailsModalInstance: null,
+    batchEditModalInstance: null,
+    globalItemDetailsModalElement: null,
+    globalBatchEditModalElement: null,
+    dataSources: {
+        paises: { cache: null, promise: null, url: '/3comex/painel-adm/due/ajax_buscar_paises.php', dataKey: 'paises', logPrefix: 'Paises' },
+        recintos: { cache: null, promise: null, url: '/3comex/painel-adm/due/ajax_buscar_recintos.php', dataKey: 'recintos', logPrefix: 'Recintos' },
+        unidadesRfb: { cache: null, promise: null, url: '/3comex/painel-adm/due/ajax_buscar_unidades_rfb.php', dataKey: 'unidades', logPrefix: 'UnidadesRFB' }
+    }
+};
+
+// --- Constantes ---
+const REQUIRED_DUE_FIELDS = [ 'ncm', 'descricaoDetalhadaDue', 'unidadeEstatistica', 'quantidadeEstatistica', 'pesoLiquidoItem', 'condicaoVenda', 'vmcv', 'paisDestino', 'enquadramento1' ];
 
 // --- Funções Auxiliares ---
-const getSafe = (obj, path, defaultValue = '') => { try { const value = path.split('.').reduce((o, k) => (o || {})[k], obj); return value ?? defaultValue; } catch { return defaultValue; } };
+const getSafe = (obj, path, defaultValue = '') => { try { const value = path.split('.').reduce((o, k) => (o || {})[k], obj); return value !== null && value !== undefined ? value : defaultValue; } catch { return defaultValue; } };
 const getXmlValue = (el, tag) => el?.getElementsByTagName(tag)?.[0]?.textContent?.trim() ?? '';
 const getXmlAttr = (el, attr) => el?.getAttribute(attr) ?? '';
-const htmlspecialchars = (str) => { if (typeof str !== 'string') return String(str ?? ''); return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); };
+const htmlspecialchars = (str) => { if (typeof str !== 'string') str = String(str ?? ''); return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); };
 
-// --- Variáveis Globais ---
-let itemDetailsModalInstance = null; // Será instanciado no DOMContentLoaded
-let batchEditModalInstance = null; // Será instanciado no DOMContentLoaded
-
-const requiredDueFields = [ 'ncm', 'descricaoDetalhadaDue', 'unidadeEstatistica', 'quantidadeEstatistica', 'pesoLiquidoItem', 'condicaoVenda', 'vmcv', 'paisDestino', 'enquadramento1' ];
-
-function isItemDueComplete(item) {
-    if (!item) return false;
-    return requiredDueFields.every(fieldName => {
-        const value = item[fieldName]; let isFilled;
-        if (Array.isArray(value)) { isFilled = value !== null && value !== undefined && value.length > 0; }
-        else if (typeof value === 'number') { isFilled = value !== null && value !== undefined && !isNaN(value); }
-        else { isFilled = value !== null && value !== undefined && String(value).trim() !== ''; }
-        return isFilled;
-    });
-}
-
-const parseNFeXML = (xmlString, fileName = 'arquivo') => {
-    console.log(`[main.mjs parseNFeXML] Iniciando para ${fileName}`);
-    try {
-        const parser = new DOMParser(); const xmlDoc = parser.parseFromString(xmlString, "text/xml"); const parserError = xmlDoc.getElementsByTagName("parsererror"); if (parserError.length > 0) { throw new Error(`Erro parse XML: ${parserError[0].textContent}`); } const infNFe = xmlDoc.getElementsByTagName("infNFe")[0]; if (!infNFe) { throw new Error(`<infNFe> não encontrada`); } const chave = getXmlAttr(infNFe, 'Id').replace('NFe', ''); const emit = infNFe.getElementsByTagName("emit")[0]; const dest = infNFe.getElementsByTagName("dest")[0]; const enderDest = dest?.getElementsByTagName("enderDest")[0]; const exporta = infNFe.getElementsByTagName("exporta")[0]; const infAdic = infNFe.getElementsByTagName("infAdic")[0]; const detElements = infNFe.getElementsByTagName("det"); const nfeData = { chaveAcesso: chave, emitente: { cnpj: getXmlValue(emit, "CNPJ"), nome: getXmlValue(emit, "xNome") }, destinatario: { nome: getXmlValue(dest, "xNome"), idEstrangeiro: getXmlValue(dest, "idEstrangeiro"), endereco: { logradouro: getXmlValue(enderDest, "xLgr"), numero: getXmlValue(enderDest, "nro"), bairro: getXmlValue(enderDest, "xBairro"), municipio: getXmlValue(enderDest, "xMun"), uf: getXmlValue(enderDest, "UF"), paisNome: getXmlValue(enderDest, "xPais"), paisCodigo: getXmlValue(enderDest, "cPais") } }, exportacao: { ufSaidaPais: getXmlValue(exporta, "UFSaidaPais"), localExportacao: getXmlValue(exporta, "xLocExporta") }, infAdicional: { infCpl: getXmlValue(infAdic, "infCpl"), infAdFisco: getXmlValue(infAdic, "infAdFisco") }, items: [] }; for (let i = 0; i < detElements.length; i++) { const det = detElements[i]; const prod = det.getElementsByTagName("prod")[0]; if (!prod) { console.warn(`[main.mjs parseNFeXML - Parse Item ${i+1}] <prod> não encontrada.`); continue; } const nItem = getXmlAttr(det, 'nItem') || (i + 1).toString(); const xProdValue = getXmlValue(prod, "xProd"); const qCom = parseFloat(getXmlValue(prod, "qCom")) || 0; const vUnCom = parseFloat(getXmlValue(prod, "vUnCom")) || 0; const vProd = parseFloat(getXmlValue(prod, "vProd")) || 0; const qTrib = parseFloat(getXmlValue(prod, "qTrib")) || null; const pesoLiquidoXml = getXmlValue(prod, "pesoL") || getXmlValue(prod, "PESOL") || getXmlValue(prod, "PesoLiquido"); const pesoL = pesoLiquidoXml ? parseFloat(pesoLiquidoXml.replace(',', '.')) : null; const pesoLiquidoItem = isNaN(pesoL) ? null : pesoL; const paisDestinoInicialXML = getSafe(nfeData, 'destinatario.endereco.paisCodigo', null); nfeData.items.push({ nItem: nItem, cProd: getXmlValue(prod, "cProd"), xProd: xProdValue, ncm: getXmlValue(prod, "NCM"), cfop: getXmlValue(prod, "CFOP"), uCom: getXmlValue(prod, "uCom"), qCom: qCom, vUnCom: vUnCom, vProd: vProd, uTrib: getXmlValue(prod, "uTrib"), qTrib: qTrib, infAdProd: getXmlValue(det, "infAdProd"), descricaoNcm: "", atributosNcm: "", unidadeEstatistica: getXmlValue(prod, "uTrib"), quantidadeEstatistica: qTrib, pesoLiquidoItem: pesoLiquidoItem, condicaoVenda: "", vmcv: null, vmle: vProd, paisDestino: paisDestinoInicialXML, descricaoDetalhadaDue: xProdValue, enquadramento1: "", enquadramento2: "", enquadramento3: "", enquadramento4: "", lpcos: [], nfsRefEletronicas: [], nfsRefFormulario: [], nfsComplementares: [], ccptCcrom: "" }); } console.log(`[main.mjs parseNFeXML] Parse XML OK: ${fileName} - ${nfeData.items.length} itens.`); return nfeData;
-    } catch (error) { console.error(`[main.mjs parseNFeXML] Erro GERAL Parse XML ${fileName}:`, error); const uploadStatusEl = document.getElementById('uploadStatus'); if(uploadStatusEl) uploadStatusEl.innerHTML += `<div class="text-danger small"><i class="bi bi-x-octagon-fill me-1"></i>Falha processar ${htmlspecialchars(fileName)}: ${htmlspecialchars(error.message)}</div>`; return null; }
-};
-
-async function fetchPaisesDataIfNeeded() {
-    if (_paisesDataCache) {
-        console.log('[main.mjs fetchPaisesDataIfNeeded] Usando dados de países do cache.');
-        return _paisesDataCache;
-    }
-    if (_paisesDataFetchPromise) {
-        console.log('[main.mjs fetchPaisesDataIfNeeded] Aguardando promise de busca de países existente.');
-        return _paisesDataFetchPromise;
-    }
-
-    const ajaxUrl = '/3comex/painel-adm/due/ajax_buscar_paises.php'; // Mantenha o caminho absoluto que funcionou
-    console.log('[main.mjs fetchPaisesDataIfNeeded] Buscando dados de países via AJAX para URL:', ajaxUrl);
-    
-    _paisesDataFetchPromise = fetch(ajaxUrl)
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(text => {
-                    throw new Error(`Erro HTTP ${response.status} (${response.statusText}) ao buscar países. Resposta: ${text}`);
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.sucesso && data.paises && Array.isArray(data.paises)) {
-                _paisesDataCache = data.paises;
-                console.log(`[main.mjs fetchPaisesDataIfNeeded] Países carregados via AJAX com sucesso: ${_paisesDataCache.length} países.`);
-                return _paisesDataCache;
-            } else {
-                console.error('[main.mjs fetchPaisesDataIfNeeded] Resposta AJAX para países não foi bem-sucedida ou dados inválidos:', data.mensagem, data);
-                _paisesDataCache = []; 
-                return []; 
-            }
-        })
-        .catch(error => {
-            console.error('[main.mjs fetchPaisesDataIfNeeded] Erro CRÍTICO na requisição AJAX para buscar países:', error);
-            showToast('Erro ao carregar lista de países. A busca pode não funcionar.', 'error');
-            _paisesDataCache = []; 
-            _paisesDataFetchPromise = null; 
-            return []; 
-        });
-    return _paisesDataFetchPromise;
-}
-
-async function createItemDetailsFields(itemData, nfData, nfIndex, itemIndex) {
-    console.log('[main.mjs createItemDetailsFields] Função chamada.');
-    const paisesParaEsteModal = await fetchPaisesDataIfNeeded();
-
-    if (!paisesParaEsteModal || paisesParaEsteModal.length === 0) {
-        console.warn('[main.mjs createItemDetailsFields] ALERTA: Lista de países está vazia ou não pôde ser carregada (AJAX). A busca de país pode não funcionar corretamente.');
-    } else {
-        console.log('[main.mjs createItemDetailsFields] Países disponíveis para o modal (via AJAX/cache):', paisesParaEsteModal.length);
-    }
-
-    const container = document.createElement('div');
-    container.classList.add('item-details-form-container');
-    const idPrefix = `modal-item-${nfIndex}-${itemIndex}-`;
-
-    const val = (key, defaultValue = '') => getSafe(itemData, key, defaultValue);
-    const isSelected = (v, t) => (v !== null && t !== null && String(v) == String(t)) ? 'selected' : '';
-    const isChecked = (v, t) => v === t ? 'checked' : '';
-
-    const createOptions = (data, valueKey, textKey, selectedValue, includeEmpty = true) => {
-        let optionsHtml = includeEmpty ? '<option value="">Selecione...</option>' : '';
-        if (data?.length) {
-            optionsHtml += data.map(item => `
-                <option value="${htmlspecialchars(getSafe(item, valueKey))}" 
-                    ${isSelected(selectedValue, getSafe(item, valueKey))}>
-                    ${htmlspecialchars(getSafe(item, textKey))}
-                </option>`
-            ).join('');
-        }
-        return optionsHtml;
-    };
-
-    let nomePaisInicialParaInput = '';
-    if (itemData && typeof itemData.paisDestino !== 'undefined' && itemData.paisDestino !== null) {
-        if (paisesParaEsteModal && paisesParaEsteModal.length > 0) {
-            const paisEncontrado = paisesParaEsteModal.find(p => 
-                p.CODIGO_NUMERICO != null && 
-                String(p.CODIGO_NUMERICO) === String(itemData.paisDestino)
-            );
-            if (paisEncontrado) {
-                nomePaisInicialParaInput = paisEncontrado.NOME;
-            } else {
-                // O log que você viu: "[main.mjs createItemDetailsFields] Código de país inicial '2755' do item não encontrado..."
-                console.warn(`[main.mjs createItemDetailsFields] Código de país inicial '${itemData.paisDestino}' do item não encontrado na lista de ${paisesParaEsteModal.length} países carregada (AJAX).`);
-            }
-        } else {
-            console.warn("[main.mjs createItemDetailsFields] Lista de países (AJAX) não disponível ou vazia para buscar nome do país inicial.");
-        }
-    }
-    
-    container.innerHTML = `
-        <h5 class="mb-3 border-bottom pb-2">Item ${htmlspecialchars(val('nItem', itemIndex + 1))} (NF-e: ...${htmlspecialchars(getSafe(nfData, 'chaveAcesso', 'N/A').slice(-6))})</h5>
-        <h6>Dados Básicos e NCM</h6>
-        <div class="row g-3 mb-4"><div class="col-md-6"><label class="form-label">Exportador:</label><input type="text" class="form-control form-control-sm bg-light" value="${htmlspecialchars(getSafe(nfData, 'emitente.nome', 'N/A'))}" readonly></div><div class="col-md-6"><label for="${idPrefix}ncm" class="form-label">NCM:</label><input type="text" id="${idPrefix}ncm" name="ncm" class="form-control form-control-sm" value="${htmlspecialchars(val('ncm'))}" required></div><div class="col-md-6"><label for="${idPrefix}descricao_ncm" class="form-label">Descrição NCM:</label><input type="text" id="${idPrefix}descricao_ncm" name="descricaoNcm" class="form-control form-control-sm" value="${htmlspecialchars(val('descricaoNcm'))}" placeholder="Consultar"></div><div class="col-md-6"><label for="${idPrefix}atributos_ncm" class="form-label">Atributos NCM:</label><input type="text" id="${idPrefix}atributos_ncm" name="atributosNcm" class="form-control form-control-sm" value="${htmlspecialchars(val('atributosNcm'))}" placeholder="Consultar/definir"></div></div>
-        <h6>Descrição Mercadoria</h6>
-        <div class="mb-3"><label for="${idPrefix}descricao_mercadoria" class="form-label">Descrição NF-e:</label><textarea id="${idPrefix}descricao_mercadoria" class="form-control form-control-sm bg-light" rows="2" readonly>${htmlspecialchars(val('xProd'))}</textarea></div><div class="mb-3"><label for="${idPrefix}descricao_complementar" class="form-label">Descrição Complementar:</label><textarea id="${idPrefix}descricao_complementar" name="infAdProd" class="form-control form-control-sm" rows="2">${htmlspecialchars(val('infAdProd'))}</textarea></div><div class="mb-4"><label for="${idPrefix}descricao_detalhada_due" class="form-label">Descrição Detalhada DU-E:</label><textarea id="${idPrefix}descricao_detalhada_due" name="descricaoDetalhadaDue" class="form-control form-control-sm" rows="4" required>${htmlspecialchars(val('descricaoDetalhadaDue'))}</textarea></div>
-        <h6>Quantidades e Valores</h6>
-        <div class="row g-3 mb-4"><div class="col-md-4"><label for="${idPrefix}unidade_estatistica" class="form-label">Unid. Estatística:</label><input type="text" id="${idPrefix}unidade_estatistica" name="unidadeEstatistica" class="form-control form-control-sm" value="${htmlspecialchars(val('unidadeEstatistica'))}" required></div><div class="col-md-4"><label for="${idPrefix}quantidade_estatistica" class="form-label">Qtd. Estatística:</label><input type="number" step="any" id="${idPrefix}quantidade_estatistica" name="quantidadeEstatistica" class="form-control form-control-sm" value="${htmlspecialchars(val('quantidadeEstatistica', ''))}" required></div><div class="col-md-4"><label for="${idPrefix}peso_liquido" class="form-label">Peso Líquido (KG):</label><input type="number" step="any" id="${idPrefix}peso_liquido" name="pesoLiquidoItem" class="form-control form-control-sm" value="${htmlspecialchars(val('pesoLiquidoItem', ''))}" required></div><div class="col-md-3"><label class="form-label">Unid. Comercial:</label><input type="text" class="form-control form-control-sm bg-light" value="${htmlspecialchars(val('uCom'))}" readonly></div><div class="col-md-3"><label class="form-label">Qtd. Comercial:</label><input type="number" step="any" class="form-control form-control-sm bg-light" value="${htmlspecialchars(val('qCom'))}" readonly></div><div class="col-md-3"><label class="form-label">Vlr Unit. Com.:</label><input type="number" step="any" class="form-control form-control-sm bg-light" value="${htmlspecialchars(val('vUnCom'))}" readonly></div><div class="col-md-3"><label class="form-label">Vlr Total:</label><input type="number" step="any" class="form-control form-control-sm bg-light" value="${htmlspecialchars(val('vProd'))}" readonly></div><div class="col-md-4"><label for="${idPrefix}condicao_venda" class="form-label">Condição Venda:</label><select id="${idPrefix}condicao_venda" name="condicaoVenda" class="form-select form-select-sm" required>${createOptions((window.incotermsData || []).map(i => ({...i, DisplayText: `${i.Sigla} - ${i.Descricao}`})), 'Sigla', 'DisplayText', val('condicaoVenda'))}</select></div><div class="col-md-4"><label for="${idPrefix}vmle" class="form-label">VMLE (R$):</label><input type="number" step="any" id="${idPrefix}vmle" name="vmle" class="form-control form-control-sm" value="${htmlspecialchars(val('vmle', ''))}" required></div><div class="col-md-4"><label for="${idPrefix}vmcv" class="form-label">VMCV (Moeda):</label><input type="number" step="any" id="${idPrefix}vmcv" name="vmcv" class="form-control form-control-sm" value="${htmlspecialchars(val('vmcv', ''))}" required></div></div>
-        <h6>Importador e Destino</h6>
-        <div class="row g-3 mb-4"><div class="col-md-6"><label class="form-label">Nome Importador:</label><input type="text" class="form-control form-control-sm bg-light" value="${htmlspecialchars(getSafe(nfData, 'destinatario.nome', 'N/A'))}" readonly></div><div class="col-md-6"><label class="form-label">País Importador:</label><input type="text" class="form-control form-control-sm bg-light" value="${htmlspecialchars(getSafe(nfData, 'destinatario.endereco.paisNome', 'N/A'))} (${htmlspecialchars(getSafe(nfData, 'destinatario.endereco.paisCodigo', 'N/A'))})" readonly></div><div class="col-12"><label class="form-label">Endereço:</label><input type="text" class="form-control form-control-sm bg-light" value="${htmlspecialchars([getSafe(nfData, 'destinatario.endereco.logradouro'), getSafe(nfData, 'destinatario.endereco.numero'), getSafe(nfData, 'destinatario.endereco.bairro'), getSafe(nfData, 'destinatario.endereco.municipio'), getSafe(nfData, 'destinatario.endereco.uf')].filter(Boolean).join(', ') || 'Não informado')}" readonly></div>
-        <div class="col-md-6">
-            <label for="${idPrefix}pais_destino" class="form-label">País Destino Final:</label>
-            <div class="position-relative">
-                <input type="text" id="${idPrefix}pais_destino" class="form-control form-control-sm" value="${htmlspecialchars(nomePaisInicialParaInput)}" placeholder="Digite para buscar..." autocomplete="off" required>
-                <div id="${idPrefix}paises_list" class="d-none position-absolute w-100 bg-white border rounded mt-1" style="max-height:200px; overflow-y:auto; z-index:1000;"></div>
-            </div>
-        </div></div>
-        <h6>Enquadramentos</h6>
-        <div class="row g-3 mb-4">${[1,2,3,4].map(num => `<div class="col-md-6"><label for="${idPrefix}enquadramento${num}" class="form-label">${num}º Enquadramento:</label><select id="${idPrefix}enquadramento${num}" name="enquadramento${num}" class="form-select form-select-sm"><option value="">Selecione...</option>${(window.enquadramentosData || []).map(enq => `<option value="${htmlspecialchars(enq.CODIGO)}" ${isSelected(val(`enquadramento${num}`), enq.CODIGO)}>${htmlspecialchars(enq.CODIGO)} - ${htmlspecialchars(enq.DESCRICAO)}</option>`).join('')}<option value="99999" ${isSelected(val(`enquadramento${num}`), '99999')}>99999 - SEM ENQUADRAMENTO</option></select></div>`).join('')}</div>
-        <h6>Acordos Comerciais</h6>
-        <div class="row g-3"><div class="col-md-5"><div class="border p-3 rounded"><div class="form-check"><input class="form-check-input" type="radio" name="ccptCcrom" id="${idPrefix}ccpt_ccrom_none" value="" ${isChecked(val('ccptCcrom'), '')}><label class="form-check-label" for="${idPrefix}ccpt_ccrom_none">Nenhum</label></div><div class="form-check"><input class="form-check-input" type="radio" name="ccptCcrom" id="${idPrefix}ccpt" value="CCPT" ${isChecked(val('ccptCcrom'), 'CCPT')}><label class="form-check-label" for="${idPrefix}ccpt">CCPT</label></div><div class="form-check"><input class="form-check-input" type="radio" name="ccptCcrom" id="${idPrefix}ccrom" value="CCROM" ${isChecked(val('ccptCcrom'), 'CCROM')}><label class="form-check-label" for="${idPrefix}ccrom">CCROM</label></div></div></div></div>
-    `;
-
-    const setupPaisBusca = () => {
-        console.log('[main.mjs setupPaisBusca] Iniciando configuração da busca de país para o modal.');
-        const input = container.querySelector(`#${idPrefix}pais_destino`);
-        const lista = container.querySelector(`#${idPrefix}paises_list`);
-
-        if (!input || !lista) {
-            console.error('[main.mjs setupPaisBusca] Elementos input/lista do país NÃO encontrados no DOM do modal. idPrefix:', idPrefix);
-            return;
-        }
-
-        const paisesParaEstaBusca = _paisesDataCache || []; 
-
-        if (paisesParaEstaBusca.length === 0) {
-            console.warn('[main.mjs setupPaisBusca] ALERTA: A lista de países (_paisesDataCache) está VAZIA. A busca não funcionará. Verifique o endpoint AJAX e os logs do PHP.');
-            lista.innerHTML = '<div class="p-2 text-danger small">Erro: Lista de países indisponível ou vazia.</div>';
-            lista.classList.remove('d-none');
-            return;
-        } else {
-            console.log('[main.mjs setupPaisBusca] Países disponíveis para busca (do cache/AJAX):', paisesParaEstaBusca.length);
-        }
-
-        const atualizarLista = (termo = '') => {
-            lista.innerHTML = '';
-            if (paisesParaEstaBusca.length === 0) { lista.classList.add('d-none'); return; }
-            
-            const termoLower = termo.toLowerCase();
-            const paisesFiltrados = paisesParaEstaBusca.filter(p =>
-                p.NOME && typeof p.NOME === 'string' && p.NOME.toLowerCase().includes(termoLower)
-            );
-
-            if (paisesFiltrados.length > 0) {
-                paisesFiltrados.forEach(pais => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'list-group-item list-group-item-action py-1 px-2';
-                    itemDiv.style.cursor = 'pointer';
-                    itemDiv.textContent = pais.NOME;
-                    itemDiv.addEventListener('click', () => {
-                        input.value = pais.NOME;
-                        lista.classList.add('d-none');
-                        if (itemData) { 
-                            itemData.paisDestino = pais.CODIGO_NUMERICO;
-                            console.log('[main.mjs setupPaisBusca] País selecionado:', pais.NOME, '- Código:', itemData.paisDestino);
-                        }
-                    });
-                    lista.appendChild(itemDiv);
-                });
-                lista.classList.remove('d-none');
-            } else {
-                if (termo.length > 0) {
-                    lista.innerHTML = '<div class="p-2 text-muted small">Nenhum país encontrado.</div>';
-                    lista.classList.remove('d-none');
-                } else {
-                    lista.classList.add('d-none'); 
-                }
-            }
-        };
-
-        input.addEventListener('input', (e) => atualizarLista(e.target.value));
-        input.addEventListener('focus', () => atualizarLista(input.value)); 
-        
-        // CORREÇÃO DO ERRO: Obter a referência ao elemento do modal aqui
-        const esteModalElement = document.getElementById('itemDetailsModal'); // ID do seu modal de detalhes do item
-
-        const clickForaHandlerModal = (e) => {
-            if (lista && !lista.classList.contains('d-none') && !lista.contains(e.target) && e.target !== input) {
-                lista.classList.add('d-none');
-            }
-        };
-        document.addEventListener('click', clickForaHandlerModal, true);
-
-        // Adicionar listener para 'hidden.bs.modal' para remover o clickForaHandlerModal
-        if (esteModalElement) { // Verifica se o elemento do modal foi encontrado
-            const onModalHidden = () => {
-                console.log("[main.mjs setupPaisBusca] Modal de detalhes fechado (hidden.bs.modal). Removendo listener de clique fora.");
-                document.removeEventListener('click', clickForaHandlerModal, true);
-                esteModalElement.removeEventListener('hidden.bs.modal', onModalHidden); // Auto-remove este listener
-            };
-            // Remove qualquer listener anterior para evitar duplicatas se setupPaisBusca for chamado múltiplas vezes
-            // para o mesmo modal (embora o conteúdo do modal seja recriado, o elemento do modal é o mesmo)
-            esteModalElement.removeEventListener('hidden.bs.modal', onModalHidden); // Tenta remover antes de adicionar
-            esteModalElement.addEventListener('hidden.bs.modal', onModalHidden);
-        } else {
-            console.warn("[main.mjs setupPaisBusca] Não foi possível encontrar o elemento do modal #itemDetailsModal para adicionar o listener 'hidden.bs.modal'. O listener de clique fora pode não ser removido.");
-        }
-    };
-    
-    setupPaisBusca(); // Chamado após o HTML do container ser definido e os dados dos países (paisesParaEsteModal) estarem disponíveis
-
-    return container;
-}
-
-// --- Renderização da Tabela de Itens ---
-function renderNotasFiscaisTable() {
-    // ... (Seu código renderNotasFiscaisTable existente, adaptado para usar _paisesDataCache para nomes de países se necessário) ...
-    console.log('[main.mjs renderNotasFiscaisTable] EXECUTANDO.');
-    const tbody = document.querySelector('#notasFiscaisTable tbody');
-    const theadRow = document.querySelector('#notasFiscaisTable thead tr');
-    const batchButton = document.getElementById('batchEditButton');
-    if (!tbody || !theadRow) { console.error("[main.mjs renderNotasFiscaisTable] Tabela #notasFiscaisTable ou thead não encontrada."); return; }
-    tbody.innerHTML = '';
-
-    let statusHeader = theadRow.querySelector('.status-header');
-    if (!statusHeader) { statusHeader = document.createElement('th'); statusHeader.textContent = 'Status DUE'; statusHeader.classList.add('status-header'); statusHeader.style.width = '80px'; statusHeader.style.textAlign = 'center'; theadRow.appendChild(statusHeader); }
-    else if (statusHeader !== theadRow.lastElementChild) { theadRow.appendChild(statusHeader); }
-
-    const colCount = theadRow.cells.length;
-    let hasItems = false;
-    const currentNFData = window.processedNFData || [];
-
-    if (!Array.isArray(currentNFData) || currentNFData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-muted fst-italic">Carregue arquivos XML ou dados existentes...</td></tr>`;
-        if (batchButton) batchButton.disabled = true;
-        return;
-    }
-
-    currentNFData.forEach((nfEntry, nfIndex) => {
-        let nf = nfEntry.nf || {};
-        let items = nfEntry.items || (Array.isArray(nfEntry) ? nfEntry : (nfEntry.nItem ? [nfEntry] : []));
-
-        if (!Array.isArray(items) || items.length === 0) {
-            console.warn(`[main.mjs renderNotasFiscaisTable] Entrada ${nfIndex} sem array de 'items' válido.`);
-            return;
-        }
-
-        const chaveNFeShort = getSafe(nf, 'chaveAcesso', 'N/A').slice(-9);
-        const nomeDest = getSafe(nf, 'destinatario.nome', 'Desconhecido');
-        
-        items.forEach((item, itemIndex) => {
-            if (!item || typeof item !== 'object') {
-                console.warn(`[main.mjs renderNotasFiscaisTable] Item inválido no índice ${itemIndex} da NF ${nfIndex}`);
-                return;
-            }
-            hasItems = true;
-
-            let paisDestNomeParaTabela = getSafe(nf, 'destinatario.endereco.paisNome', '');
-            if (item.paisDestino) {
-                const paisesDisponiveisParaTabela = _paisesDataCache && Array.isArray(_paisesDataCache) && _paisesDataCache.length > 0;
-                if (paisesDisponiveisParaTabela) {
-                    const paisItemEncontrado = _paisesDataCache.find(p => String(p.CODIGO_NUMERICO) === String(item.paisDestino));
-                    if (paisItemEncontrado) {
-                        paisDestNomeParaTabela = paisItemEncontrado.NOME;
-                    } else {
-                        if (!paisDestNomeParaTabela) paisDestNomeParaTabela = `Cód: ${item.paisDestino}`;
-                    }
-                } else {
-                     if (!paisDestNomeParaTabela) paisDestNomeParaTabela = `Cód: ${item.paisDestino}`;
-                }
-            }
-            if (!paisDestNomeParaTabela) paisDestNomeParaTabela = 'N/A';
-
-            const row = document.createElement('tr');
-            row.classList.add('item-row');
-            row.dataset.nfIndex = nfIndex;
-            row.dataset.itemIndex = itemIndex;
-
-            row.innerHTML = `
-                <td>...${htmlspecialchars(chaveNFeShort)}</td>
-                <td class="text-center">${htmlspecialchars(getSafe(item, 'nItem', itemIndex + 1))}</td>
-                <td>${htmlspecialchars(getSafe(item, 'ncm', 'N/A'))}</td>
-                <td>${htmlspecialchars(getSafe(item, 'xProd', 'N/A'))}</td>
-                <td>${htmlspecialchars(nomeDest)}</td>
-                <td>${htmlspecialchars(paisDestNomeParaTabela)}</td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-outline-primary toggle-details" title="Detalhes Item ${htmlspecialchars(getSafe(item, 'nItem', itemIndex + 1))}" data-nf-index="${nfIndex}" data-item-index="${itemIndex}">
-                        <i class="bi bi-pencil-fill"></i>
-                    </button>
-                </td>
-            `;
-
-            const statusCell = document.createElement('td');
-            const completo = isItemDueComplete(item);
-            statusCell.style.textAlign = 'center'; statusCell.style.verticalAlign = 'middle';
-            statusCell.innerHTML = completo ? '<span class="text-success" title="Completo">&#x2705;</span>' : '<span class="text-danger" title="Incompleto">&#x274C;</span>';
-            row.appendChild(statusCell);
-            tbody.appendChild(row);
-        });
-    });
-
-    if (!hasItems && currentNFData.length > 0) {
-        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-warning fst-italic">Nenhum item válido encontrado.</td></tr>`;
-        if (batchButton) batchButton.disabled = true;
-    } else if (hasItems) {
-        if (batchButton) batchButton.disabled = false;
-    } else {
-        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-muted fst-italic">Carregue XMLs...</td></tr>`;
-        if (batchButton) batchButton.disabled = true;
-    }
-}
-
-// --- Preencher Campos da Aba 1 ---
-const populateMainForm = (nfData) => {
-    // ... (Seu código populateMainForm existente, sem alterações) ...
-    console.log('[main.mjs populateMainForm] EXECUTANDO. Dados recebidos (nfData):', nfData);
-    const formElements = { cnpjCpf: document.getElementById('text-cnpj-cpf-select'), nomeCliente: document.getElementById('nomeCliente'), infoCompl: document.getElementById('info-compl') };
-    const editId = document.getElementById('due_id_hidden')?.value;
-    if (nfData && Object.keys(nfData).length > 0) { console.log('[main.mjs populateMainForm] Preenchendo com dados (XML ou edição).'); if (formElements.cnpjCpf) formElements.cnpjCpf.value = getSafe(nfData, 'emitente.cnpj', ''); if (formElements.nomeCliente) formElements.nomeCliente.value = getSafe(nfData, 'emitente.nome', ''); if (formElements.infoCompl && (!formElements.infoCompl.value || !formElements.infoCompl.value.trim())) { formElements.infoCompl.value = getSafe(nfData, 'infAdicional.infCpl', ''); }
-    } else if (editId && window.dueDataPrincipalPHP) { console.log('[main.mjs populateMainForm] Preenchendo com dados de edição (window.dueDataPrincipalPHP).'); if (formElements.cnpjCpf) formElements.cnpjCpf.value = getSafe(window.dueDataPrincipalPHP, 'cnpj_exportador', ''); if (formElements.nomeCliente) formElements.nomeCliente.value = getSafe(window.dueDataPrincipalPHP, 'nome_exportador', ''); if (formElements.infoCompl) formElements.infoCompl.value = getSafe(window.dueDataPrincipalPHP, 'info_complementar_geral', '');
-    } else { console.warn('[main.mjs populateMainForm] Recebeu nfData vazio ou nulo, e não é edição com dueDataPrincipalPHP.'); if (editId) { console.log('[main.mjs populateMainForm] Modo Edição (ID existe), mas sem dados para popular formulário principal via JS.'); } else { console.log('[main.mjs populateMainForm] Nova DU-E. Resetando rádios padrão (se existirem).'); const radioPropria = document.getElementById('por-conta-propria'); const radioNfe = document.getElementById('nfe'); if(radioPropria && !radioPropria.checked && !document.querySelector('input[name="tipo_operacao_due"]:checked')) radioPropria.checked = true; if(radioNfe && !radioNfe.checked && !document.querySelector('input[name="tipo_documento_base"]:checked')) radioNfe.checked = true; } }
-};
-
-// --- Código Principal (DOMContentLoaded) ---
-document.addEventListener('DOMContentLoaded', () => {
-    // ... (Seu código DOMContentLoaded existente, com a chamada a createItemDetailsFields agora sendo async)
-    console.log('[main.mjs DOMContentLoaded] DOM Carregado. Iniciando script...');
-    console.log('[main.mjs DOMContentLoaded] Verificando window.processedNFData inicial:', window.processedNFData);
-
-    const inputXML = document.getElementById('xml-files');
-    const uploadStatus = document.getElementById('uploadStatus');
-    const spinner = document.getElementById('spinner');
-    const notasTable = document.querySelector('#notasFiscaisTable');
-    const itemDetailsModalElement = document.getElementById('itemDetailsModal'); // Definido aqui
-    const batchEditButton = document.getElementById('batchEditButton');
-    const batchEditModalElement = document.getElementById('batchEditModal'); // Definido aqui
-    const mainForm = document.getElementById('dueForm');
-    const salvarDueButton = document.getElementById('salvarDUE');
-    const enviarDueButton = document.getElementById('enviarDUE');
-    const dueIdHiddenInput = document.getElementById('due_id_hidden');
-
-    if (!notasTable) console.error("[main.mjs DOMContentLoaded] ERRO FATAL: Tabela #notasFiscaisTable não encontrada.");
-    if (!mainForm) console.error("[main.mjs DOMContentLoaded] ERRO FATAL: Formulário #dueForm não encontrado.");
-    console.log("[main.mjs DOMContentLoaded] Elementos UI essenciais verificados.");
-
-    try {
-        if (window.bootstrap?.Modal && itemDetailsModalElement) {
-            itemDetailsModalInstance = new bootstrap.Modal(itemDetailsModalElement);
-            // O listener 'hidden.bs.modal' para limpar o conteúdo do modal e remover o 
-            // 'clickForaHandlerModal' será adicionado DENTRO de setupPaisBusca,
-            // pois o handler 'clickForaHandlerModal' é definido lá.
-        }
-        if (window.bootstrap?.Modal && batchEditModalElement) {
-            batchEditModalInstance = new bootstrap.Modal(batchEditModalElement);
-             batchEditModalElement.addEventListener('hidden.bs.modal', () => { 
-                const bf = batchEditModalElement.querySelector('#batchEditForm');
-                if(bf) { 
-                    bf.reset(); 
-                    const ra = bf.querySelector('input[name="batchCcptCcromModal"][value=""]'); 
-                    if(ra) ra.checked = true;
-                }
-            });
-        }
-        console.log("[main.mjs DOMContentLoaded] Modais Bootstrap configurados.");
-    } catch (e) { console.error("[main.mjs DOMContentLoaded] Falha inicializar Modais:", e); }
-
-    console.log('[main.mjs DOMContentLoaded] Antes de chamar renderNotasFiscaisTable() inicial.');
-    if (typeof renderNotasFiscaisTable === "function") renderNotasFiscaisTable();
-    console.log('[main.mjs DOMContentLoaded] Depois de chamar renderNotasFiscaisTable() inicial.');
-    
-    if (window.processedNFData && window.processedNFData.length > 0 && window.processedNFData[0].nf) {
-        populateMainForm(window.processedNFData[0].nf);
-    } else if (window.dueDataPrincipalPHP) {
-        populateMainForm(null);
-    }
-
-    if(inputXML) {
-        inputXML.addEventListener('change', async (event) => {
-            // ... (código do listener de input XML mantido como no seu original) ...
-            console.log("[main.mjs inputXML 'change'] Evento de mudança de ficheiro XML.");
-            const files = event.target.files;
-            if (!files?.length) { if(uploadStatus) uploadStatus.innerHTML = 'Nenhum arquivo selecionado.'; return; }
-            if(uploadStatus) uploadStatus.innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border spinner-border-sm me-2 text-primary" role="status"></div> Processando ${files.length} arquivo(s)...</div>`;
-            if(spinner) spinner.style.display = 'flex'; 
-            inputXML.disabled = true;
-            let tempProcessedData = []; let promises = []; let errorCount = 0; let warningCount = 0; let statusMessagesHTML = '';
-            for (const file of files) {
-                if (file.name.toLowerCase().endsWith('.xml') && (file.type === 'text/xml' || file.type === 'application/xml' || file.type === '')) {
-                    promises.push( file.text().then(xml => {
-                        const data = parseNFeXML(xml, file.name);
-                        if (data?.items?.length > 0) { tempProcessedData.push({ nf: data, items: data.items }); statusMessagesHTML += `<div class="alert alert-success alert-sm py-1 px-2 mb-1 small"><i class="bi bi-check-circle-fill me-1"></i>${htmlspecialchars(file.name)}: OK (${data.items.length} itens)</div>`;
-                        } else if (data) { statusMessagesHTML += `<div class="alert alert-warning alert-sm py-1 px-2 mb-1 small"><i class="bi bi-exclamation-triangle-fill me-1"></i>${htmlspecialchars(file.name)}: XML válido, mas sem itens.</div>`; warningCount++; 
-                        } else { errorCount++; /* Erro já logado e adicionado ao status pelo parser */ }
-                    }).catch(err => { console.error(`[main.mjs inputXML 'change'] Erro LER ${file.name}:`, err); statusMessagesHTML += `<div class="alert alert-danger alert-sm py-1 px-2 mb-1 small"><i class="bi bi-x-octagon-fill me-1"></i>Falha LER ${htmlspecialchars(file.name)}.</div>`; errorCount++; }) );
-                } else { statusMessagesHTML += `<div class="alert alert-secondary alert-sm py-1 px-2 mb-1 small"><i class="bi bi-slash-circle-fill me-1"></i>${htmlspecialchars(file.name)}: Ignorado.</div>`; warningCount++; }
-            }
-            try { await Promise.all(promises); } 
-            catch (err) { console.error("[main.mjs inputXML 'change'] Erro GERAL async XML:", err); statusMessagesHTML += `<div class="alert alert-danger mt-2">Erro inesperado.</div>`; errorCount++; }
-            finally {
-                if(spinner) spinner.style.display = 'none'; inputXML.disabled = false; if (event.target) event.target.value = null; 
-                if(uploadStatus) uploadStatus.innerHTML = statusMessagesHTML;
-                const totalItemsCarregados = tempProcessedData.reduce((sum, entry) => sum + (entry.items?.length || 0), 0);
-                const totalNFsCarregadas = tempProcessedData.length;
-                if (totalItemsCarregados > 0) {
-                    console.log(`[main.mjs inputXML 'change'] Upload OK. ${totalItemsCarregados} itens em ${totalNFsCarregadas} NF(s). SUBSTITUINDO dados.`);
-                    window.processedNFData = tempProcessedData; 
-                    if (window.processedNFData[0]?.nf) populateMainForm(window.processedNFData[0].nf); else populateMainForm(null);
-                    if(uploadStatus) uploadStatus.insertAdjacentHTML('beforeend', `<hr class="my-1"><div class="alert alert-primary alert-sm py-1 px-2 small fw-bold">Total: ${totalItemsCarregados} item(ns) em ${totalNFsCarregadas} NF(s) carregadas.</div>`);
-                } else {
-                    console.warn("[main.mjs inputXML 'change'] Upload concluído, sem itens válidos.");
-                    if (!errorCount && uploadStatus) uploadStatus.insertAdjacentHTML('beforeend', `<hr class="my-1"><div class="alert alert-warning alert-sm py-1 px-2 small">Nenhum item válido encontrado.</div>`);
-                    else if (errorCount > 0 && uploadStatus) uploadStatus.insertAdjacentHTML('beforeend', `<hr class="my-1"><div class="alert alert-danger alert-sm py-1 px-2 small fw-bold">Houve ${errorCount} erro(s).</div>`);
-                }
-                renderNotasFiscaisTable();
-            }
-        });
-    }
-
-    if(notasTable && itemDetailsModalInstance) { // Verifica itemDetailsModalInstance aqui
-        notasTable.addEventListener('click', async (e) => {
-            const detailsButton = e.target.closest('button.toggle-details'); 
-            if (!detailsButton) return;
-            
-            console.log("[main.mjs Abrir Modal] Botão de detalhes clicado.");
-            const nfIndex = parseInt(detailsButton.dataset.nfIndex, 10); 
-            const itemIndex = parseInt(detailsButton.dataset.itemIndex, 10);
-            
-            if (isNaN(nfIndex) || isNaN(itemIndex) || !window.processedNFData?.[nfIndex]?.items?.[itemIndex]) { 
-                console.error("[main.mjs Abrir Modal] Índices/dados inválidos para abrir modal:", { nfIndex, itemIndex }); 
-                alert("Erro: Dados do item não encontrados para o modal."); return; 
-            }
-            
-            // itemDetailsModalElement é definido no escopo do DOMContentLoaded
-            const modalBody = itemDetailsModalElement.querySelector('.modal-body');
-            const modalTitle = itemDetailsModalElement.querySelector('.modal-title');
-            const saveBtn = itemDetailsModalElement.querySelector('#saveItemDetails');
-
-            if (!modalBody || !modalTitle || !saveBtn) { 
-                console.error("[main.mjs Abrir Modal] Elementos internos do modal de detalhes não encontrados."); 
-                alert("Erro interno ao preparar para abrir detalhes do item."); return; 
-            }
-            
-            const nfData = window.processedNFData[nfIndex].nf || {}; 
-            const itemData = window.processedNFData[nfIndex].items[itemIndex];
-            
-            modalTitle.textContent = `Detalhes Item ${htmlspecialchars(getSafe(itemData, 'nItem', itemIndex + 1))} (NF: ...${htmlspecialchars(getSafe(nfData, 'chaveAcesso', 'N/A').slice(-6))})`;
-            modalBody.innerHTML = '<div class="d-flex justify-content-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">A carregar dados e países...</span></div></div>';
-            
-            saveBtn.dataset.nfIndex = nfIndex; 
-            saveBtn.dataset.itemIndex = itemIndex; 
-            
-            try {
-                const itemFormFieldsContainer = await createItemDetailsFields(itemData, nfData, nfIndex, itemIndex);
-                modalBody.innerHTML = ''; 
-                modalBody.appendChild(itemFormFieldsContainer);
-                itemDetailsModalInstance.show(); 
-                console.log("[main.mjs Abrir Modal] Modal de detalhes do item mostrado.");
-
-            } catch (err) { 
-                console.error("[main.mjs Abrir Modal] Erro geral ao tentar abrir modal de detalhes (catch no listener):", err); 
-                if(modalBody) modalBody.innerHTML = `<div class="alert alert-danger p-3">Erro ao carregar os detalhes do item: ${htmlspecialchars(err.message || 'Erro desconhecido')}. Tente novamente.</div>`;
-                if (itemDetailsModalInstance && !itemDetailsModalInstance._isShown) itemDetailsModalInstance.show();
-            }
-        });
-    }
-
-    // ... (Resto dos seus listeners: saveItemBtnGlobalRef, batchEditButton, saveBatchBtnGlobalRef, salvarDueButton, enviarDueButton)
-    const saveItemBtnGlobalRef = document.getElementById('saveItemDetails');
-    if (saveItemBtnGlobalRef) {
-        saveItemBtnGlobalRef.addEventListener('click', () => {
-            console.log("[main.mjs Salvar Modal Item] Botão 'Salvar' clicado.");
-            const nfIndex = parseInt(saveItemBtnGlobalRef.dataset.nfIndex, 10); const itemIndex = parseInt(saveItemBtnGlobalRef.dataset.itemIndex, 10);
-            if (isNaN(nfIndex) || isNaN(itemIndex) || !window.processedNFData?.[nfIndex]?.items?.[itemIndex]) { console.error("[main.mjs Salvar Modal Item] Ref inválida."); alert("Erro salvar."); return; }
-            const itemDataRef = window.processedNFData[nfIndex].items[itemIndex];
-            const idPrefix = `modal-item-${nfIndex}-${itemIndex}-`; 
-            const modalContentContainer = itemDetailsModalElement?.querySelector('.modal-body .item-details-form-container');
-            if (!modalContentContainer) { console.error("[main.mjs Salvar Modal Item] Conteúdo do modal não encontrado."); return; }
-            try {
-                const getModalValue = (idSuffix, num=false, flt=true) => { const el=modalContentContainer.querySelector(`#${idPrefix}${idSuffix}`); let v = el?.value ?? null; if(v!==null){ v=String(v).trim(); if(num){ if(v===''){v=null;}else{const c=v.replace(',','.'); const n=flt?parseFloat(c):parseInt(c,10); v=isNaN(n)?null:n;}}} return v;};
-                const getModalRadio = (rName) => modalContentContainer.querySelector(`input[name="${rName}"]:checked`)?.value ?? "";
-                const newData = { ncm: getModalValue('ncm'), descricaoNcm: getModalValue('descricao_ncm'), atributosNcm: getModalValue('atributos_ncm'), infAdProd: getModalValue('descricao_complementar'), descricaoDetalhadaDue: getModalValue('descricao_detalhada_due'), unidadeEstatistica: getModalValue('unidade_estatistica'), quantidadeEstatistica: getModalValue('quantidade_estatistica', true, true), pesoLiquidoItem: getModalValue('peso_liquido', true, true), condicaoVenda: getModalValue('condicao_venda'), vmle: getModalValue('vmle', true, true), vmcv: getModalValue('vmcv', true, true), /* paisDestino é atualizado pelo setupPaisBusca */ enquadramento1: getModalValue('enquadramento1'), enquadramento2: getModalValue('enquadramento2'), enquadramento3: getModalValue('enquadramento3'), enquadramento4: getModalValue('enquadramento4'), ccptCcrom: getModalRadio('ccptCcrom') };
-                const paisNomeDigitado = getModalValue('pais_destino');
-                if (paisNomeDigitado && _paisesDataCache) { const paisEncontradoNaLista = _paisesDataCache.find(p => p.NOME.toLowerCase() === paisNomeDigitado.toLowerCase()); if (paisEncontradoNaLista && String(itemDataRef.paisDestino) !== String(paisEncontradoNaLista.CODIGO_NUMERICO)) { itemDataRef.paisDestino = paisEncontradoNaLista.CODIGO_NUMERICO; } else if (!paisEncontradoNaLista && itemDataRef.paisDestino) { const nomeOriginalDoCodigo = (_paisesDataCache.find(p=>String(p.CODIGO_NUMERICO) === String(itemDataRef.paisDestino))?.NOME || ''); if (paisNomeDigitado !== nomeOriginalDoCodigo) { console.warn(`[main.mjs Salvar Modal Item] Nome de país '${paisNomeDigitado}' não encontrado. Código ${itemDataRef.paisDestino} (Nome original: ${nomeOriginalDoCodigo}) mantido.`); } } }
-                Object.assign(itemDataRef, newData);
-                const btnTxt = saveItemBtnGlobalRef.innerHTML; saveItemBtnGlobalRef.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Salvando...`; saveItemBtnGlobalRef.disabled = true;
-                setTimeout(() => { itemDetailsModalInstance?.hide(); showToast("Item atualizado localmente!"); saveItemBtnGlobalRef.innerHTML = btnTxt; saveItemBtnGlobalRef.disabled = false; renderNotasFiscaisTable(); }, 300);
-            } catch (saveErr) { console.error("[main.mjs Salvar Modal Item] Erro salvar:", saveErr); alert(`Erro: ${saveErr.message}.`); saveItemBtnGlobalRef.innerHTML = 'Salvar Alterações Item'; saveItemBtnGlobalRef.disabled = false; }
-        });
-    }
-
-    if(batchEditButton && batchEditModalInstance) {
-        batchEditButton.addEventListener('click', async () => { 
-            if (!window.processedNFData?.length || window.processedNFData.every(nf => !nf.items?.length)) { alert("Não há itens para editar em lote."); return; } 
-            console.log("[main.mjs Abrir Modal Lote] Botão clicado.");
-            await fetchPaisesDataIfNeeded(); 
-            batchEditModalInstance.show(); 
-        });
-    }
-
-    const saveBatchBtnGlobalRef = document.getElementById('saveBatchEdit');
-    if (saveBatchBtnGlobalRef && batchEditModalElement) {
-        saveBatchBtnGlobalRef.addEventListener('click', () => {
-            console.log("[main.mjs Salvar Modal Lote] Botão 'Aplicar' clicado.");
-            const batchForm = batchEditModalElement.querySelector('#batchEditForm');
-            if (!batchForm) { console.error("[main.mjs Salvar Modal Lote] Form #batchEditForm não encontrado."); return; }
-            if (!window.processedNFData?.length || window.processedNFData.every(nf => !nf.items?.length)) { alert("Sem itens para lote."); batchEditModalInstance?.hide(); return; }
-            const incotermLote = batchForm.querySelector('#batchIncotermSelectModal')?.value; 
-            const paisNomeLote = batchForm.querySelector('#batchPaisDestinoInputModal')?.value.trim();
-            let paisCodigoLote = null;
-            if (paisNomeLote) { paisCodigoLote = getCountryCodeByName(paisNomeLote); if (!paisCodigoLote) { console.warn(`[main.mjs Salvar Modal Lote] País para lote "${paisNomeLote}" não encontrado.`); alert(`Atenção: País "${paisNomeLote}" não reconhecido.`); } }
-            const enqsLote = [1,2,3,4].map(i => batchForm.querySelector(`#batchEnquadramento${i}SelectModal`)?.value); 
-            const ccptCcromLote = batchForm.querySelector('input[name="batchCcptCcromModal"]:checked')?.value; 
-            let itemsChangedCount = 0;
-            window.processedNFData.forEach(nfEntry => { if (nfEntry.items?.length) { nfEntry.items.forEach(item => { let changed = false; if (incotermLote && item.condicaoVenda !== incotermLote) { item.condicaoVenda = incotermLote; changed = true; } if (paisCodigoLote && item.paisDestino !== paisCodigoLote) { item.paisDestino = paisCodigoLote; changed = true; } enqsLote.forEach((enq, i) => { const key = `enquadramento${i+1}`; if (enq && item[key] !== enq) { item[key] = enq; changed = true; } }); if (ccptCcromLote !== undefined && ccptCcromLote !== "") { if (ccptCcromLote === "NA" && item.ccptCcrom !== "") { item.ccptCcrom = ""; changed = true; } else if (ccptCcromLote !== "NA" && item.ccptCcrom !== ccptCcromLote) { item.ccptCcrom = ccptCcromLote; changed = true; } } if (changed) itemsChangedCount++; }); } });
-            batchEditModalInstance?.hide(); renderNotasFiscaisTable(); showToast(`${itemsChangedCount} item(ns) atualizados em lote.`); console.log(`[main.mjs Salvar Modal Lote] ${itemsChangedCount} itens atualizados.`);
-        });
-    }
-    
-    const HTML_DUE_ID_HIDDEN_CONST = 'due_id_hidden'; 
-    const HTML_DUE_NOME_CLIENTE_CONST = 'nomeCliente'; 
-
-    if (salvarDueButton && mainForm && dueIdHiddenInput) {
-        salvarDueButton.addEventListener('click', async () => { 
-            console.log("[main.mjs Salvar DU-E] Botão Salvar DU-E clicado.");
-            if(spinner) spinner.style.display = 'flex'; salvarDueButton.disabled = true; if(enviarDueButton) enviarDueButton.disabled = true;
-            const formDataObj = {}; const formDataEntries = new FormData(mainForm);
-            for (const [key, value] of formDataEntries.entries()) { const el=mainForm.elements[key];if(el?.type==='checkbox'){formDataObj[key]=el.checked;}else if(el?.type==='radio'){const chk=mainForm.querySelector(`input[name="${key}"]:checked`);formDataObj[key]=chk?chk.value:null;}else if(el?.tagName==='SELECT'&&value===''){formDataObj[key]=null;}else{formDataObj[key]=String(value).trim()===''?null:value;} }
-            formDataObj[HTML_DUE_ID_HIDDEN_CONST] = dueIdHiddenInput.value || null;
-            const itemsToSave = window.processedNFData || [];
-            if (!Array.isArray(itemsToSave) || itemsToSave.reduce((count, nf) => count + (nf.items?.length || 0), 0) === 0) { alert("Não há itens válidos para salvar."); if(spinner) spinner.style.display = 'none'; salvarDueButton.disabled = false; if(enviarDueButton && dueIdHiddenInput) enviarDueButton.disabled = !dueIdHiddenInput.value; return; }
-            const payload = { formData: formDataObj, itemsData: itemsToSave };
-            console.log("[main.mjs Salvar DU-E] Enviando payload:", payload);
-            console.log(`>>> [main.mjs Salvar DU-E] Valor nomeCliente ENVIADO: '${formDataObj[HTML_DUE_NOME_CLIENTE_CONST]}'`);
-            try {
-                const response = await fetch('due/salvar_due.php', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(payload) });
-                const responseText = await response.text(); console.log("[main.mjs Salvar DU-E] Resposta bruta:", responseText);
-                if (!response.ok) { throw new Error(`HTTP ${response.status}: ${responseText}`); }
-                const result = JSON.parse(responseText);
-                if (result.success) { console.log("Salvo OK:", result); showToast(result.message || 'Salvo!'); if (result.due_id && dueIdHiddenInput) { dueIdHiddenInput.value = result.due_id; document.title = `DU-E: ${result.due_id}`; } if(enviarDueButton) enviarDueButton.disabled = !(dueIdHiddenInput && dueIdHiddenInput.value); }
-                else { console.error("Erro lógico salvar:", result); alert(`Falha: ${result.message || 'Erro servidor.'}`); if(enviarDueButton && dueIdHiddenInput) enviarDueButton.disabled = !dueIdHiddenInput.value; }
-            } catch (error) { console.error("[main.mjs Salvar DU-E] Erro fetch/salvar:", error); alert(`Erro comunicação: ${error.message}.`); if(enviarDueButton && dueIdHiddenInput) enviarDueButton.disabled = !dueIdHiddenInput.value; }
-            finally { if(spinner) spinner.style.display = 'none'; salvarDueButton.disabled = false; if(enviarDueButton && dueIdHiddenInput) enviarDueButton.disabled = !dueIdHiddenInput.value; }
-        });
-        console.log("[main.mjs DOMContentLoaded] Listener Salvar Adicionado OK.");
-    }
-
-    if (enviarDueButton && dueIdHiddenInput) { 
-        enviarDueButton.addEventListener('click', () => { const id=dueIdHiddenInput.value; if(!id){alert('Salve primeiro.');return;} if(confirm(`Enviar DU-E ${id}?`)){alert(`Envio NÃO IMPLEMENTADO (DU-E: ${id}).`);}}); 
-        console.log("[main.mjs DOMContentLoaded] Listener Enviar Adicionado OK."); 
-    }
-
-    if(salvarDueButton) salvarDueButton.disabled = false; 
-    if(enviarDueButton && dueIdHiddenInput) enviarDueButton.disabled = !dueIdHiddenInput.value; 
-    if(batchEditButton) batchEditButton.disabled = !(window.processedNFData && window.processedNFData.length > 0 && window.processedNFData.some(nf => nf.items?.length > 0));
-
-    console.log("[main.mjs DOMContentLoaded] Script principal: Aplicação pronta e listeners configurados.");
-});
-
+// DENTRO DO SEU main.mjs
 function showToast(message, type = 'info') {
     const toastContainer = document.getElementById('toast-container') || (() => {
         const tc = document.createElement('div');
         tc.id = 'toast-container';
-        tc.style.position = 'fixed'; tc.style.top = '20px'; tc.style.right = '20px'; tc.style.zIndex = '1090';
+        Object.assign(tc.style, { position: 'fixed', top: '20px', right: '20px', zIndex: '1090' });
         document.body.appendChild(tc);
         return tc;
     })();
+
     const toastEl = document.createElement('div');
     toastEl.className = `alert alert-${type === 'error' ? 'danger' : (type === 'success' ? 'success' : 'info')} alert-dismissible fade show m-1`;
     toastEl.setAttribute('role', 'alert');
-    toastEl.innerHTML = `${htmlspecialchars(message)}<button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>`;
+
+    // Processa a mensagem para HTML seguro e lida com quebras de linha
+    let processedMessage = String(message ?? ''); // Garante que é string
+    processedMessage = processedMessage.replace(/\r\n|\r|\n/g, '<br>'); // Substitui quebras de linha por <br>
+    const safeMessage = htmlspecialchars(processedMessage); // Escapa o HTML
+
+    toastEl.innerHTML = `${safeMessage}<button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>`;
     toastContainer.appendChild(toastEl);
-    if (bootstrap?.Alert) {
+
+    if (window.bootstrap?.Alert && typeof bootstrap.Alert.getOrCreateInstance === 'function') {
+        const bsAlert = bootstrap.Alert.getOrCreateInstance(toastEl);
+        setTimeout(() => { if (toastEl.parentNode) bsAlert.close(); }, 5000);
+    } else if (window.bootstrap?.Alert) { // Fallback para Bootstrap 5 mais antigo
         const bsAlert = new bootstrap.Alert(toastEl);
-        setTimeout(() => { bsAlert.close(); }, 5000);
+        setTimeout(() => { if (toastEl.parentNode) bsAlert.close(); }, 5000);
     } else {
-        setTimeout(() => { toastEl.classList.remove('show'); setTimeout(() => toastEl.remove(), 150);}, 5000);
+        setTimeout(() => { if (toastEl.parentNode) { toastEl.classList.remove('show'); setTimeout(() => { if (toastEl.parentNode) toastEl.remove(); }, 150); } }, 5000);
     }
-    console.log(`[Toast] Exibido: ${message}`);
+    console.log(`[Toast Executado] ${type.toUpperCase()}: ${message}`); // Log da mensagem original
 }
 
-function getCountryCodeByName(countryName) {
-    if (!_paisesDataCache || !Array.isArray(_paisesDataCache)) {
-        console.warn("[getCountryCodeByName] _paisesDataCache não disponível.");
-        return null;
-    }
-    const countryNameToSearch = String(countryName)?.toLowerCase();
-    const found = _paisesDataCache.find(p => p.NOME && p.NOME.toLowerCase() === countryNameToSearch);
-    return found ? found.CODIGO_NUMERICO : null;
+// --- Funções de Busca de Dados AJAX com Cache ---
+async function fetchGenericData(sourceName) {
+    const source = moduleState.dataSources[sourceName]; if (!source) { console.error(`[FetchData][${sourceName}] Fonte desconhecida.`); return []; }
+    const logPrefix = `[FetchData][${source.logPrefix}]`;
+    if (source.cache && source.cache.length > 0) { console.log(`${logPrefix} Usando cache (${source.cache.length} itens).`); return source.cache; }
+    if (source.promise) { console.log(`${logPrefix} Aguardando promise existente.`); return source.promise; }
+    console.log(`${logPrefix} Buscando dados via AJAX: ${source.url}`);
+    source.promise = fetch(source.url)
+        .then(response => { if (!response.ok) { return response.text().then(text => { console.error(`${logPrefix} Erro HTTP ${response.status}. Resposta:`, text); throw new Error(`Erro HTTP ${response.status} ao buscar ${source.dataKey}.`); }); } return response.json(); })
+        .then(data => {
+            if (data.sucesso && data[source.dataKey] && Array.isArray(data[source.dataKey])) {
+                source.cache = data[source.dataKey];
+                console.log(`${logPrefix} Dados carregados: ${source.cache.length} ${source.dataKey}. Amostra [0]:`, source.cache.length > 0 ? JSON.stringify(source.cache[0]) : 'Array vazio');
+                return source.cache;
+            } else {
+                console.error(`${logPrefix} Resposta AJAX inválida ou sem sucesso para ${source.dataKey}:`, data);
+                source.cache = []; return [];
+            }
+        })
+        .catch(error => { console.error(`${logPrefix} Erro CRÍTICO na requisição AJAX para ${source.dataKey}:`, error); showToast(`Erro ao carregar ${source.dataKey}. Verifique o console.`, 'error'); source.cache = []; return []; })
+        .finally(() => { source.promise = null; });
+    return source.promise;
 }
+const fetchPaisesDataIfNeeded = () => fetchGenericData('paises');
+const fetchRecintosAduaneirosIfNeeded = () => fetchGenericData('recintos');
+const fetchUnidadesRfbIfNeeded = () => fetchGenericData('unidadesRfb');
+
+// --- Função Genérica de Autocomplete (input.value SEMPRE será o NOME) ---
+function setupGenericAutocomplete(inputElement, dataProviderFn, options) {
+    const AC_LOG_PREFIX = `[Autocomplete][${options.idPrefix || inputElement.id || 'unnamed'}]`;
+    if (!inputElement) { console.error(`${AC_LOG_PREFIX} ERRO GRAVE: inputElement não fornecido para Autocomplete.`); return; }
+    console.log(`${AC_LOG_PREFIX} Configurando para input: ${inputElement.id}. Opções:`, JSON.stringify(options));
+
+    const {
+        valueKey, displayKey,
+        labelFormatter = item => `${item[displayKey] || ''} (${item[valueKey] || ''})`,
+        idPrefix = `ac-${inputElement.id}-${Date.now().toString().slice(-5)}`,
+        initialCodeToGetName = null,
+        modalElement = null,
+        sourceNameForDebug = 'unspecified',
+        storeCodeCallback = (code, item) => {}
+    } = options;
+
+    const listContainerId = `${idPrefix}-list`;
+    let listContainer = document.getElementById(listContainerId);
+    if (listContainer) listContainer.remove();
+
+    listContainer = document.createElement('div'); listContainer.id = listContainerId;
+    listContainer.className = 'd-none position-absolute w-100 bg-white border rounded mt-1 shadow-sm';
+    Object.assign(listContainer.style, { maxHeight: '200px', overflowY: 'auto', zIndex: modalElement ? '1055' : '1000' });
+    if (getComputedStyle(inputElement.parentNode).position === 'static') inputElement.parentNode.style.position = 'relative';
+    inputElement.parentNode.appendChild(listContainer);
+
+    let currentData = []; let dataFetched = false; let fetchInProgress = false;
+
+    const fetchDataAndSetInitialName = async () => {
+        if (fetchInProgress) return; fetchInProgress = true;
+        console.log(`${AC_LOG_PREFIX}[${sourceNameForDebug}] Buscando dados (chamada inicial/foco)...`);
+        try {
+            currentData = await dataProviderFn(); dataFetched = true;
+            console.log(`${AC_LOG_PREFIX}[${sourceNameForDebug}] Dados recebidos: ${currentData.length} itens. Amostra[0]:`, currentData.length > 0 ? JSON.stringify(currentData[0]) : 'vazio');
+
+            if (initialCodeToGetName !== null && initialCodeToGetName !== '' && currentData.length > 0) {
+                console.log(`${AC_LOG_PREFIX}[${sourceNameForDebug}] Tentando encontrar item com ${valueKey} = '${initialCodeToGetName}'`);
+                const selectedItem = currentData.find(i => i && String(i[valueKey]) === String(initialCodeToGetName));
+                if (selectedItem && selectedItem[displayKey] !== undefined) {
+                    inputElement.value = selectedItem[displayKey];
+                    storeCodeCallback(selectedItem[valueKey], selectedItem);
+                    console.log(`${AC_LOG_PREFIX}[${sourceNameForDebug}] Código inicial '${initialCodeToGetName}' ENCONTRADO. Input.value (NOME): '${inputElement.value}'`);
+                } else {
+                    console.warn(`${AC_LOG_PREFIX}[${sourceNameForDebug}] Código inicial '${initialCodeToGetName}' NÃO encontrado nos dados ou item não tem ${displayKey}. Input.value setado para o código como fallback.`);
+                    inputElement.value = initialCodeToGetName;
+                    storeCodeCallback(initialCodeToGetName, null);
+                }
+            } else if (initialCodeToGetName !== null && initialCodeToGetName !== '') {
+                 console.warn(`${AC_LOG_PREFIX}[${sourceNameForDebug}] Código inicial '${initialCodeToGetName}' fornecido, mas currentData está vazio. Input.value setado para o código.`);
+                 inputElement.value = initialCodeToGetName;
+                 storeCodeCallback(initialCodeToGetName, null);
+            } else {
+                console.log(`${AC_LOG_PREFIX}[${sourceNameForDebug}] Sem código inicial válido fornecido. Limpando input.value.`);
+                inputElement.value = '';
+                storeCodeCallback(null, null);
+            }
+        } catch (error) { console.error(`${AC_LOG_PREFIX}[${sourceNameForDebug}] Erro ao buscar/processar dados iniciais:`, error); currentData = []; inputElement.value = ''; storeCodeCallback(null, null); }
+        finally { fetchInProgress = false; }
+    };
+
+    const updateList = (searchTerm = '') => {
+        const term = String(searchTerm).trim().toLowerCase();
+        console.log(`${AC_LOG_PREFIX}[${sourceNameForDebug}] updateList com termo: "${term}" (Original: "${searchTerm}")`);
+        if (!dataFetched && !fetchInProgress) {
+             if (!dataFetched) {
+                console.log(`${AC_LOG_PREFIX}[${sourceNameForDebug}] Dados não buscados, tentando buscar para updateList...`);
+                fetchDataAndSetInitialName().then(() => updateList(searchTerm));
+            }
+            listContainer.innerHTML = '<div class="p-2 text-muted small">Carregando...</div>';
+            listContainer.classList.remove('d-none'); return;
+        }
+        if (!dataFetched && fetchInProgress) { listContainer.innerHTML = '<div class="p-2 text-muted small">Carregando...</div>'; listContainer.classList.remove('d-none'); return; }
+
+        listContainer.innerHTML = '';
+        if (!currentData || currentData.length === 0) { console.warn(`${AC_LOG_PREFIX}[${sourceNameForDebug}] Sem dados (currentData) para filtrar.`); listContainer.innerHTML = `<div class="p-2 text-danger small">Lista de dados indisponível.</div>`; if (inputElement === document.activeElement || term) listContainer.classList.remove('d-none'); return; }
+
+        const filteredData = currentData.filter(item => {
+            if (!item) return false;
+            const displayName = String(item[displayKey] || '').toLowerCase();
+            const codeValue = String(item[valueKey] || '').toLowerCase();
+            if (term === '' && inputElement === document.activeElement) return true;
+            if (term === '') return false;
+            return displayName.includes(term) || codeValue.includes(term);
+        });
+        console.log(`${AC_LOG_PREFIX}[${sourceNameForDebug}] Dados filtrados: ${filteredData.length} de ${currentData.length} para termo "${term}"`);
+        if (filteredData.length > 0) {
+            filteredData.forEach(item => {
+                const itemDiv = document.createElement('div'); itemDiv.className = 'list-group-item list-group-item-action py-1 px-2'; Object.assign(itemDiv.style, { cursor: 'pointer' });
+                itemDiv.textContent = labelFormatter(item);
+                itemDiv.addEventListener('click', () => {
+                    console.log(`${AC_LOG_PREFIX}[${sourceNameForDebug}] Item clicado:`, item);
+                    inputElement.value = item[displayKey] || '';
+                    storeCodeCallback(item[valueKey], item);
+                    console.log(`${AC_LOG_PREFIX} Input.value (NOME) definido para: '${inputElement.value}'`);
+                    listContainer.classList.add('d-none');
+                    inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+                listContainer.appendChild(itemDiv);
+            });
+            listContainer.classList.remove('d-none');
+        } else {
+            if (term.length > 0) listContainer.innerHTML = '<div class="p-2 text-muted small">Nenhum resultado encontrado.</div>'; else listContainer.classList.add('d-none');
+            if (term.length > 0 || (currentData.length === 0 && term.length > 0)) listContainer.classList.remove('d-none');
+        }
+    };
+
+    inputElement.addEventListener('input', (e) => updateList(e.target.value));
+    inputElement.addEventListener('focus', () => {
+        console.log(`${AC_LOG_PREFIX}[${sourceNameForDebug}] Input focado.`);
+        if (!dataFetched) {
+            fetchDataAndSetInitialName().then(() => updateList(inputElement.value));
+        } else {
+            updateList(inputElement.value);
+        }
+    });
+    const clickOutsideHandler = (e) => { if (!listContainer.classList.contains('d-none') && !listContainer.contains(e.target) && e.target !== inputElement) { listContainer.classList.add('d-none'); } };
+    document.addEventListener('click', clickOutsideHandler, true);
+    if (modalElement) { const onModalHidden = () => { document.removeEventListener('click', clickOutsideHandler, true); modalElement.removeEventListener('hidden.bs.modal', onModalHidden); }; modalElement.removeEventListener('hidden.bs.modal', onModalHidden); modalElement.addEventListener('hidden.bs.modal', onModalHidden); }
+    
+    fetchDataAndSetInitialName();
+}
+
+// --- Validação de Item ---
+function isItemDueComplete(item) { if (!item) return false; return REQUIRED_DUE_FIELDS.every(fieldName => { const value = item[fieldName]; if (Array.isArray(value)) return value.length > 0; if (typeof value === 'number') return !isNaN(value); return value !== null && value !== undefined && String(value).trim() !== ''; }); }
+
+// --- Processamento de XML NFe ---
+const parseNFeXML = (xmlString, fileName = 'arquivo') => { const PXML_LOG = `[ParseNFeXML][${fileName}]`; console.log(`${PXML_LOG} Iniciando.`); try { const parser = new DOMParser(); const xmlDoc = parser.parseFromString(xmlString, "text/xml"); const parserError = xmlDoc.getElementsByTagName("parsererror"); if (parserError.length > 0) { console.error(`${PXML_LOG} Erro no parse:`, parserError[0].textContent); throw new Error(`Erro parse XML: ${parserError[0].textContent}`); } const infNFe = xmlDoc.getElementsByTagName("infNFe")[0]; if (!infNFe) { console.error(`${PXML_LOG} <infNFe> não encontrada.`); throw new Error("<infNFe> não encontrada"); } const chave = getXmlAttr(infNFe, 'Id').replace('NFe', ''); const emit = infNFe.getElementsByTagName("emit")[0]; const dest = infNFe.getElementsByTagName("dest")[0]; const enderDest = dest?.getElementsByTagName("enderDest")[0]; const exporta = infNFe.getElementsByTagName("exporta")[0]; const infAdic = infNFe.getElementsByTagName("infAdic")[0]; const detElements = infNFe.getElementsByTagName("det"); const nfeData = { chaveAcesso: chave, emitente: { cnpj: getXmlValue(emit, "CNPJ"), nome: getXmlValue(emit, "xNome") }, destinatario: { nome: getXmlValue(dest, "xNome"), idEstrangeiro: getXmlValue(dest, "idEstrangeiro"), endereco: { logradouro: getXmlValue(enderDest, "xLgr"), numero: getXmlValue(enderDest, "nro"), bairro: getXmlValue(enderDest, "xBairro"), municipio: getXmlValue(enderDest, "xMun"), uf: getXmlValue(enderDest, "UF"), paisNome: getXmlValue(enderDest, "xPais"), paisCodigo: getXmlValue(enderDest, "cPais") } }, exportacao: { ufSaidaPais: getXmlValue(exporta, "UFSaidaPais"), localExportacao: getXmlValue(exporta, "xLocExporta"), codigoRecintoAduaneiro: getXmlValue(exporta, "xLocDespacho"), codigoUnidadeRfbDespacho: getXmlValue(exporta, "xLocDespacho"), codigoUnidadeRfbEmbarque: getXmlValue(exporta, "xLocEmbarque") }, infAdicional: { infCpl: getXmlValue(infAdic, "infCpl"), infAdFisco: getXmlValue(infAdic, "infAdFisco") }, items: [] }; for (let i = 0; i < detElements.length; i++) { const det = detElements[i]; const prod = det.getElementsByTagName("prod")[0]; if (!prod) { console.warn(`${PXML_LOG} Item ${i+1}: <prod> não encontrada.`); continue; } const nItem = getXmlAttr(det, 'nItem') || (i + 1).toString(); const xProdValue = getXmlValue(prod, "xProd"); const qCom = parseFloat(getXmlValue(prod, "qCom")) || 0; const vUnCom = parseFloat(getXmlValue(prod, "vUnCom")) || 0; const vProd = parseFloat(getXmlValue(prod, "vProd")) || 0; const qTrib = parseFloat(getXmlValue(prod, "qTrib")); const pesoLXml = getXmlValue(prod, "pesoL") || getXmlValue(prod, "PESOL") || getXmlValue(prod, "PesoLiquido"); const pesoL = pesoLXml ? parseFloat(pesoLXml.replace(',', '.')) : null; const paisDestinoInicialXML = getSafe(nfeData, 'destinatario.endereco.paisCodigo', null); nfeData.items.push({ nItem, cProd: getXmlValue(prod, "cProd"), xProd: xProdValue, ncm: getXmlValue(prod, "NCM"), cfop: getXmlValue(prod, "CFOP"), uCom: getXmlValue(prod, "uCom"), qCom, vUnCom, vProd, uTrib: getXmlValue(prod, "uTrib"), qTrib: isNaN(qTrib) ? null : qTrib, infAdProd: getXmlValue(det, "infAdProd"), descricaoNcm: "", atributosNcm: "", unidadeEstatistica: getXmlValue(prod, "uTrib"), quantidadeEstatistica: isNaN(qTrib) ? null : qTrib, pesoLiquidoItem: isNaN(pesoL) ? null : pesoL, condicaoVenda: "", vmcv: null, vmle: null, paisDestino: paisDestinoInicialXML, descricaoDetalhadaDue: xProdValue, enquadramento1: "", enquadramento2: "", enquadramento3: "", enquadramento4: "", lpcos: [], nfsRefEletronicas: [], nfsRefFormulario: [], nfsComplementares: [], ccptCcrom: "" }); } console.log(`${PXML_LOG} Parse OK: ${nfeData.items.length} itens.`, nfeData); return nfeData; } catch (error) { console.error(`${PXML_LOG} Erro GERAL:`, error); const uploadStatusEl = document.getElementById('uploadStatus'); if (uploadStatusEl) uploadStatusEl.innerHTML += `<div class="text-danger small"><i class="bi bi-x-octagon-fill me-1"></i>Falha processar ${htmlspecialchars(fileName)}: ${htmlspecialchars(error.message)}</div>`; return null; } };
+
+// --- Criação dos Campos do Modal de Detalhes do Item ---
+async function createItemDetailsFields(itemData, nfData, nfIndex, itemIndex) {
+    const CIDF_LOG = `[CreateItemFields][${nfIndex}-${itemIndex}]`; console.log(`${CIDF_LOG} ItemData:`, itemData);
+    await fetchPaisesDataIfNeeded(); const container = document.createElement('div'); container.classList.add('item-details-form-container');
+    const idPrefix = `modal-item-${nfIndex}-${itemIndex}-`; const val = (key, defaultValue = '') => getSafe(itemData, key, defaultValue);
+    const isSelected = (v, t) => (String(v) === String(t) && v !== '' && v !== null) ? 'selected' : ''; const isChecked = (v, t) => v === t ? 'checked' : '';
+    const createOptions = (data, valueK, textK, selectedV, includeEmpty = true, formatter = null) => { let html = includeEmpty ? '<option value="">Selecione...</option>' : ''; if (data?.length) { html += data.map(item => { const text = formatter ? formatter(item) : getSafe(item, textK); return `<option value="${htmlspecialchars(getSafe(item, valueK))}" ${isSelected(selectedV, getSafe(item, valueK))}>${htmlspecialchars(text)}</option>`; }).join(''); } return html; };
+    let nomePaisInicial = ''; if (itemData?.paisDestino) { const paises = moduleState.dataSources.paises.cache || []; const pais = paises.find(p => String(p.CODIGO_NUMERICO) === String(itemData.paisDestino)); nomePaisInicial = pais ? pais.NOME : `Cód: ${itemData.paisDestino}`; }
+
+    container.innerHTML = `
+        <h5 class="mb-3 border-bottom pb-2">Item ${htmlspecialchars(val('nItem', itemIndex + 1))} (NF-e: ...${htmlspecialchars(getSafe(nfData, 'chaveAcesso', 'N/A').slice(-6))})</h5>
+        <h6>Dados Básicos e NCM</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6"><label class="form-label">Exportador:</label><input type="text" class="form-control form-control-sm bg-light" value="${htmlspecialchars(getSafe(nfData, 'emitente.nome', 'N/A'))}" readonly></div>
+            <div class="col-md-6"><label for="${idPrefix}ncm" class="form-label">NCM:</label><input type="text" id="${idPrefix}ncm" name="ncm" class="form-control form-control-sm" value="${htmlspecialchars(val('ncm'))}" required></div>
+            <div class="col-md-6"><label for="${idPrefix}descricao_ncm" class="form-label">Descrição NCM:</label><input type="text" id="${idPrefix}descricao_ncm" name="descricaoNcm" class="form-control form-control-sm" value="${htmlspecialchars(val('descricaoNcm'))}" placeholder="Consultar"></div>
+            <div class="col-md-6"><label for="${idPrefix}atributos_ncm" class="form-label">Atributos NCM:</label><input type="text" id="${idPrefix}atributos_ncm" name="atributosNcm" class="form-control form-control-sm" value="${htmlspecialchars(val('atributosNcm'))}" placeholder="Consultar/definir"></div>
+        </div>
+        <h6>Descrição Mercadoria</h6>
+        <div class="mb-3"><label for="${idPrefix}descricao_mercadoria" class="form-label">Descrição NF-e:</label><textarea id="${idPrefix}descricao_mercadoria" class="form-control form-control-sm bg-light" rows="2" readonly>${htmlspecialchars(val('xProd'))}</textarea></div>
+        <div class="mb-3"><label for="${idPrefix}descricao_complementar" class="form-label">Descrição Complementar (Item):</label><textarea id="${idPrefix}descricao_complementar" name="infAdProd" class="form-control form-control-sm" rows="2">${htmlspecialchars(val('infAdProd'))}</textarea></div>
+        <div class="mb-4"><label for="${idPrefix}descricao_detalhada_due" class="form-label">Descrição Detalhada DU-E:</label><textarea id="${idPrefix}descricao_detalhada_due" name="descricaoDetalhadaDue" class="form-control form-control-sm" rows="4" required>${htmlspecialchars(val('descricaoDetalhadaDue'))}</textarea></div>
+        <h6>Quantidades e Valores</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4"><label for="${idPrefix}unidade_estatistica" class="form-label">Unid. Estatística:</label><input type="text" id="${idPrefix}unidade_estatistica" name="unidadeEstatistica" class="form-control form-control-sm" value="${htmlspecialchars(val('unidadeEstatistica'))}" required></div>
+            <div class="col-md-4"><label for="${idPrefix}quantidade_estatistica" class="form-label">Qtd. Estatística:</label><input type="number" step="any" id="${idPrefix}quantidade_estatistica" name="quantidadeEstatistica" class="form-control form-control-sm" value="${htmlspecialchars(val('quantidadeEstatistica', ''))}" required></div>
+            <div class="col-md-4"><label for="${idPrefix}peso_liquido" class="form-label">Peso Líquido (KG):</label><input type="number" step="any" id="${idPrefix}peso_liquido" name="pesoLiquidoItem" class="form-control form-control-sm" value="${htmlspecialchars(val('pesoLiquidoItem', ''))}" required></div>
+            <div class="col-md-3"><label class="form-label">Unid. Comercial:</label><input type="text" class="form-control form-control-sm bg-light" value="${htmlspecialchars(val('uCom'))}" readonly></div>
+            <div class="col-md-3"><label class="form-label">Qtd. Comercial:</label><input type="number" step="any" class="form-control form-control-sm bg-light" value="${htmlspecialchars(val('qCom'))}" readonly></div>
+            <div class="col-md-3"><label class="form-label">Vlr Unit. Com.:</label><input type="number" step="any" class="form-control form-control-sm bg-light" value="${htmlspecialchars(val('vUnCom'))}" readonly></div>
+            <div class="col-md-3"><label class="form-label">Vlr Total:</label><input type="number" step="any" class="form-control form-control-sm bg-light" value="${htmlspecialchars(val('vProd'))}" readonly></div>
+            <div class="col-md-4"><label for="${idPrefix}condicao_venda" class="form-label">Condição Venda:</label><select id="${idPrefix}condicao_venda" name="condicaoVenda" class="form-select form-select-sm" required>${createOptions((window.incotermsData || []), 'Sigla', 'Sigla', val('condicaoVenda'), true, item => `${item.Sigla} - ${item.Descricao}`)}</select></div>
+            <div class="col-md-4"><label for="${idPrefix}vmle" class="form-label">VMLE (R$):</label><input type="number" step="any" id="${idPrefix}vmle" name="vmle" class="form-control form-control-sm" value="${htmlspecialchars(val('vmle', ''))}" required></div>
+            <div class="col-md-4"><label for="${idPrefix}vmcv" class="form-label">VMCV (Moeda Negociada):</label><input type="number" step="any" id="${idPrefix}vmcv" name="vmcv" class="form-control form-control-sm" value="${htmlspecialchars(val('vmcv', ''))}" required></div>
+        </div>
+        <h6>Importador e Destino</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6"><label class="form-label">Nome Importador (NF):</label><input type="text" class="form-control form-control-sm bg-light" value="${htmlspecialchars(getSafe(nfData, 'destinatario.nome', 'N/A'))}" readonly></div>
+            <div class="col-md-6"><label class="form-label">País Importador (NF):</label><input type="text" class="form-control form-control-sm bg-light" value="${htmlspecialchars(getSafe(nfData, 'destinatario.endereco.paisNome', 'N/A'))} (${htmlspecialchars(getSafe(nfData, 'destinatario.endereco.paisCodigo', 'N/A'))})" readonly></div>
+            <div class="col-12"><label class="form-label">Endereço (NF):</label><input type="text" class="form-control form-control-sm bg-light" value="${htmlspecialchars([getSafe(nfData, 'destinatario.endereco.logradouro'), getSafe(nfData, 'destinatario.endereco.numero'), getSafe(nfData, 'destinatario.endereco.bairro'), getSafe(nfData, 'destinatario.endereco.municipio'), getSafe(nfData, 'destinatario.endereco.uf')].filter(Boolean).join(', ') || 'Não informado')}" readonly></div>
+            <div class="col-md-6">
+                <label for="${idPrefix}pais_destino" class="form-label">País Destino Final (DU-E):</label>
+                <input type="text" id="${idPrefix}pais_destino" class="form-control form-control-sm" value="${htmlspecialchars(nomePaisInicial)}" placeholder="Digite para buscar..." autocomplete="off" required>
+            </div>
+        </div>
+        <h6>Enquadramentos</h6>
+        <div class="row g-3 mb-4">
+            ${[1,2,3,4].map(num => {
+                const enquadramentoValue = val(`enquadramento${num}`);
+                const optionsHtml = createOptions((window.enquadramentosData || []), 'CODIGO', 'CODIGO', enquadramentoValue, true, item => `${item.CODIGO} - ${item.DESCRICAO}`);
+                const semEnquadramentoSelected = isSelected(enquadramentoValue, '99999');
+                const requiredAttr = num === 1 ? 'required' : '';
+                return `
+                    <div class="col-md-6">
+                        <label for="${idPrefix}enquadramento${num}" class="form-label">${num}º Enquadramento:</label>
+                        <select id="${idPrefix}enquadramento${num}" name="enquadramento${num}" class="form-select form-select-sm" ${requiredAttr}>
+                            ${optionsHtml}
+                            <option value="99999" ${semEnquadramentoSelected}>99999 - SEM ENQUADRAMENTO</option>
+                        </select>
+                    </div>`;
+            }).join('')}
+        </div>
+        <h6>Acordos Comerciais (Exportador Original)</h6>
+        <div class="row g-3">
+            <div class="col-md-5">
+                <div class="border p-3 rounded">
+                    <div class="form-check"><input class="form-check-input" type="radio" name="ccptCcrom" id="${idPrefix}ccpt_ccrom_none" value="" ${isChecked(val('ccptCcrom'), '')}><label class="form-check-label" for="${idPrefix}ccpt_ccrom_none">Nenhum</label></div>
+                    <div class="form-check"><input class="form-check-input" type="radio" name="ccptCcrom" id="${idPrefix}ccpt" value="CCPT" ${isChecked(val('ccptCcrom'), 'CCPT')}><label class="form-check-label" for="${idPrefix}ccpt">CCPT</label></div>
+                    <div class="form-check"><input class="form-check-input" type="radio" name="ccptCcrom" id="${idPrefix}ccrom" value="CCROM" ${isChecked(val('ccptCcrom'), 'CCROM')}><label class="form-check-label" for="${idPrefix}ccrom">CCROM</label></div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const paisDestinoInput = container.querySelector(`#${idPrefix}pais_destino`);
+    if (paisDestinoInput && moduleState.globalItemDetailsModalElement) {
+        setupGenericAutocomplete(paisDestinoInput, fetchPaisesDataIfNeeded, {
+            valueKey: 'CODIGO_NUMERICO', displayKey: 'NOME',
+            labelFormatter: item => `${item.NOME || ''} (${item.CODIGO_NUMERICO || ''})`,
+            initialCodeToGetName: itemData.paisDestino,
+            idPrefix: `${idPrefix}pais-dest-modal`,
+            sourceNameForDebug: 'paises_modal_item',
+            modalElement: moduleState.globalItemDetailsModalElement,
+            storeCodeCallback: (code, selectedItem) => {
+                if (itemData) {
+                    itemData.paisDestino = code || null;
+                }
+            }
+        });
+    }
+    return container;
+}
+
+// --- Renderização da Tabela de Itens ---
+function renderNotasFiscaisTable() { const RNF_LOG = '[RenderNFTable]'; console.log(`${RNF_LOG} Executando.`); const tbody = document.querySelector('#notasFiscaisTable tbody'); const theadRow = document.querySelector('#notasFiscaisTable thead tr'); const batchBtn = document.getElementById('batchEditButton'); if (!tbody || !theadRow) { console.error(`${RNF_LOG} Tabela ou thead não encontrada.`); return; } tbody.innerHTML = ''; let statusHdr = theadRow.querySelector('.status-header'); if (!statusHdr) { statusHdr = document.createElement('th'); statusHdr.textContent = 'Status DUE'; statusHdr.classList.add('status-header', 'text-center'); statusHdr.style.width = '80px'; theadRow.appendChild(statusHdr); } else if (statusHdr !== theadRow.lastElementChild) { theadRow.appendChild(statusHdr); } const colCount = theadRow.cells.length; let hasItems = false; const nfs = window.processedNFData || []; if (!Array.isArray(nfs) || nfs.length === 0) { tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-muted fst-italic">Carregue XMLs...</td></tr>`; if (batchBtn) batchBtn.disabled = true; return; } nfs.forEach((nfEntry, nfIdx) => { const nf = nfEntry.nf || {}; const items = nfEntry.items || []; if (!items.length) { console.warn(`${RNF_LOG} NF ${nfIdx} sem itens.`); return; } const chaveShort = getSafe(nf, 'chaveAcesso', 'N/A').slice(-9); const nomeDest = getSafe(nf, 'destinatario.nome', 'Desconhecido'); items.forEach((item, itemIdx) => { if (!item || typeof item !== 'object') { console.warn(`${RNF_LOG} Item inválido ${itemIdx} NF ${nfIdx}`); return; } hasItems = true; let paisDestDisp = 'N/A'; if (item.paisDestino) { const paises = moduleState.dataSources.paises.cache || []; const pFound = paises.find(p => String(p.CODIGO_NUMERICO) === String(item.paisDestino)); paisDestDisp = pFound ? pFound.NOME : `Cód: ${item.paisDestino}`; } const row = document.createElement('tr'); row.classList.add('item-row'); row.dataset.nfIndex = nfIdx; row.dataset.itemIndex = itemIdx; row.innerHTML = `<td>...${htmlspecialchars(chaveShort)}</td><td class="text-center">${htmlspecialchars(getSafe(item, 'nItem', itemIdx + 1))}</td><td>${htmlspecialchars(getSafe(item, 'ncm', 'N/A'))}</td><td>${htmlspecialchars(getSafe(item, 'xProd', 'N/A'))}</td><td>${htmlspecialchars(nomeDest)}</td><td>${htmlspecialchars(paisDestDisp)}</td><td class="text-center"><button type="button" class="btn btn-sm btn-outline-primary toggle-details" title="Detalhes Item ${htmlspecialchars(getSafe(item, 'nItem', itemIdx + 1))}" data-nf-index="${nfIdx}" data-item-index="${itemIdx}"><i class="bi bi-pencil-fill"></i></button></td>`; const statusCell = document.createElement('td'); const completo = isItemDueComplete(item); statusCell.style.textAlign = 'center'; statusCell.style.verticalAlign = 'middle'; statusCell.innerHTML = completo ? '<span class="text-success" title="Completo">✅</span>' : '<span class="text-danger" title="Incompleto">❌</span>'; row.appendChild(statusCell); tbody.appendChild(row); }); }); if (!hasItems && nfs.length > 0) { tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-warning fst-italic">Nenhum item válido.</td></tr>`; if (batchBtn) batchBtn.disabled = true; } else if (hasItems) { if (batchBtn) batchBtn.disabled = false; } else { tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-muted fst-italic">Carregue XMLs...</td></tr>`; if (batchBtn) batchBtn.disabled = true; } }
+
+// --- Preencher Campos do Formulário Principal (Aba 1) ---
+const populateMainForm = async (nfDataPrimeiraNF) => {
+    const PMF_LOG = '[PopulateMainForm]'; console.log(`${PMF_LOG} Iniciando. Dados NF:`, nfDataPrimeiraNF);
+    // !!! IDs ATUALIZADOS PARA CORRESPONDER AO SEU LOG [LogFormIDs] !!!
+    const ID_CNPJ_EXP = 'text-cnpj-cpf-select', ID_NOME_EXP = 'nomeCliente', ID_INFO_COMPL = 'info-compl',
+          ID_REC_ADU_D = 'text-campo-de-pesquisa-recinto-alfandegado-d',
+          ID_REC_ADU_E = 'text-campo-de-pesquisa-recinto-alfandegado-e',
+          ID_UND_DESP = 'text-campo-de-pesquisa-unidades-rfb-d',
+          ID_UND_EMB = 'text-campo-de-pesquisa-unidades-rfb-e'; 
+    
+    const formEls = {
+        cnpjCpf: document.getElementById(ID_CNPJ_EXP),
+        nomeCliente: document.getElementById(ID_NOME_EXP),
+        infoComplGeral: document.getElementById(ID_INFO_COMPL),
+        recintoAduaneiroD: document.getElementById(ID_REC_ADU_D),
+        recintoAduaneiroE: document.getElementById(ID_REC_ADU_E),
+        unidadeRfbDespacho: document.getElementById(ID_UND_DESP),
+        unidadeRfbEmbarque: document.getElementById(ID_UND_EMB)
+    };
+
+    if (!formEls.recintoAduaneiroD) console.error(`${PMF_LOG} ERRO: Elemento recintoAduaneiroD (ID: ${ID_REC_ADU_D}) NÃO ENCONTRADO!`);
+    if (!formEls.recintoAduaneiroE) console.error(`${PMF_LOG} ERRO: Elemento recintoAduaneiroE (ID: ${ID_REC_ADU_E}) NÃO ENCONTRADO!`);
+    if (!formEls.unidadeRfbDespacho) console.error(`${PMF_LOG} ERRO: Elemento unidadeRfbDespacho (ID: ${ID_UND_DESP}) NÃO ENCONTRADO!`);
+    if (!formEls.unidadeRfbEmbarque) console.warn(`${PMF_LOG} AVISO: Elemento unidadeRfbEmbarque (ID: ${ID_UND_EMB}) não encontrado (pode ser opcional).`);
+
+    const editId = document.getElementById('due_id_hidden')?.value;
+
+    const setupAcComNomeNoValue = (element, dataProvider, initialCodeFromSource, sourceName) => {
+        if (!element) { console.warn(`${PMF_LOG} Elemento para Autocomplete ${sourceName} é NULO.`); return; }
+        console.log(`${PMF_LOG} Configurando Autocomplete para ${element.id} (source: ${sourceName}). InitialCode: '${initialCodeFromSource}'`);
+        setupGenericAutocomplete(element, dataProvider, {
+            valueKey: 'CODIGO',
+            displayKey: 'NOME',
+            labelFormatter: item => `${item.NOME || ''} (${item.CODIGO || ''})`,
+            initialCodeToGetName: initialCodeFromSource,
+            idPrefix: `${element.id}-ac`,
+            sourceNameForDebug: sourceName
+        });
+    };
+
+    if (nfDataPrimeiraNF && Object.keys(nfDataPrimeiraNF).length > 0) {
+        console.log(`${PMF_LOG} Preenchendo com dados XML.`);
+        if (formEls.cnpjCpf) formEls.cnpjCpf.value = getSafe(nfDataPrimeiraNF, 'emitente.cnpj', '');
+        if (formEls.nomeCliente) formEls.nomeCliente.value = getSafe(nfDataPrimeiraNF, 'emitente.nome', '');
+        if (formEls.infoComplGeral && !editId) formEls.infoComplGeral.value = getSafe(nfDataPrimeiraNF, 'infAdicional.infCpl', '');
+        
+        const recintoXMLCode = getSafe(nfDataPrimeiraNF, 'exportacao.codigoRecintoAduaneiro');
+        const undDespXMLCode = getSafe(nfDataPrimeiraNF, 'exportacao.codigoUnidadeRfbDespacho');
+        const undEmbXMLCode = getSafe(nfDataPrimeiraNF, 'exportacao.codigoUnidadeRfbEmbarque');
+        console.log(`${PMF_LOG} Códigos do XML: Recinto='${recintoXMLCode}', UndDesp='${undDespXMLCode}', UndEmb='${undEmbXMLCode}'`);
+
+        setupAcComNomeNoValue(formEls.recintoAduaneiroD, fetchRecintosAduaneirosIfNeeded, recintoXMLCode, 'recintos_main');
+        setupAcComNomeNoValue(formEls.recintoAduaneiroE, fetchRecintosAduaneirosIfNeeded, recintoXMLCode, 'recintos_main');
+        setupAcComNomeNoValue(formEls.unidadeRfbDespacho, fetchUnidadesRfbIfNeeded, undDespXMLCode, 'unidadesRfb_main_desp');
+        if (formEls.unidadeRfbEmbarque) setupAcComNomeNoValue(formEls.unidadeRfbEmbarque, fetchUnidadesRfbIfNeeded, undEmbXMLCode, 'unidadesRfb_main_emb');
+
+    } else if (editId && window.dueDataPrincipalPHP) {
+        console.log(`${PMF_LOG} Preenchendo com dados de edição (PHP).`);
+        const php = window.dueDataPrincipalPHP;
+        if (formEls.cnpjCpf) formEls.cnpjCpf.value = getSafe(php, 'cnpj_exportador', '');
+        if (formEls.nomeCliente) formEls.nomeCliente.value = getSafe(php, 'nome_exportador', '');
+        if (formEls.infoComplGeral) formEls.infoComplGeral.value = getSafe(php, 'info_complementar_geral', '');
+        
+        // ** MUITO IMPORTANTE: AJUSTE ESTAS CHAVES para os NOMES DOS CAMPOS que contêm os CÓDIGOS no seu objeto window.dueDataPrincipalPHP **
+        const recintoDBCode = getSafe(php, 'AQUI_CHAVE_CODIGO_RECINTO_PHP');
+        const undDespDBCode = getSafe(php, 'AQUI_CHAVE_CODIGO_UND_DESP_PHP');
+        const undEmbDBCode = getSafe(php, 'AQUI_CHAVE_CODIGO_UND_EMB_PHP'); 
+
+        console.log(`${PMF_LOG} Códigos do DB (PHP): Recinto='${recintoDBCode}', UndDesp='${undDespDBCode}', UndEmb='${undEmbDBCode}'`);
+
+        setupAcComNomeNoValue(formEls.recintoAduaneiroD, fetchRecintosAduaneirosIfNeeded, recintoDBCode, 'recintos_main_edit');
+        setupAcComNomeNoValue(formEls.recintoAduaneiroE, fetchRecintosAduaneirosIfNeeded, recintoDBCode, 'recintos_main_edit');
+        setupAcComNomeNoValue(formEls.unidadeRfbDespacho, fetchUnidadesRfbIfNeeded, undDespDBCode, 'unidadesRfb_main_desp_edit');
+        if (formEls.unidadeRfbEmbarque) setupAcComNomeNoValue(formEls.unidadeRfbEmbarque, fetchUnidadesRfbIfNeeded, undEmbDBCode, 'unidadesRfb_main_emb_edit');
+    } else {
+        console.warn(`${PMF_LOG} Nova DU-E sem XML/dados de edição. Configurando campos vazios.`);
+        if (formEls.infoComplGeral) formEls.infoComplGeral.value = '';
+        setupAcComNomeNoValue(formEls.recintoAduaneiroD, fetchRecintosAduaneirosIfNeeded, null, 'recintos_main_new');
+        setupAcComNomeNoValue(formEls.recintoAduaneiroE, fetchRecintosAduaneirosIfNeeded, null, 'recintos_main_new');
+        setupAcComNomeNoValue(formEls.unidadeRfbDespacho, fetchUnidadesRfbIfNeeded, null, 'unidadesRfb_main_desp_new');
+        if (formEls.unidadeRfbEmbarque) setupAcComNomeNoValue(formEls.unidadeRfbEmbarque, fetchUnidadesRfbIfNeeded, null, 'unidadesRfb_main_emb_new');
+        const radioPropria = document.getElementById('por-conta-propria'); if(radioPropria && !radioPropria.checked && !document.querySelector('input[name="tipo_operacao_due"]:checked')) radioPropria.checked = true;
+        const radioNfe = document.getElementById('nfe'); if(radioNfe && !radioNfe.checked && !document.querySelector('input[name="tipo_documento_base"]:checked')) radioNfe.checked = true;
+    }
+};
+
+// --- Código Principal (DOMContentLoaded) ---
+document.addEventListener('DOMContentLoaded', () => {
+    const DCL_LOG = '[DOMContentLoaded]'; console.log(`${DCL_LOG} Iniciando...`);
+    moduleState.globalItemDetailsModalElement = document.getElementById('itemDetailsModal');
+    moduleState.globalBatchEditModalElement = document.getElementById('batchEditModal');
+    const inputXML = document.getElementById('xml-files'), uploadStatus = document.getElementById('uploadStatus'),
+          spinner = document.getElementById('spinner'), notasTableQuery = '#notasFiscaisTable',
+          batchEditBtn = document.getElementById('batchEditButton'), mainForm = document.getElementById('dueForm'),
+          salvarDueBtn = document.getElementById('salvarDUE'), enviarDueBtn = document.getElementById('enviarDUE'),
+          dueIdHidden = document.getElementById('due_id_hidden');
+
+    if (!mainForm) {
+        console.error(`${DCL_LOG} ERRO FATAL: Formulário principal #dueForm NÃO encontrado. O script não pode prosseguir.`);
+        showToast("Erro crítico: Formulário principal #dueForm não encontrado.", "error");
+        return; 
+    }
+    const notasTableElement = document.querySelector(notasTableQuery);
+    if (!notasTableElement) console.warn(`${DCL_LOG} AVISO: Tabela ${notasTableQuery} não encontrada.`);
+    
+    logTodosOsElementosNoFormularioPrincipal();
+
+    try { if (window.bootstrap?.Modal) { if (moduleState.globalItemDetailsModalElement) moduleState.itemDetailsModalInstance = new bootstrap.Modal(moduleState.globalItemDetailsModalElement); if (moduleState.globalBatchEditModalElement) { moduleState.batchEditModalInstance = new bootstrap.Modal(moduleState.globalBatchEditModalElement); moduleState.globalBatchEditModalElement.addEventListener('hidden.bs.modal', () => { const bf = moduleState.globalBatchEditModalElement.querySelector('#batchEditForm'); if (bf) { bf.reset(); const r = bf.querySelector('input[name="batchCcptCcromModal"][value=""]'); if(r) r.checked = true;} }); } } else console.warn(`${DCL_LOG} Bootstrap Modal não encontrado.`); } catch (e) { console.error(`${DCL_LOG} Falha inicializar Modais:`, e); }
+    
+    renderNotasFiscaisTable();
+    
+    // CORREÇÃO PARA window.processedNFData = 0
+    if (typeof window.processedNFData === 'number' && window.processedNFData === 0) {
+        console.warn(`${DCL_LOG} window.processedNFData era 0. Convertendo para array vazio []. CORRIJA A INICIALIZAÇÃO NO SEU PHP.`);
+        window.processedNFData = [];
+    } else if (!Array.isArray(window.processedNFData)) {
+        console.warn(`${DCL_LOG} window.processedNFData não é um array. Definindo como array vazio []. Verifique a inicialização no PHP. Valor atual:`, window.processedNFData);
+        window.processedNFData = [];
+    }
+
+    const initialNF = window.processedNFData?.[0]?.nf;
+    populateMainForm(initialNF || (window.dueDataPrincipalPHP ? null : null) );
+    
+    Promise.all([fetchPaisesDataIfNeeded(), fetchRecintosAduaneirosIfNeeded(), fetchUnidadesRfbIfNeeded()])
+        .then(() => {
+            console.log(`${DCL_LOG} Dados de lookup (países, recintos, unidades) pré-carregados ou busca iniciada.`);
+        })
+        .catch(err => console.error(`${DCL_LOG} Erro no pré-carregamento de dados de lookup:`, err));
+
+    if (inputXML) { inputXML.addEventListener('change', async (event) => { const IXML_LOG = `${DCL_LOG}[InputXML]`; console.log(`${IXML_LOG} Evento 'change'.`); const files = event.target.files; if (!files?.length) { if(uploadStatus) uploadStatus.innerHTML = 'Nenhum arquivo selecionado.'; return; } if(uploadStatus) uploadStatus.innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border spinner-border-sm me-2 text-primary"></div>Processando ${files.length} arquivo(s)...</div>`; if(spinner) spinner.style.display = 'flex'; inputXML.disabled = true; let tempProcData = [], promises = [], errCount = 0, statusHTML = ''; for (const file of files) { if (file.name.toLowerCase().endsWith('.xml') && (file.type === 'text/xml' || file.type === 'application/xml' || file.type === '')) { promises.push( file.text().then(xml => { const data = parseNFeXML(xml, file.name); if (data?.items?.length > 0) { tempProcData.push({ nf: data, items: data.items }); statusHTML += `<div class="alert alert-success alert-sm py-1 px-2 mb-1 small"><i class="bi bi-check-circle-fill me-1"></i>${htmlspecialchars(file.name)}: OK (${data.items.length} itens)</div>`; } else if (data) { statusHTML += `<div class="alert alert-warning alert-sm py-1 px-2 mb-1 small"><i class="bi bi-exclamation-triangle-fill me-1"></i>${htmlspecialchars(file.name)}: XML válido, sem itens.</div>`; } else { errCount++; } }).catch(err => { console.error(`${IXML_LOG} Erro ao LER ${file.name}:`, err); statusHTML += `<div class="alert alert-danger alert-sm py-1 px-2 mb-1 small"><i class="bi bi-x-octagon-fill me-1"></i>Falha LER ${htmlspecialchars(file.name)}.</div>`; errCount++; }) ); } else { statusHTML += `<div class="alert alert-secondary alert-sm py-1 px-2 mb-1 small"><i class="bi bi-slash-circle-fill me-1"></i>${htmlspecialchars(file.name)}: Ignorado (não XML).</div>`; } } try { await Promise.all(promises); } catch (err) { console.error(`${IXML_LOG} Erro GERAL async XML:`, err); statusHTML += `<div class="alert alert-danger mt-2">Erro inesperado no processamento.</div>`; errCount++; } finally { if(spinner) spinner.style.display = 'none'; inputXML.disabled = false; if (event.target) event.target.value = null; if(uploadStatus) uploadStatus.innerHTML = statusHTML; const totalItens = tempProcData.reduce((s, e) => s + (e.items?.length || 0), 0); if (totalItens > 0) { console.log(`${IXML_LOG} Sucesso: ${totalItens} itens em ${tempProcData.length} NFs. SUBSTITUINDO dados.`); window.processedNFData = tempProcData; await populateMainForm(window.processedNFData[0]?.nf); if(uploadStatus) uploadStatus.insertAdjacentHTML('beforeend', `<hr class="my-1"><div class="alert alert-primary alert-sm py-1 px-2 small fw-bold">Total: ${totalItens} item(ns) em ${tempProcData.length} NF(s) carregadas.</div>`); } else { console.warn(`${IXML_LOG} Concluído, sem itens válidos.`); if (!errCount && uploadStatus) uploadStatus.insertAdjacentHTML('beforeend', `<hr class="my-1"><div class="alert alert-warning alert-sm py-1 px-2 small">Nenhum item válido encontrado.</div>`); else if (errCount > 0 && uploadStatus) uploadStatus.insertAdjacentHTML('beforeend', `<hr class="my-1"><div class="alert alert-danger alert-sm py-1 px-2 small fw-bold">Houve ${errCount} erro(s).</div>`); } renderNotasFiscaisTable(); } }); }
+    
+    const notasTableElementForModal = document.querySelector(notasTableQuery);
+    if (notasTableElementForModal && moduleState.itemDetailsModalInstance) {
+        notasTableElementForModal.addEventListener('click', async (e) => {
+            const MODAL_ITEM_LOG = `${DCL_LOG}[ModalItem]`; const btn = e.target.closest('button.toggle-details'); if (!btn) return;
+            console.log(`${MODAL_ITEM_LOG} Botão detalhes clicado.`); const nfIdx = parseInt(btn.dataset.nfIndex, 10), itemIdx = parseInt(btn.dataset.itemIndex, 10);
+            if (isNaN(nfIdx) || isNaN(itemIdx) || !window.processedNFData?.[nfIdx]?.items?.[itemIdx]) { console.error(`${MODAL_ITEM_LOG} Índices/dados inválidos. NFidx: ${nfIdx}, ItemIdx: ${itemIdx}`); showToast("Erro: Dados do item não encontrados.", "error"); return; }
+            const modalBody = moduleState.globalItemDetailsModalElement.querySelector('.modal-body'); const modalTitle = moduleState.globalItemDetailsModalElement.querySelector('.modal-title'); const saveBtn = moduleState.globalItemDetailsModalElement.querySelector('#saveItemDetails');
+            if (!modalBody || !modalTitle || !saveBtn) { console.error(`${MODAL_ITEM_LOG} Elementos internos do modal não achados.`); showToast("Erro interno ao preparar modal.", "error"); return; }
+            const nfData = window.processedNFData[nfIdx].nf || {}; const itemData = window.processedNFData[nfIdx].items[itemIdx];
+            modalTitle.textContent = `Detalhes Item ${htmlspecialchars(getSafe(itemData, 'nItem', itemIdx + 1))} (NF: ...${htmlspecialchars(getSafe(nfData, 'chaveAcesso', 'N/A').slice(-6))})`;
+            modalBody.innerHTML = '<div class="d-flex justify-content-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>';
+            saveBtn.dataset.nfIndex = nfIdx; saveBtn.dataset.itemIndex = itemIdx;
+            try {
+                const formContainer = await createItemDetailsFields(itemData, nfData, nfIdx, itemIdx);
+                modalBody.innerHTML = ''; modalBody.appendChild(formContainer);
+                moduleState.itemDetailsModalInstance.show(); console.log(`${MODAL_ITEM_LOG} Modal exibido.`);
+            } catch (err) {
+                console.error(`${MODAL_ITEM_LOG} Erro ao abrir modal:`, err);
+                if (modalBody) modalBody.innerHTML = `<div class="alert alert-danger p-3">Erro ao carregar detalhes: ${htmlspecialchars(err.message || 'Desconhecido')}.</div>`;
+                if (moduleState.itemDetailsModalInstance && !moduleState.itemDetailsModalInstance._isShown) moduleState.itemDetailsModalInstance.show();
+            }
+        });
+    } else if (!notasTableElementForModal && notasTableQuery) {
+        console.warn(`${DCL_LOG} Tabela ${notasTableQuery} não encontrada para adicionar listener de clique do modal.`);
+    }
+
+    const saveItemBtn = document.getElementById('saveItemDetails'); if (saveItemBtn && moduleState.globalItemDetailsModalElement) { saveItemBtn.addEventListener('click', () => { const SAVE_ITEM_LOG = `${DCL_LOG}[SaveItemModal]`; const nfIdx = parseInt(saveItemBtn.dataset.nfIndex, 10), itemIdx = parseInt(saveItemBtn.dataset.itemIndex, 10); if (isNaN(nfIdx) || isNaN(itemIdx) || !window.processedNFData?.[nfIdx]?.items?.[itemIdx]) { console.error(`${SAVE_ITEM_LOG} Índices/dados inválidos.`); showToast("Erro: Dados do item não encontrados para salvar.", "error"); return; } const item = window.processedNFData[nfIdx].items[itemIdx]; const formCont = moduleState.globalItemDetailsModalElement.querySelector('.item-details-form-container'); if (!formCont) { console.error(`${SAVE_ITEM_LOG} Container do formulário não encontrado.`); showToast("Erro interno ao salvar.", "error"); return; } const fields = ['ncm', 'descricaoNcm', 'atributosNcm', 'infAdProd', 'descricaoDetalhadaDue', 'unidadeEstatistica', 'quantidadeEstatistica', 'pesoLiquidoItem', 'condicaoVenda', 'vmle', 'vmcv', 'enquadramento1', 'enquadramento2', 'enquadramento3', 'enquadramento4']; fields.forEach(fName => { const input = formCont.querySelector(`[name="${fName}"]`); if (input) { if (input.type === 'number') {const val = parseFloat(input.value); item[fName] = isNaN(val) ? null : val;} else item[fName] = input.value.trim(); }}); const ccptRadio = formCont.querySelector('input[name="ccptCcrom"]:checked'); if (ccptRadio) item.ccptCcrom = ccptRadio.value; console.log(`${SAVE_ITEM_LOG} Item atualizado:`, item); showToast("Dados do item salvos localmente.", "success"); moduleState.itemDetailsModalInstance.hide(); renderNotasFiscaisTable(); }); }
+    if (batchEditBtn && moduleState.batchEditModalInstance) { batchEditBtn.addEventListener('click', async () => { const BATCH_MODAL_LOG = `${DCL_LOG}[BatchEditModalOpen]`; if (!window.processedNFData?.length || window.processedNFData.every(nf => !nf.items?.length)) { showToast("Não há itens para edição em lote.", "warning"); return; } console.log(`${BATCH_MODAL_LOG} Abrindo...`); moduleState.batchEditModalInstance.show(); }); }
+    const saveBatchBtn = document.getElementById('saveBatchEdit'); if (saveBatchBtn && moduleState.globalBatchEditModalElement) { saveBatchBtn.addEventListener('click', () => { const SAVE_BATCH_LOG = `${DCL_LOG}[SaveBatchEdit]`; const form = moduleState.globalBatchEditModalElement.querySelector('#batchEditForm'); if (!form) { console.error(`${SAVE_BATCH_LOG} Formulário de lote não encontrado.`); showToast("Erro: Formulário de lote não encontrado.", "error"); return; } const updates = {}; let itemsUpdatedCount = 0; form.querySelectorAll('input[type="checkbox"][data-field-name]').forEach(cb => { if (cb.checked) { const fieldName = cb.dataset.fieldName; const input = form.querySelector(`[name="${fieldName}"]`); if (input) { if (input.type === 'radio') { const checkedRadio = form.querySelector(`input[name="${fieldName}"]:checked`); updates[fieldName] = checkedRadio ? checkedRadio.value : ""; } else if (input.id === 'batchPaisDestino') { updates[fieldName] = input.dataset.codigoPais || null; } else { updates[fieldName] = input.value; } } else console.warn(`${SAVE_BATCH_LOG} Input para campo ${fieldName} não encontrado.`); } }); if (Object.keys(updates).length === 0) { showToast("Nenhum campo selecionado para atualização em lote.", "info"); return; } console.log(`${SAVE_BATCH_LOG} Aplicando atualizações em lote:`, updates); window.processedNFData.forEach(nfEntry => nfEntry.items.forEach(item => { let itemChanged = false; for (const field in updates) { if (item.hasOwnProperty(field)) { let valueToApply = updates[field]; if (['quantidadeEstatistica', 'pesoLiquidoItem', 'vmle', 'vmcv'].includes(field)) { valueToApply = parseFloat(updates[field]); if (isNaN(valueToApply)) valueToApply = null; } if (item[field] !== valueToApply) { item[field] = valueToApply; itemChanged = true; } } } if (itemChanged) itemsUpdatedCount++; })); if (itemsUpdatedCount > 0) showToast(`${itemsUpdatedCount} item(ns) atualizado(s) em lote.`, "success"); else showToast("Nenhum item foi modificado.", "info"); moduleState.batchEditModalInstance.hide(); renderNotasFiscaisTable(); }); }
+    if (salvarDueBtn) salvarDueBtn.addEventListener('click', async () => { console.log(`${DCL_LOG}[SalvarDUE] Clicado.`); showToast("Lógica de Salvar DU-E a ser implementada.", "info"); });
+    if (enviarDueBtn) enviarDueBtn.addEventListener('click', () => { console.log(`${DCL_LOG}[EnviarDUE] Clicado.`); showToast("Lógica de Enviar DU-E a ser implementada.", "info"); });
+    if(salvarDueBtn) salvarDueBtn.disabled = false; if(enviarDueBtn && dueIdHidden) enviarDueBtn.disabled = !dueIdHidden.value; if(batchEditBtn) batchEditBtn.disabled = !(window.processedNFData?.length && window.processedNFData.some(nf => nf.items?.length > 0));
+    console.log(`${DCL_LOG} Script principal pronto e listeners configurados.`);
+});
+function logTodosOsElementosNoFormularioPrincipal() { const form = document.getElementById('dueForm'); const LOG_FORM_IDS = '[LogFormIDs]'; if (form) { console.warn(`${LOG_FORM_IDS} --- IDs no Formulário Principal '#dueForm' ---`); const elementsWithId = form.querySelectorAll('[id]'); if (elementsWithId.length === 0) { console.warn(`${LOG_FORM_IDS} Nenhum elemento com 'id' encontrado em #dueForm.`); } else { elementsWithId.forEach(el => { console.log(`${LOG_FORM_IDS}   TAG: ${el.tagName}, ID: '${el.id}' (Name: ${el.name || 'N/A'})`); }); } console.warn(`${LOG_FORM_IDS} --- Fim da Lista de IDs ---`); } else { console.error(`${LOG_FORM_IDS} ERRO CRÍTICO: Formulário #dueForm NÃO encontrado.`); } }
+console.log('[main.mjs] Script finalizou execução global.');
