@@ -40,7 +40,7 @@
         // Iterar sobre os itens na resposta
         foreach ($responseArray['dados'] as $item) {
             // Preparando as variáveis para evitar erros de variáveis indefinidas
-            $codigo = $nome = $descricao =  $inicioVigencia = $fimVigencia =  '';
+            $codigo = $nome = $descricao =  $inicioVigencia = $fimVigencia = $siglaRegiaoFiscal = '';
 
             // Iterar sobre os campos de cada item
             foreach ($item['campos'] as $campo) {
@@ -57,6 +57,9 @@
                     case 'DATA_FIM':
                         $fimVigencia = $campo['valor'];
                         break;
+                    case 'SIGLA_REGIAO_FISCAL':
+                        $siglaRegiaoFiscal = $campo['valor'];
+                        break;
                 }
             }
             
@@ -66,13 +69,14 @@
             $total_reg = @count($res);
             
             if ($total_reg === 0) { // Se registro não existir, inserir novo registro
-                $query = $pdo->prepare("INSERT INTO recinto_aduaneiro (codigo, nome, data_inicio, data_fim) 
-                                        VALUES (:codigo, :nome, :dataInicio, :dataFim)");
+                $query = $pdo->prepare("INSERT INTO recinto_aduaneiro (codigo, nome, data_inicio, data_fim, sigla_regiao_fiscal) 
+                                        VALUES (:codigo, :nome, :dataInicio, :dataFim, :siglaRegiaoFiscal)");
 
                 $query->bindValue(":codigo", $codigo);
                 $query->bindValue(":nome", $nome); // Inserir o nome correto agora
                 $query->bindValue(":dataInicio", $inicioVigencia);
                 $query->bindValue(":dataFim", $fimVigencia);
+                 $query->bindValue(":siglaRegiaoFiscal", $siglaRegiaoFiscal);
                 $query->execute();
             } else {
                 // Aqui pode-se atualizar o registro caso já exista

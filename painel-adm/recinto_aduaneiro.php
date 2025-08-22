@@ -49,6 +49,11 @@
 						<input type="date" class="form-control" name="<?php echo $campo4 ?>" placeholder="<?php echo $campo4 ?>" id="<?php echo $campo4 ?>" required>
 					</div>
 
+			<div class="mb-3">
+						<label for="exampleFormControlInput1" class="form-label">Sigla da Região Fiscal</label>
+						<input type="date" class="form-control" name="<?php echo $campo7 ?>" placeholder="<?php echo $campo7 ?>" id="<?php echo $campo7 ?>" required>
+					</div>		
+
          
           
 					<small><div id="mensagem" align="center"></div></small>
@@ -120,6 +125,10 @@
             <hr style="margin:6px;">
 
             <span><b><?php echo $campo4 ?>: </b><span id="campo4"></span></span>
+
+            <hr style="margin:6px;">
+
+			 <span><b><?php echo $campo7 ?>: </b><span id="campo7"></span></span>
 
             <hr style="margin:6px;">
    

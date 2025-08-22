@@ -1,8 +1,8 @@
 -- --------------------------------------------------------
 -- Servidor:                     127.0.0.1
--- Versão do servidor:           10.4.32-MariaDB - mariadb.org binary distribution
+-- Versão do servidor:           10.4.27-MariaDB - mariadb.org binary distribution
 -- OS do Servidor:               Win64
--- HeidiSQL Versão:              12.10.0.7000
+-- HeidiSQL Versão:              12.5.0.6677
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -1025,7 +1025,7 @@ CREATE TABLE IF NOT EXISTS `ncm` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=15076 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Copiando dados para a tabela 3comex.ncm: ~14.487 rows (aproximadamente)
+-- Copiando dados para a tabela 3comex.ncm: ~15.282 rows (aproximadamente)
 INSERT INTO `ncm` (`id`, `Codigo`, `Descricao`, `Data_Inicio`, `Data_Fim`, `Tipo_Ato_Ini`, `Numero_Ato_Ini`, `Ano_Ato_Ini`, `Tipo_Ato_Fim`, `Numero_Ato_Fim`, `Ano_Ato_Fim`) VALUES
 	(1, '01', 'Animais vivos.', '0000-00-00', '31/12/9999', 'Res Camex', 272, 2021, NULL, NULL, NULL),
 	(2, '01.01', 'Cavalos, asininos e muares, vivos.', '0000-00-00', '31/12/9999', 'Res Camex', 272, 2021, NULL, NULL, NULL),
@@ -19122,6 +19122,23 @@ CREATE TABLE IF NOT EXISTS `produto` (
 INSERT INTO `produto` (`id`, `codigo`, `codigo_interno`, `descricao`, `denominacao`, `ncm`, `periodo_registro_inicio`, `periodo_registro_fim`, `situacao`, `ultima_alteracao_inicio`, `ultima_alteracao_fim`, `pais_origem`, `cpf_cnpj_fabricante`, `cpf_cnpj_raiz`, `modalidade`, `data_referencia`, `operador_estrangeiro_codigo`) VALUES
 	(1, '456', '12', 'teste1', '55', '10011900', '2024-02-02', '2024-02-24', 2, '2024-02-02', '2024-02-24', 'BR', '44030409857', '44030409857', 'EXPORTACAO', '2024-02-16', '2');
 
+-- Copiando estrutura para tabela 3comex.recintos_por_unidade
+CREATE TABLE IF NOT EXISTS `recintos_por_unidade` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `codigo_unidade_rfb` varchar(30) NOT NULL,
+  `codigo_recinto` varchar(30) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_unidade` (`codigo_unidade_rfb`),
+  KEY `idx_recinto` (`codigo_recinto`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+-- Copiando dados para a tabela 3comex.recintos_por_unidade: ~4 rows (aproximadamente)
+INSERT INTO `recintos_por_unidade` (`id`, `codigo_unidade_rfb`, `codigo_recinto`) VALUES
+	(1, '1010252', '971901'),
+	(2, '1010252', '971902'),
+	(3, '1010253', '941901'),
+	(4, '1010300', '603401');
+
 -- Copiando estrutura para tabela 3comex.recinto_aduaneiro
 CREATE TABLE IF NOT EXISTS `recinto_aduaneiro` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -19134,7 +19151,7 @@ CREATE TABLE IF NOT EXISTS `recinto_aduaneiro` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5796 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
--- Copiando dados para a tabela 3comex.recinto_aduaneiro: ~0 rows (aproximadamente)
+-- Copiando dados para a tabela 3comex.recinto_aduaneiro: ~950 rows (aproximadamente)
 INSERT INTO `recinto_aduaneiro` (`id`, `codigo`, `nome`, `data_inicio`, `data_fim`, `interno_versao`, `interno_hash`) VALUES
 	(4846, '155201', 'DRF-PASSO FUNDO (NAC. RECOF,AD TEMP,DEP ESP)', '2022-11-07T03:22:23', NULL, '2', 'c45e04572c4011c4b1ea4a5e1408a91f'),
 	(4847, '201101', 'AEROPORTO INTERNACIONAL PELOTAS - INFRAERO - RS', '2022-11-07T03:22:39', NULL, '2', '354db3176e590c2422c55a38afeff9dd'),
