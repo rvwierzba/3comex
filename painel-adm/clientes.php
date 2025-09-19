@@ -492,17 +492,7 @@
 </script>
 
 <!-- Inclua o arquivo ajax.js *DEPOIS* da definição da variável 'pag' e das funções globais -->
-<script src="ajax.js"></script>
-
-<!-- O restante do seu HTML, se houver -->
-Use code with caution.
-PHP
-2. Arquivo ajax.js
-Este arquivo agora conterá as chamadas de inicialização ($(document).ready), a função listarClientes (ou listar, mantive listarClientes para consistência com o log do seu clientes.php), e os handlers de submit dos formulários.
-// Arquivo: ajax.js
-// Lógica AJAX para a página de clientes
-
-console.log("ajax.js: Arquivo carregado.");
+<script>
 
 // A variável global 'pag' DEVE ser definida em clientes.php ANTES deste arquivo ser incluído.
 if (typeof pag === 'undefined') {

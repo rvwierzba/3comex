@@ -1,20 +1,207 @@
-<?php
-// clientes/inserir.php - TESTE DE ALCANCE "PING"
+<?php 
+    require_once("../../conexao.php");
+    require_once("campos.php"); // Onde a variável $pagina = 'clientes' e os $campoN são definidos
 
-// Define que a resposta será texto plano (para o AJAX ler fácil)
-header('Content-Type: text/plain; charset=utf-8');
+    echo <<<HTML
+    <table id="example" class="table table-striped table-light table-hover my-4">
+    <thead>
+    <tr>
+    <th>Nome</th>
+    <th>CPF / CNPJ</th>
+    <th>Telefone</th>
+    <th>Email</th>
+    <th>Ações</th>
+    </tr>
+    </thead>
+    <tbody>
+    HTML;
 
-$timestamp = date('Y-m-d H:i:s');
-$output = "PING! O arquivo inserir.php FOI ALCANÇADO E EXECUTADO em: " . $timestamp . "\n\n";
+    $query = $pdo->query("SELECT * from $pagina order by Codigo desc ");
+    $res = $query->fetchAll(PDO::FETCH_ASSOC);
+    for($i=0; $i < @count($res); $i++){
+        
+        // Atribui todos os campos a variáveis para usar no onclick
+        $id = $res[$i]['Codigo'];
+        $cp1 = $res[$i]['NomeRes'];
+        $cp2 = $res[$i]['Nome'];
+        $cp3 = $res[$i]['CNPJ'];
+        $cp4 = $res[$i]['CPF'];
+        $cp5 = $res[$i]['Endereco'];
+        $cp6 = $res[$i]['Complemento'];
+        $cp7 = $res[$i]['Bairro'];
+        $cp8 = $res[$i]['Cidade'];
+        $cp9 = $res[$i]['Estado'];
+        $cp10 = $res[$i]['Cep'];
+        $cp11 = $res[$i]['Telefone'];
+        $cp12 = $res[$i]['Celular'];
+        $cp13 = $res[$i]['InscMun'];
+        $cp14 = $res[$i]['InscEst'];
+        $cp15 = $res[$i]['Site'];
+        $cp16 = $res[$i]['Email'];
+        $cp17 = $res[$i]['Vendedor'];
+        $cp18 = $res[$i]['ComVend'];
+        $cp19 = $res[$i]['Ptax'];
+        $cp20 = $res[$i]['Obs'];
+        $cp21 = $res[$i]['CustService'];
+        $cp22 = $res[$i]['EmailNfe'];
+        $cp23 = $res[$i]['LocalRps'];
+        $cp24 = $res[$i]['Grupo'];
+        $cp25 = $res[$i]['DiasVenc'];
+        $cp26 = $res[$i]['VencRadar'];
+        $cp27 = $res[$i]['VencProcuracao'];
+        $cp28 = $res[$i]['VencMercante'];
+        $cp29 = $res[$i]['VencAnvisa'];
+        $cp30 = $res[$i]['IrDia'];
+        $cp31 = $res[$i]['IN381'];
+        $cp32 = $res[$i]['Simples'];
+        $cp33 = $res[$i]['IOF'];
+        $cp34 = $res[$i]['ImpEsc'];
+        $cp35 = $res[$i]['NumPad'];
+        $cp36 = $res[$i]['SubsTrib'];
+        $cp37 = $res[$i]['ISS'];
+        $cp38 = $res[$i]['Suframa'];
+        $cp39 = $res[$i]['CodInt'];
+        $cp40 = $res[$i]['CodContabil'];
+        $cp41 = $res[$i]['FDA'];
+        $cp42 = $res[$i]['CtaDesp'];
+        $cp43 = $res[$i]['DataCad'];
+        $cp44 = $res[$i]['UsuResp'];
 
-// Adiciona alguns dados do POST para ver se chegam
-$output .= "ID recebido (\$_POST['id']): " . htmlspecialchars($_POST['id'] ?? 'NENHUM ID') . "\n";
-$output .= "NomeRes recebido (\$_POST['NomeRes']): " . htmlspecialchars($_POST['NomeRes'] ?? 'NENHUM NomeRes') . "\n";
-// Adicione mais um ou dois campos que você espera do formulário para teste, se quiser.
+        // Define qual documento mostrar (CNPJ ou CPF)
+        $documento = $cp3 ? $cp3 : $cp4;
 
-// Log para o arquivo de erro do servidor (para termos uma segunda confirmação)
-error_log("PING INSERIR.PHP EXECUTADO: " . $timestamp . " - ID: " . ($_POST['id'] ?? 'N/A'));
-
-echo $output; // Envia a resposta
-exit(); // Para o script aqui, não executa mais nada
+    echo <<<HTML
+        <tr>
+        <td>{$cp2}</td>
+        <td>{$documento}</td>
+        <td>{$cp11}</td>
+        <td>{$cp16}</td>
+        <td>
+            <a href="#" onclick="editar('{$id}', '{$cp1}', '{$cp2}', '{$cp3}', '{$cp4}', '{$cp5}', '{$cp6}', '{$cp7}', '{$cp8}', '{$cp9}', '{$cp10}', '{$cp11}', '{$cp12}', '{$cp13}', '{$cp14}', '{$cp15}', '{$cp16}', '{$cp17}', '{$cp18}', '{$cp19}', '{$cp20}', '{$cp21}', '{$cp22}', '{$cp23}', '{$cp24}', '{$cp25}', '{$cp26}', '{$cp27}', '{$cp28}', '{$cp29}', '{$cp30}', '{$cp31}', '{$cp32}', '{$cp33}', '{$cp34}', '{$cp35}', '{$cp36}', '{$cp37}', '{$cp38}', '{$cp39}', '{$cp40}', '{$cp41}', '{$cp42}', '{$cp43}', '{$cp44}')" title="Editar Registro">
+                <i class="bi bi-pencil-square text-primary"></i>
+            </a>
+            <a href="#" onclick="excluir('{$id}', '{$cp2}')" title="Excluir Registro">
+                <i class="bi bi-trash text-danger"></i>
+            </a>
+        </td>
+        </tr>
+    HTML;
+    } 
+    echo <<<HTML
+    </tbody>
+    </table>
+    HTML;
 ?>
+
+<script>
+    $(document).ready(function() {
+        $('#example').DataTable({
+            "ordering": false
+        });
+    });
+
+    // A função editar agora recebe o ID e todos os 44 campos do cliente
+    function editar(id, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34, p35, p36, p37, p38, p39, p40, p41, p42, p43, p44) {
+        
+        $('#id').val(id);
+        $('#<?=$campo1?>').val(p1);
+        $('#<?=$campo2?>').val(p2);
+        $('#<?=$campo3?>').val(p3);
+        $('#<?=$campo4?>').val(p4);
+        $('#<?=$campo5?>').val(p5);
+        $('#<?=$campo6?>').val(p6);
+        $('#<?=$campo7?>').val(p7);
+        $('#<?=$campo8?>').val(p8);
+        $('#<?=$campo9?>').val(p9);
+        $('#<?=$campo10?>').val(p10);
+        $('#<?=$campo11?>').val(p11);
+        $('#<?=$campo12?>').val(p12);
+        $('#<?=$campo13?>').val(p13);
+        $('#<?=$campo14?>').val(p14);
+        $('#<?=$campo15?>').val(p15);
+        $('#<?=$campo16?>').val(p16);
+        $('#<?=$campo17?>').val(p17);
+        $('#<?=$campo18?>').val(p18);
+        $('#<?=$campo19?>').val(p19);
+        $('#<?=$campo20?>').val(p20);
+        $('#<?=$campo21?>').val(p21);
+        $('#<?=$campo22?>').val(p22);
+        $('#<?=$campo23?>').val(p23);
+        $('#<?=$campo24?>').val(p24);
+        $('#<?=$campo25?>').val(p25);
+        $('#<?=$campo26?>').val(p26);
+        $('#<?=$campo27?>').val(p27);
+        $('#<?=$campo28?>').val(p28);
+        $('#<?=$campo29?>').val(p29);
+        $('#<?=$campo30?>').val(p30);
+        $('#<?=$campo31?>').val(p31);
+        $('#<?=$campo32?>').val(p32);
+        $('#<?=$campo33?>').val(p33);
+        $('#<?=$campo34?>').val(p34);
+        $('#<?=$campo35?>').val(p35);
+        $('#<?=$campo36?>').val(p36);
+        $('#<?=$campo37?>').val(p37);
+        $('#<?=$campo38?>').val(p38);
+        $('#<?=$campo39?>').val(p39);
+        $('#<?=$campo40?>').val(p40);
+        $('#<?=$campo41?>').val(p41);
+        $('#<?=$campo42?>').val(p42);
+        $('#<?=$campo43?>').val(p43);
+        $('#<?=$campo44?>').val(p44);
+        
+        $('#tituloModal').text('Editar Registro');
+        var myModal = new bootstrap.Modal(document.getElementById('modalForm'), {});
+        myModal.show();
+        $('#mensagem').text('');
+    }
+
+    function limparCampos() {
+        $('#id').val('');
+        $('#<?=$campo1?>').val('');
+        $('#<?=$campo2?>').val('');
+        $('#<?=$campo3?>').val('');
+        $('#<?=$campo4?>').val('');
+        $('#<?=$campo5?>').val('');
+        $('#<?=$campo6?>').val('');
+        $('#<?=$campo7?>').val('');
+        $('#<?=$campo8?>').val('');
+        $('#<?=$campo9?>').val('');
+        $('#<?=$campo10?>').val('');
+        $('#<?=$campo11?>').val('');
+        $('#<?=$campo12?>').val('');
+        $('#<?=$campo13?>').val('');
+        $('#<?=$campo14?>').val('');
+        $('#<?=$campo15?>').val('');
+        $('#<?=$campo16?>').val('');
+        $('#<?=$campo17?>').val('');
+        $('#<?=$campo18?>').val('');
+        $('#<?=$campo19?>').val('');
+        $('#<?=$campo20?>').val('');
+        $('#<?=$campo21?>').val('');
+        $('#<?=$campo22?>').val('');
+        $('#<?=$campo23?>').val('');
+        $('#<?=$campo24?>').val('');
+        $('#<?=$campo25?>').val('');
+        $('#<?=$campo26?>').val('');
+        $('#<?=$campo27?>').val('');
+        $('#<?=$campo28?>').val('');
+        $('#<?=$campo29?>').val('');
+        $('#<?=$campo30?>').val('');
+        $('#<?=$campo31?>').val('');
+        $('#<?=$campo32?>').val('');
+        $('#<?=$campo33?>').val('');
+        $('#<?=$campo34?>').val('');
+        $('#<?=$campo35?>').val('');
+        $('#<?=$campo36?>').val('');
+        $('#<?=$campo37?>').val('');
+        $('#<?=$campo38?>').val('');
+        $('#<?=$campo39?>').val('');
+        $('#<?=$campo40?>').val('');
+        $('#<?=$campo41?>').val('');
+        $('#<?=$campo42?>').val('');
+        $('#<?=$campo43?>').val('');
+        $('#<?=$campo44?>').val('');
+
+        $('#mensagem').text('');
+    }
+</script>
