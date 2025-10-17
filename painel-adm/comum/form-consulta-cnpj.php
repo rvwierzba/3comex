@@ -72,6 +72,9 @@
             <input type="text" class="form-control" name="cp15" id="cp15" readonly>
         </div>
     </div>
+
+    <input type="hidden" class="form-control" name="cnpj-h" id="cnpj-h" readonly>
+
 </div>
 
 <div class="modal-footer">
@@ -121,6 +124,7 @@ $(document).ready(function() {
                     // **Preenche os campos de visualização que você pediu de volta**
                     $('#cp1').val(data.estabelecimento.nome_fantasia || '');
                     $('#cp2').val(data.razao_social || '');
+                    $('#cnpj-h').val(`${data.cnpj || ''}, ${data.cnpj_raiz|| ''}`);
                     $('#cp5').val(`${data.estabelecimento.logradouro || ''}, ${data.estabelecimento.numero || ''}`);
                     $('#cp6').val(data.estabelecimento.bairro || '');
                     $('#cp7').val(data.cidade?.nome || '');

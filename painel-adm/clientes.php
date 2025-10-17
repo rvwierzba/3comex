@@ -99,7 +99,7 @@
         const est = dados.estabelecimento;
         $('#Nome').val(dados.razao_social || '');
         $('#NomeRes').val(est.nome_fantasia || '');
-        $('#CNPJ').val(dados.cnpj || '');
+        $('#CNPJ').val(dados.cnpj_raiz || '');
         $('#Endereco').val(`${est.logradouro || ''}, ${est.numero || ''}`);
         $('#Complemento').val(est.complemento || '');
         $('#Bairro').val(est.bairro || '');
@@ -220,3 +220,5 @@
         });
     });
 </script>
+
+<script src="../js/ajax.js"></script>
