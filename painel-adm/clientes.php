@@ -25,6 +25,7 @@
                     <ul class="nav nav-tabs" id="myTab" role="tablist">
                         <li class="nav-item" role="presentation"><a class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#dados" type="button" role="tab" aria-controls="home" aria-selected="true">Informações Clientes</a></li>
                         <li class="nav-item" role="presentation"><a class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#contas" type="button" role="tab" aria-controls="profile" aria-selected="false">Outros</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#vencimentos" type="button" role="tab" aria-controls="profile" aria-selected="false">Vencimentos</a></li>
                     </ul>
                     <hr>
                     <div class="tab-content" id="myTabContent">
@@ -56,6 +57,50 @@
                                 <div class="col-md-3 col-sm-12"><div class="mb-3"><label for="Obs" class="form-label">Observações</label><textarea class="form-control" name="Obs" id="Obs"></textarea></div></div>
                             </div>
                         </div>
+
+                      <div class="tab-pane fade show active" id="vencimentos" role="tabpanel" aria-labelledby="vencimentos-tab">
+    
+    <div class="row g-3"> 
+        
+                <div class="col-md-3 col-sm-12">
+                    <div class="mb-3">
+                        <label for="DiasVenc" class="form-label">Dias Vencimento</label>
+                        <input type="number" class="form-control" name="DiasVenc" id="DiasVenc">
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-sm-12">
+                    <div class="mb-3">
+                        <label for="VencRadar" class="form-label">Vencimento Radar</label>
+                        <input type="date" class="form-control" name="VencRadar" id="VencRadar">
+                    </div>
+                </div> 
+
+                <div class="col-md-3 col-sm-12">
+                    <div class="mb-3">
+                        <label for="VencProcuracao" class="form-label">Vencimento Procuração</label>
+                        <input type="date" class="form-control" name="VencProcuracao" id="VencProcuracao">
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-sm-12">
+                    <div class="mb-3">
+                        <label for="VencMercante" class="form-label">Vencimento Mercante</label>
+                        <input type="date" class="form-control" name="VencMercante" id="VencMercante">
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-sm-12">
+                    <div class="mb-3">
+                        <label for="VencAnvisa" class="form-label">Vencimento Anvisa</label>
+                        <input type="date" class="form-control" name="VencAnvisa" id="VencAnvisa">
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+
+
                     </div>
                     <small><div id="mensagem" align="center"></div></small>
                     <div class="modal-footer" style="margin-right:40%;"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btn-fechar">Fechar</button><button type="submit" class="btn btn-primary">Salvar</button></div>
