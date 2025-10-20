@@ -25,6 +25,7 @@
                     <ul class="nav nav-tabs" id="myTab" role="tablist">
                         <li class="nav-item" role="presentation"><a class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#dados" type="button" role="tab" aria-controls="home" aria-selected="true">Informações Clientes</a></li>
                         <li class="nav-item" role="presentation"><a class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#contas" type="button" role="tab" aria-controls="profile" aria-selected="false">Outros</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#dadosBanc" type="button" role="tab" aria-controls="profile" aria-selected="false">Dados bancários</a></li>
                         <li class="nav-item" role="presentation"><a class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#vencimentos" type="button" role="tab" aria-controls="profile" aria-selected="false">Vencimentos</a></li>
                     </ul>
                     <hr>
@@ -46,6 +47,31 @@
                                 <div class="col-md-3 col-sm-12"><div class="mb-3"><label for="Cep" class="form-label">CEP</label><input type="text" class="form-control" name="Cep" id="Cep"></div></div>
                             </div>
                         </div>
+
+                        <div class="tab-pane fade" id="dadosBanc" role="tabpanel" aria-labelledby="profile-tab">
+
+
+                            <table id="minhaTabelaEditavel" class="table table-striped" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>Banco</th>
+                                        <th>Agência/th>
+                                        <th>Conta</th>
+                                        <th>Tipo</th>
+                                        <th>Pessoa</th>
+                                        <th>CPF / CNPJ</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="corpoTabelaBancaria">
+                                    <tr><td colspan="7" class="text-center">Carregando dados bancários...</td></tr>
+                                </tbody>
+                            </table>
+
+
+
+                        </div>
+
                         <div class="tab-pane fade" id="contas" role="tabpanel" aria-labelledby="profile-tab">
                             <div class="row">
                                 <div class="col-md-3 col-sm-12"><div class="mb-3"><label for="Telefone" class="form-label">Telefone</label><input type="text" class="form-control" name="Telefone" id="Telefone"></div></div>
@@ -131,6 +157,64 @@
 
 
 <script type="text/javascript">
+
+    $(document).ready(function() {
+    $('#minhaTabelaEditavel').DataTable({
+        language: { // Para traduzir para português
+            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
+         }
+        });
+    });
+
+
+
+    //-------------------FUNÇÃO PARA PEGAR O CPF/CNPJ DO CLIENTE ATUAL ABERTO NO MODAL
+
+        // Função para carregar os dados bancários do cliente
+        function carregarDadosBancarios(docCliente) {
+            if (!docCliente) {
+                // Se não houver CPF nem CNPJ, limpa a tabela e mostra mensagem.
+                $('#corpoTabelaBancaria').html('<tr><td colspan="7" class="text-center text-danger">CPF ou CNPJ do cliente não foi preenchido.</td></tr>');
+                return;
+            }
+
+            // A URL que fará a consulta (você criará este arquivo na próxima seção)
+            var urlConsulta = pag + "/listar-contas.php"; 
+            
+            // Requisição AJAX para buscar os dados
+            $.ajax({
+                url: urlConsulta,
+                method: 'POST', // Usamos POST para enviar o documento
+                data: { doc: docCliente },
+                dataType: 'html', // Esperamos o HTML das linhas da tabela
+                success: function(responseHtml) {
+                    // Insere as linhas da tabela retornadas pelo PHP
+                    $('#corpoTabelaBancaria').html(responseHtml); 
+                    // Você pode querer re-inicializar o DataTables aqui, se necessário.
+                },
+                error: function() {
+                    $('#corpoTabelaBancaria').html('<tr><td colspan="7" class="text-center text-danger">Erro ao carregar dados bancários.</td></tr>');
+                }
+            });
+        }
+
+        // Handler para quando a ABA 'Dados bancários' for clicada
+        // Note que o ID do link da aba é `profile-tab` e o target é `#dadosBanc`
+        $('#dadosBanc').on('shown.bs.tab', function (e) {
+            // 1. Pega o valor do CNPJ (limpando a máscara)
+            var cnpj = $('#CNPJ').val().replace(/\D/g,'');
+            // 2. Pega o valor do CPF (limpando a máscara)
+            var cpf = $('#CPF').val().replace(/\D/g,'');
+            
+            // 3. Define o documento a ser usado (dá preferência ao CNPJ se ambos existirem)
+            var docParaConsulta = cnpj || cpf; 
+            
+            // 4. Chama a função para carregar os dados
+            carregarDadosBancarios(docParaConsulta);
+        });
+
+   //---------------------------------------------------------------------------------------
+
     var pag = "<?php echo isset($pagina) ? htmlspecialchars($pagina) : 'ERRO_PAG_NAO_DEFINIDA'; ?>";
 
     /**
