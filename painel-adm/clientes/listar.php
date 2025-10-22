@@ -1,6 +1,6 @@
 <?php 
     require_once("../../conexao.php");
-    require_once("campos.php"); // Onde a variável $pagina = 'clientes' e os $campoN são definidos
+    require_once("campos.php");
 
     echo <<<HTML
     <table id="example" class="table table-striped table-light table-hover my-4">
@@ -20,52 +20,52 @@
     $res = $query->fetchAll(PDO::FETCH_ASSOC);
     for($i=0; $i < @count($res); $i++){
         
-        // Atribui todos os campos a variáveis para usar no onclick
+        // --- CORREÇÃO DE SINTAXE: ESCAPAR ASPAS (addslashes) ---
         $id = $res[$i]['Codigo'];
-        $cp1 = $res[$i]['NomeRes'];
-        $cp2 = $res[$i]['Nome'];
-        $cp3 = $res[$i]['CNPJ'];
-        $cp4 = $res[$i]['CPF'];
-        $cp5 = $res[$i]['Endereco'];
-        $cp6 = $res[$i]['Complemento'];
-        $cp7 = $res[$i]['Bairro'];
-        $cp8 = $res[$i]['Cidade'];
-        $cp9 = $res[$i]['Estado'];
-        $cp10 = $res[$i]['Cep'];
-        $cp11 = $res[$i]['Telefone'];
-        $cp12 = $res[$i]['Celular'];
-        $cp13 = $res[$i]['InscMun'];
-        $cp14 = $res[$i]['InscEst'];
-        $cp15 = $res[$i]['Site'];
-        $cp16 = $res[$i]['Email'];
-        $cp17 = $res[$i]['Vendedor'];
-        $cp18 = $res[$i]['ComVend'];
-        $cp19 = $res[$i]['Ptax'];
-        $cp20 = $res[$i]['Obs'];
-        $cp21 = $res[$i]['CustService'];
-        $cp22 = $res[$i]['EmailNfe'];
-        $cp23 = $res[$i]['LocalRps'];
-        $cp24 = $res[$i]['Grupo'];
-        $cp25 = $res[$i]['DiasVenc'];
-        $cp26 = $res[$i]['VencRadar'];
-        $cp27 = $res[$i]['VencProcuracao'];
-        $cp28 = $res[$i]['VencMercante'];
-        $cp29 = $res[$i]['VencAnvisa'];
-        $cp30 = $res[$i]['IrDia'];
-        $cp31 = $res[$i]['IN381'];
-        $cp32 = $res[$i]['Simples'];
-        $cp33 = $res[$i]['IOF'];
-        $cp34 = $res[$i]['ImpEsc'];
-        $cp35 = $res[$i]['NumPad'];
-        $cp36 = $res[$i]['SubsTrib'];
-        $cp37 = $res[$i]['ISS'];
-        $cp38 = $res[$i]['Suframa'];
-        $cp39 = $res[$i]['CodInt'];
-        $cp40 = $res[$i]['CodContabil'];
-        $cp41 = $res[$i]['FDA'];
-        $cp42 = $res[$i]['CtaDesp'];
-        $cp43 = $res[$i]['DataCad'];
-        $cp44 = $res[$i]['UsuResp'];
+        $cp1 = addslashes($res[$i]['NomeRes']);
+        $cp2 = addslashes($res[$i]['Nome']);
+        $cp3 = addslashes($res[$i]['CNPJ']);
+        $cp4 = addslashes($res[$i]['CPF']);
+        $cp5 = addslashes($res[$i]['Endereco']);
+        $cp6 = addslashes($res[$i]['Complemento']);
+        $cp7 = addslashes($res[$i]['Bairro']);
+        $cp8 = addslashes($res[$i]['Cidade']);
+        $cp9 = addslashes($res[$i]['Estado']);
+        $cp10 = addslashes($res[$i]['Cep']);
+        $cp11 = addslashes($res[$i]['Telefone']);
+        $cp12 = addslashes($res[$i]['Celular']);
+        $cp13 = addslashes($res[$i]['InscMun']);
+        $cp14 = addslashes($res[$i]['InscEst']);
+        $cp15 = addslashes($res[$i]['Site']);
+        $cp16 = addslashes($res[$i]['Email']);
+        $cp17 = addslashes($res[$i]['Vendedor']);
+        $cp18 = addslashes($res[$i]['ComVend']);
+        $cp19 = addslashes($res[$i]['Ptax']);
+        $cp20 = addslashes($res[$i]['Obs']);
+        $cp21 = addslashes($res[$i]['CustService']);
+        $cp22 = addslashes($res[$i]['EmailNfe']);
+        $cp23 = addslashes($res[$i]['LocalRps']);
+        $cp24 = addslashes($res[$i]['Grupo']);
+        $cp25 = addslashes($res[$i]['DiasVenc']);
+        $cp26 = addslashes($res[$i]['VencRadar']);
+        $cp27 = addslashes($res[$i]['VencProcuracao']);
+        $cp28 = addslashes($res[$i]['VencMercante']);
+        $cp29 = addslashes($res[$i]['VencAnvisa']);
+        $cp30 = addslashes($res[$i]['IrDia']);
+        $cp31 = addslashes($res[$i]['IN381']);
+        $cp32 = addslashes($res[$i]['Simples']);
+        $cp33 = addslashes($res[$i]['IOF']);
+        $cp34 = addslashes($res[$i]['ImpEsc']);
+        $cp35 = addslashes($res[$i]['NumPad']);
+        $cp36 = addslashes($res[$i]['SubsTrib']);
+        $cp37 = addslashes($res[$i]['ISS']);
+        $cp38 = addslashes($res[$i]['Suframa']);
+        $cp39 = addslashes($res[$i]['CodInt']);
+        $cp40 = addslashes($res[$i]['CodContabil']);
+        $cp41 = addslashes($res[$i]['FDA']);
+        $cp42 = addslashes($res[$i]['CtaDesp']);
+        $cp43 = addslashes($res[$i]['DataCad']);
+        $cp44 = addslashes($res[$i]['UsuResp']);
 
         // Define qual documento mostrar (CNPJ ou CPF)
         $documento = $cp3 ? $cp3 : $cp4;
@@ -83,6 +83,9 @@
             <a href="#" onclick="excluir('{$id}', '{$cp2}')" title="Excluir Registro">
                 <i class="bi bi-trash text-danger"></i>
             </a>
+            <a href="#" onclick="abrirModalContas('{$documento}')" title="Ver Contas">
+                 <i class="bi bi-bank2 text-dark"></i>
+            </a>
         </td>
         </tr>
     HTML;
@@ -95,64 +98,76 @@
 
 <script>
     $(document).ready(function() {
+        // ESSENCIAL: Destrói o DataTables anterior antes de criar o novo
         $('#example').DataTable({
-            "ordering": false
+            "ordering": false,
+            "destroy": true, 
+            "language": {
+                "url": "../js/pt-BR.json"
+            }
         });
     });
 
-    // A função editar agora recebe o ID e todos os 44 campos do cliente
+    // A função editar COMPLETA
     function editar(id, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34, p35, p36, p37, p38, p39, p40, p41, p42, p43, p44) {
         
+        // Pega o documento (CNPJ ou CPF) do cliente que está sendo editado
+        const doc_cliente_pai = p3 || p4;
+        
         $('#id').val(id);
-        $('#<?=$campo1?>').val(p1);
-        $('#<?=$campo2?>').val(p2);
-        $('#<?=$campo3?>').val(p3);
-        $('#<?=$campo4?>').val(p4);
-        $('#<?=$campo5?>').val(p5);
-        $('#<?=$campo6?>').val(p6);
-        $('#<?=$campo7?>').val(p7);
-        $('#<?=$campo8?>').val(p8);
-        $('#<?=$campo9?>').val(p9);
-        $('#<?=$campo10?>').val(p10);
-        $('#<?=$campo11?>').val(p11);
-        $('#<?=$campo12?>').val(p12);
-        $('#<?=$campo13?>').val(p13);
-        $('#<?=$campo14?>').val(p14);
-        $('#<?=$campo15?>').val(p15);
-        $('#<?=$campo16?>').val(p16);
-        $('#<?=$campo17?>').val(p17);
-        $('#<?=$campo18?>').val(p18);
-        $('#<?=$campo19?>').val(p19);
-        $('#<?=$campo20?>').val(p20);
-        $('#<?=$campo21?>').val(p21);
-        $('#<?=$campo22?>').val(p22);
-        $('#<?=$campo23?>').val(p23);
-        $('#<?=$campo24?>').val(p24);
-        $('#<?=$campo25?>').val(p25);
-        $('#<?=$campo26?>').val(p26);
-        $('#<?=$campo27?>').val(p27);
-        $('#<?=$campo28?>').val(p28);
-        $('#<?=$campo29?>').val(p29);
-        $('#<?=$campo30?>').val(p30);
-        $('#<?=$campo31?>').val(p31);
-        $('#<?=$campo32?>').val(p32);
-        $('#<?=$campo33?>').val(p33);
-        $('#<?=$campo34?>').val(p34);
-        $('#<?=$campo35?>').val(p35);
-        $('#<?=$campo36?>').val(p36);
-        $('#<?=$campo37?>').val(p37);
-        $('#<?=$campo38?>').val(p38);
-        $('#<?=$campo39?>').val(p39);
-        $('#<?=$campo40?>').val(p40);
-        $('#<?=$campo41?>').val(p41);
-        $('#<?=$campo42?>').val(p42);
-        $('#<?=$campo43?>').val(p43);
-        $('#<?=$campo44?>').val(p44);
+        $('#doc_cliente_pai').val(doc_cliente_pai); // Define o documento aqui
+        $('#NomeRes').val(p1);
+        $('#Nome').val(p2);
+        $('#CNPJ').val(p3);
+        $('#CPF').val(p4);
+        $('#Endereco').val(p5);
+        $('#Complemento').val(p6);
+        $('#Bairro').val(p7);
+        $('#Cidade').val(p8);
+        $('#Estado').val(p9);
+        $('#Cep').val(p10);
+        $('#Telefone').val(p11);
+        $('#Celular').val(p12);
+        $('#InscMun').val(p13);
+        $('#InscEst').val(p14);
+        $('#Site').val(p15);
+        $('#Email').val(p16);
+        $('#Vendedor').val(p17);
+        $('#ComVend').val(p18);
+        $('#Ptax').val(p19);
+        $('#Obs').val(p20);
+        $('#CustService').val(p21);
+        $('#EmailNfe').val(p22);
+        $('#LocalRps').val(p23);
+        $('#Grupo').val(p24);
+        $('#DiasVenc').val(p25);
+        $('#VencRadar').val(p26);
+        $('#VencProcuracao').val(p27);
+        $('#VencMercante').val(p28);
+        $('#VencAnvisa').val(p29);
+        $('#IrDia').val(p30);
+        $('#IN381').val(p31);
+        $('#Simples').val(p32);
+        $('#IOF').val(p33);
+        $('#ImpEsc').val(p34);
+        $('#NumPad').val(p35);
+        $('#SubsTrib').val(p36);
+        $('#ISS').val(p37);
+        $('#Suframa').val(p38);
+        $('#CodInt').val(p39);
+        $('#CodContabil').val(p40);
+        $('#FDA').val(p41);
+        $('#CtaDesp').val(p42);
+        $('#DataCad').val(p43);
+        $('#UsuResp').val(p44);
         
         $('#tituloModal').text('Editar Registro');
         var myModal = new bootstrap.Modal(document.getElementById('modalForm'), {});
         myModal.show();
         $('#mensagem').text('');
+        
+        // --- CHAMA A LISTAGEM DE CONTAS AO ABRIR O MODAL DE EDIÇÃO ---
+        abrirModalContas(doc_cliente_pai); 
     }
 
     function limparCampos() {
@@ -203,5 +218,14 @@
         $('#<?=$campo44?>').val('');
 
         $('#mensagem').text('');
+    }
+    
+    // Assumindo que a função excluir é simples (você não a forneceu completa)
+    function excluir(id, nome) {
+        $('#nome-excluido').text(nome);
+        $('#id-excluir').val(id);
+        var myModal = new bootstrap.Modal(document.getElementById('modalExcluir'), {});
+        myModal.show();
+        $('#mensagem-excluir').text('');
     }
 </script>

@@ -1,8 +1,7 @@
 <?php 
-// 1. Inclui o arquivo de conexão PDO
+// Inclui a conexão e verifica a sessão (mantido conforme seu código original)
 require_once("../../conexao.php");
-// Pode ser útil incluir verificação de login/sessão aqui
-// require_once("../../verificar.php"); 
+require_once("../verificar.php");
 
 // 2. Verifica se o documento (doc) foi enviado via POST
 if (!isset($_POST['doc']) || empty($_POST['doc'])) {
@@ -11,14 +10,19 @@ if (!isset($_POST['doc']) || empty($_POST['doc'])) {
     exit();
 }
 
-// 3. Captura e limpa o documento
-// A função de limpeza depende de como você armazena no banco, 
-// mas é bom remover caracteres não numéricos.
+// 3. Captura e limpa o documento (Para buscar na tabela bancarias)
 $doc_cliente = preg_replace('/[^0-9]/', '', $_POST['doc']); 
 
+// Se a limpeza não resultou em nada (ex: passou só pontuação)
+if (empty($doc_cliente)) {
+    echo '<tr><td colspan="7" class="text-center text-danger">Documento fornecido é inválido após a limpeza.</td></tr>';
+    exit();
+}
+
 // 4. Prepara a consulta SQL
-// Usamos prepared statements para segurança (evitar SQL Injection)
-$query = "SELECT * FROM bancarias WHERE doc = :doc_cliente";
+// A busca é feita limpando os pontos e traços do campo 'doc' na tabela bancarias
+$query = "SELECT * FROM bancarias WHERE REPLACE(REPLACE(doc, '.', ''), '-', '') = :doc_cliente";
+
 $stmt = $pdo->prepare($query);
 $stmt->bindValue(':doc_cliente', $doc_cliente);
 $stmt->execute();
@@ -27,12 +31,29 @@ $stmt->execute();
 $contas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if (empty($contas)) {
+    // *** CORREÇÃO CRÍTICA: RETORNA A MENSAGEM INFORMATIVA E PARA ***
     echo '<tr><td colspan="7" class="text-center text-info">Nenhuma conta bancária cadastrada para este documento.</td></tr>';
-    exit();
+    exit(); // O SCRIPT PARA AQUI SE NÃO HOUVER CONTAS
 }
 
-// 6. Itera sobre os resultados e gera o HTML das linhas
+// 6. Itera sobre os resultados e gera o HTML das linhas (SÓ EXECUTA SE HOUVER CONTAS)
 foreach ($contas as $conta) {
+
+        $id = htmlspecialchars(addslashes($conta['id']));
+        $banco = htmlspecialchars(addslashes($conta['banco']));
+        $agencia = htmlspecialchars(addslashes($conta['agencia']));
+        $conta_numero = htmlspecialchars(addslashes($conta['conta'])); // Mapeia para ContaNumero no JS
+        $tipo = htmlspecialchars(addslashes($conta['tipo']));
+        $pessoa = htmlspecialchars(addslashes($conta['pessoa']));
+        $doc_conta = htmlspecialchars(addslashes($conta['doc'])); // Mapeia para DocConta no JS
+        
+        // Para a exclusão, usamos o nome do banco no modal
+        $banco_nome_exclusao = htmlspecialchars(addslashes($conta['banco']));
+
+        // Formata o código PHP como string para ser injetado no HTML
+        $btn_editar = "editarConta('{$id}', '{$banco}', '{$agencia}', '{$conta_numero}', '{$tipo}', '{$pessoa}', '{$doc_conta}')";
+        $btn_excluir = "excluirConta('{$id}', '{$banco_nome_exclusao}')";
+
     ?>
     <tr>
         <td><?php echo htmlspecialchars($conta['banco']); ?></td>
@@ -41,10 +62,10 @@ foreach ($contas as $conta) {
         <td><?php echo htmlspecialchars($conta['tipo']); ?></td> 
         <td><?php echo htmlspecialchars($conta['pessoa']); ?></td>
         <td><?php echo htmlspecialchars($conta['doc']); ?></td>
-        <td>
-            <button class="btn btn-sm btn-primary" onclick="editarConta(<?php echo $conta['id']; ?>)">Editar</button>
-            <button class="btn btn-sm btn-danger" onclick="excluirConta(<?php echo $conta['id']; ?>)">Excluir</button>
-        </td>
+       <td class="d-flex gap-1">
+            <button class="btn btn-sm btn-primary" onclick="editarConta('{$id}', '{$banco}', '{$agencia}', '{$conta_numero}', '{$tipo}', '{$pessoa}', '{$doc_conta}')">✎</i></button>
+            <button class="btn btn-sm btn-danger" onclick="excluirConta('{$conta_id}', '{$banco_nome}')">🗑</i></button>
+       </td>
     </tr>
     <?php
 }

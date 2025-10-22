@@ -58,16 +58,6 @@ HTML;
 ?>
 
 <script>
-$(document).ready(function() {   
-    // Inicializa o DataTables
-    $('#example').DataTable({
-        "ordering": false,
-        "language": {
-            "url": "../../js/ajax.js" // Adicionando tradução
-        }
-    });
-});
-
 /**
  * Função para preencher os campos do modal de edição (que é o modalForm)
  * Os campos do modal devem usar os nomes de ID definidos em bancarias.php (que incluem $campo1 a $campo6)
