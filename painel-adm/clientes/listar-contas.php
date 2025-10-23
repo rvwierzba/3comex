@@ -51,8 +51,8 @@ foreach ($contas as $conta) {
         $banco_nome_exclusao = htmlspecialchars(addslashes($conta['banco']));
 
         // Formata o código PHP como string para ser injetado no HTML
-        $btn_editar = "editarConta('{$id}', '{$banco}', '{$agencia}', '{$conta_numero}', '{$tipo}', '{$pessoa}', '{$doc_conta}')";
-        $btn_excluir = "excluirConta('{$id}', '{$banco_nome_exclusao}')";
+       $btn_editar = "editarConta(event, '{$id}', '{$banco}', '{$agencia}', '{$conta_numero}', '{$tipo}', '{$pessoa}', '{$doc_conta}')";
+       $btn_excluir = "excluirConta(event, '{$id}', '{$banco_nome_exclusao}')";
 
     ?>
     <tr>
@@ -63,8 +63,8 @@ foreach ($contas as $conta) {
         <td><?php echo htmlspecialchars($conta['pessoa']); ?></td>
         <td><?php echo htmlspecialchars($conta['doc']); ?></td>
        <td class="d-flex gap-1">
-            <button class="btn btn-sm btn-primary" onclick="editarConta('{$id}', '{$banco}', '{$agencia}', '{$conta_numero}', '{$tipo}', '{$pessoa}', '{$doc_conta}')">✎</i></button>
-            <button class="btn btn-sm btn-danger" onclick="excluirConta('{$conta_id}', '{$banco_nome}')">🗑</i></button>
+            <button type="button" class="btn btn-sm btn-primary" onclick="<?php echo $btn_editar; ?>">✎</button>
+            <button type="button" class="btn btn-sm btn-danger" onclick="<?php echo $btn_excluir; ?>">🗑</button>
        </td>
     </tr>
     <?php

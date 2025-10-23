@@ -86,7 +86,7 @@
                         </div>
 
                         <div class="tab-pane fade" id="dadosBanc" role="tabpanel" aria-labelledby="dadosBanc-tab">
-                            <button type="button" onclick="novaContaBancaria()" class="btn btn-dark btn-sm">Nova Conta Bancária</button>
+                           <button type="button" onclick="novaContaBancaria()" class="btn btn-dark btn-sm">Nova Conta Bancária</button>
                             <div class="table-responsive mt-3">
                                 <table id="tabelaContasCliente" class="table table-striped table-hover my-4">
                                     <thead>
@@ -100,7 +100,9 @@
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="corpoTabelaBancaria"></tbody>                                
+                                    <tbody id="corpoTabelaBancaria">
+                                        <!-- AQUI VIRÃO AS CONTAS BANCÁRIAS DO CLIENTE, QUANDO TIVEREM CONTAS BANC. CADASTRADAS EM SEU DOC. (CPF OR CNPJ) -->
+                                    </tbody>                                
                                 </table>
                             </div>
                         </div>
@@ -117,7 +119,7 @@
                     </div>
                 </div>
                 <small><div id="mensagem" align="center"></div></small>
-                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btn-fechar">Fechar</button><button type="submit" class="btn btn-primary">Salvar</button></div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btn-fechar">Fechar</button><button type="button" class="btn btn-primary">Salvar</button></div>
                 <input type="hidden" class="form-control" name="id" id="id">
             </form>
         </div>
@@ -213,8 +215,8 @@
                     <div class="row">
                         <div class="col-md-6 col-sm-12">
                             <div class="mb-3">
-                                <label for="ContaNumero" class="form-label">Conta</label>
-                                <input type="text" class="form-control" name="ContaNumero" placeholder="Conta" id="ContaNumero" required>
+                                <label for="Conta" class="form-label">Conta</label>
+                                <input type="text" class="form-control" name="Conta" placeholder="Conta" id="Conta" required>
                             </div>
                         </div>
                         <div class="col-md-6 col-sm-12">
@@ -233,15 +235,16 @@
                             <div class="mb-3">
                                 <label for="Pessoa" class="form-label">Pessoa</label>
                                 <select class="form-select" aria-label="Default select example" name="Pessoa" id="Pessoa">
-                                    <option value="Física">Física</option>
-                                    <option value="Jurídica">Jurídica</option>
+                                 <option value="">Selecionar Pessoa</option>
+                                    <option value="F">Física</option> 
+                                    <option value="J">Jurídica</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-md-6 col-sm-12">
                             <div class="mb-3">
-                                <label for="DocConta" class="form-label">CPF / CNPJ da Conta</label>
-                                <input type="text" class="form-control" name="DocConta" id="DocConta" required>
+                                <label for="Doc" class="form-label">CPF / CNPJ da Conta</label>
+                                <input type="text" class="form-control" name="Doc" id="Doc" required>
                             </div>
                         </div>
                     </div>
@@ -254,14 +257,12 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btn-fechar-conta">Fechar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
+                    <button type="submit" onclick="submeterContaBancaria()" class="btn btn-primary">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
-
 
 
 
@@ -272,7 +273,60 @@
     var pag = "<?=$pagina?>"; 
 </script>
 
+
 <script type="text/javascript">
+
+
+  // CÓDIGOS RELACIONADOS A CONSULTA DE CNPJ PARA INCLUSÃO COMO CLIENTE=========================================================================                                      
+
+
+                                          /**
+     * Função para preencher o formulário principal com os dados da consulta de CNPJ.
+     */
+    window.preencherFormularioComDadosCNPJ = function(dados) {
+        if (!dados || !dados.estabelecimento) {
+            alert("A consulta retornou dados incompletos.");
+            return;
+        }
+        const est = dados.estabelecimento;
+        $('#Nome').val(dados.razao_social || '');
+        $('#NomeRes').val(est.nome_fantasia || '');
+        $('#CNPJ').val(dados.cnpj_raiz || '');
+        $('#Endereco').val(`${est.logradouro || ''}, ${est.numero || ''}`);
+        $('#Complemento').val(est.complemento || '');
+        $('#Bairro').val(est.bairro || '');
+        $('#Cidade').val(dados.cidade?.nome || '');
+        $('#Estado').val(dados.estado?.sigla || '');
+        $('#Cep').val(est.cep ? String(est.cep).replace(/\D/g,'') : '');
+        $('#Telefone').val(`${est.ddd1 || ''}${est.telefone1 || ''}`);
+        $('#Email').val(est.email || '');
+        
+        var modalConsulta = bootstrap.Modal.getInstance(document.getElementById('modalConsulta'));
+        if (modalConsulta) {
+            modalConsulta.hide();
+        }
+    };
+
+    // Funções de controle dos modais
+    function inserir() {
+        $('#form').trigger("reset");
+        $('#id').val('');
+        $('#tituloModal').text('Inserir Novo Registro');
+        var myModal = new bootstrap.Modal(document.getElementById('modalForm'));
+        myModal.show();
+        $('#mensagem').text('');
+    }
+
+    function openModalConsulta() {
+        var myModal = new bootstrap.Modal(document.getElementById('modalConsulta'));
+        myModal.show();
+    }
+
+
+
+
+//=================================================================================================================================================
+
     // INJEÇÃO SEGURO DAS VARIÁVEIS PHP NO JAVASCRIPT
     const config = <?php echo json_encode($js_vars); ?>;
     
@@ -284,48 +338,50 @@
     // =====================================================================================
 
     // --- FUNÇÃO DE RECARREGAMENTO DE CONTAS BANCÁRIAS (AGORA GLOBAL) ---
-    function carregarDadosBancarios() { 
-        var tabelaContas = $('#tabelaContasCliente');
-        var corpoTabela = $('#corpoTabelaBancaria');
-        
+   function carregarDadosBancarios() {
+        // Verifique o ID da tabela no seu HTML!
+        var tabelaContas = $('#tabelaBancaria'); // Ex: <table id="tabelaBancaria">
+        var corpoTabela = $('#corpoTabelaBancaria'); // Ex: <tbody id="corpoTabelaBancaria">
+
         if (id_cliente_atual === 0 || id_cliente_atual === "") {
-             corpoTabela.html('<tr><td colspan="7" class="text-center text-danger">Erro: Documento do cliente não definido.</td></tr>');
-             return;
+            corpoTabela.html('<tr><td colspan="7" class="text-center text-danger">Erro: Documento do cliente não definido.</td></tr>');
+            return;
         }
 
-        // Destruição segura da tabela DataTables
+        // 1. DESTRUIÇÃO SEGURA DO DataTables (RESOLVE O ERRO 'parentNode is null')
         if ($.fn.dataTable.isDataTable(tabelaContas)) { 
-            try { tabelaContas.DataTable().destroy(); } catch (e) { /* Ignora */ }
+            try { 
+                tabelaContas.DataTable().destroy(); 
+            } catch (e) { 
+                console.error("Erro ao tentar destruir DataTables:", e);
+            }
         }
         
+        // 2. CHAMA O AJAX USANDO MÉTODO POST (Conforme o PHP exige)
         var urlListarContas = config.base_http_raiz + "/" + config.path_clientes + "/listar-contas.php"; 
-        var dadosParaEnviar = { doc: id_cliente_atual };
         
+        // Dados a serem enviados via POST
+        var dadosParaEnviar = { doc: id_cliente_atual }; 
+        
+        // Limpa a tabela antes de carregar
+        corpoTabela.html('<tr><td colspan="7" class="text-center text-secondary">Carregando dados...</td></tr>');
+
+
         $.ajax({
             url: urlListarContas,
-            method: 'POST',
-            data: dadosParaEnviar,
+            method: 'POST', // CORREÇÃO CRÍTICA: USAR POST
+            data: dadosParaEnviar, // Envia o documento do cliente
             success: function(responseHtml) {
                 
-                // Trata explicitamente as mensagens de ERRO ou NENHUMA CONTA vindas do PHP
-                if (responseHtml.includes("Documento do cliente é obrigatório") || 
-                    responseHtml.includes("Documento fornecido é inválido") ||
-                    responseHtml.includes("Nenhuma conta bancária cadastrada para este documento")) // Mensagem do listar-contas.php
-                {
-                     // Injeta a mensagem de sem dados e PARA.
-                     corpoTabela.html('<tr><td colspan="7" class="text-center text-secondary">Nenhuma conta bancária cadastrada.</td></tr>');
-                     return; 
-                }
-                
-                // Se a resposta for HTML de <tr>s válidos (dados)
+                // 3. Insere o novo HTML
                 corpoTabela.html(responseHtml); 
                 
-                // Inicializa DataTables somente se houver linhas
-                if ($('#corpoTabelaBancaria tr').length > 0 && tabelaContas.length) {
-                     tabelaContas.DataTable({ 
+                // 4. Reinicializa DataTables
+                if ($('#corpoTabelaBancaria tr').length > 0) {
+                    tabelaContas.DataTable({ 
                         "ordering": false,
                         "language": {"url": "../js/pt-BR.json"}
-                     });
+                    });
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
@@ -345,14 +401,28 @@
         // Chama a função global carregarDadosBancarios
         carregarDadosBancarios();
     }
+
+
+    // Função auxiliar para limpar e contar dígitos
+    function contarDigitos(documento) {
+        if (!documento) return 0;
+        const documentoLimpo = documento.toString().replace(/\D/g, ''); 
+        return documentoLimpo.length;
+    }
+
     
     // --- FUNÇÃO PARA ABRIR MODAL DE NOVA CONTA BANCÁRIA (Chamada pelo botão Nova Conta) ---
-    function novaContaBancaria() {
+   function novaContaBancaria() {
         if (id_cliente_atual === 0 || id_cliente_atual === "") {
             alert("Erro: Salve ou edite o cliente primeiro para poder adicionar contas bancárias.");
             return;
         }
         
+        // Fecha o modal do cliente
+        var clienteModal = bootstrap.Modal.getInstance(document.getElementById('modalForm'));
+        if (clienteModal) { clienteModal.hide(); }
+        
+        // Limpa e configura o modal da conta
         $('#tituloModalConta').text('Inserir Nova Conta Bancária');
         $('#form-conta')[0].reset(); 
         $('#mensagem-conta').text('');
@@ -360,41 +430,117 @@
         
         $('#doc-cliente-conta').val(id_cliente_atual); 
 
-        var myModal = new bootstrap.Modal(document.getElementById('modalConta'), {});
-        myModal.show();
+        // CRÍTICO: Preenche o campo #Doc (que o PHP espera) e #Pessoa
+        $('#Doc').val(id_cliente_atual); 
+
+        const numDigitos = contarDigitos(id_cliente_atual);
+        
+        if (numDigitos === 11) {
+            $('#Pessoa').val('F').trigger('change'); 
+        } else if (numDigitos === 14) {
+            $('#Pessoa').val('J').trigger('change'); 
+        } else {
+            $('#Pessoa').val('').trigger('change'); 
+        }
+
+        // Abre o Modal da Conta
+        var contaModal = new bootstrap.Modal(document.getElementById('modalConta'), {});
+        contaModal.show();
     }
 
+    // --- FUNÇÃO DEDICADA PARA SUBMETER O CADASTRO/EDIÇÃO DA CONTA BANCÁRIA ---
+    // Esta função é chamada quando o botão 'Salvar' do modal de contas é acionado.
+   function submeterContaBancaria() {
+        const formContaElement = document.getElementById('form-conta'); 
+        
+        if (!formContaElement) {
+            $('#mensagem-conta').addClass('text-danger').text('ERRO FATAL JS: Formulário #form-conta não encontrado.');
+            return;
+        }
+
+        var formData = new FormData(formContaElement); 
+        var urlAcao = config.base_http_raiz + "/" + config.path_bancarias + "/inserir.php"; 
+
+        // Limpa a mensagem antes de enviar
+        $('#mensagem-conta').text('');
+        $('#mensagem-conta').removeClass(); 
+        $('#mensagem-conta').text('Aguardando resposta do servidor...'); // Feedback de envio
+
+        $.ajax({
+            url: urlAcao,
+            type: 'POST',
+            data: formData,
+
+            success: function (mensagem) {
+                
+                var mensagemLimpa = mensagem.trim();
+
+                if (mensagemLimpa == "Salvo com Sucesso") {
+                    
+                    // SE HOUVE SUCESSO, A MENSAGEM PERMANECERÁ NA TELA
+                    $('#mensagem-conta').addClass('text-success').text("SUCESSO: O registro foi salvo no banco de dados.");
+                    
+                    // NOTA: NÃO TENTA FECHAR O MODAL NEM CHAMAR carregarDadosBancarios().
+                    
+                } else {
+                    // SE HOUVE ERRO (SQL, Validação, etc.), EXIBE EM VERMELHO
+                    $('#mensagem-conta').addClass('text-danger').text(mensagemLimpa);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                // ERRO DE REDE OU SERVIDOR
+                $('#mensagem-conta').addClass('text-danger').text('ERRO DE REDE/COMUNICAÇÃO: O PHP não respondeu. Verifique o console. Status: ' + textStatus);
+            },
+
+            cache: false,
+            contentType: false,
+            processData: false,
+        });
+    }
+
+
     // --- FUNÇÃO DE EDIÇÃO DE CONTA BANCÁRIA (Chamada pelo listar-contas.php) ---
-    function editarConta(id, banco, agencia, conta, tipo, pessoa, doc_conta) {
-        
+  
+    function editarConta(e, id, banco, agencia, conta, tipo, pessoa, doc_conta) {
+        if (e) { e.stopPropagation(); } // <<<< FIX CRÍTICO: IMPEDE QUE O CLIQUE FECHE O MODAL PAI
+
+        // FECHA O MODAL DO CLIENTE (#modalForm)
+        var clienteModal = bootstrap.Modal.getInstance(document.getElementById('modalForm'));
+        if (clienteModal) { clienteModal.hide(); }
+
+        // PREENCHE E ABRE O MODAL DA CONTA (#modalConta)
         $('#id-conta').val(id);
-        
         $('#Banco').val(banco);
         $('#Agencia').val(agencia);
         $('#ContaNumero').val(conta);
         $('#Tipo').val(tipo);
         $('#Pessoa').val(pessoa);
         $('#DocConta').val(doc_conta);
-        
         $('#doc-cliente-conta').val(id_cliente_atual); 
 
         $('#tituloModalConta').text('Editar Conta Bancária');
         
-        var myModal = new bootstrap.Modal(document.getElementById('modalConta'), {});
-        myModal.show();
+        var contaModal = new bootstrap.Modal(document.getElementById('modalConta'), {});
+        contaModal.show();
         $('#mensagem-conta').text('');
     }
 
     // --- FUNÇÃO DE EXCLUSÃO DE CONTA BANCÁRIA (Chamada pelo listar-contas.php) ---
-    function excluirConta(conta_id, nome_banco) {
+   function excluirConta(e, conta_id, nome_banco) {
+        if (e) { e.stopPropagation(); } // <<<< FIX CRÍTICO: IMPEDE QUE O CLIQUE FECHE O MODAL PAI
+        
+        // FECHA O MODAL DO CLIENTE (#modalForm)
+        var clienteModal = bootstrap.Modal.getInstance(document.getElementById('modalForm'));
+        if (clienteModal) { clienteModal.hide(); }
+
+        // CONFIGURA E ABRE O MODAL DE EXCLUSÃO (#modalExcluirConta)
         $('#nome-excluido-conta').text(nome_banco); 
         $('#id-excluir-conta').val(conta_id); 
         
-        var myModal = new bootstrap.Modal(document.getElementById('modalExcluirConta'), {});
-        myModal.show();
+        var excluirModal = new bootstrap.Modal(document.getElementById('modalExcluirConta'), {});
+        excluirModal.show();
         $('#mensagem-excluir-conta').text('');
     }
-    
     
     // =====================================================================================
     // FUNÇÕES INTERNAS (AJAX DE SUBMISSÃO E LISTAGEM DE CLIENTES)
@@ -402,34 +548,29 @@
 
     $(document).ready(function() {
         
-        // --- AJAX PARA INSERÇÃO/EDIÇÃO DE CONTA BANCÁRIA (id="form-conta") ---
-        $('#form-conta').submit(function(event) {
-            event.preventDefault();
+         // --- AJAX PARA INSERÇÃO/EDIÇÃO DE CONTA BANCÁRIA (id="form-conta") ---
+        function novoCadastroCliente(){
+             // 1. ZERA O ESTADO CRÍTICO (variável global usada para contas)
+            id_cliente_atual = 0; 
+
+            // 2. Limpa visualmente a tabela de contas no modal (garante que não apareça lixo)
+            $('#corpoTabelaBancaria').html('<tr><td colspan="7" class="text-center text-secondary">Nenhuma conta cadastrada. Salve o cliente para adicionar contas.</td></tr>');
             
-            var formData = $(this).serialize();
-            var urlAcao = config.base_http_raiz + "/" + config.path_bancarias + "/inserir.php"; 
-            
-            $.ajax({
-                url: urlAcao,
-                method: 'POST',
-                data: formData,
-                dataType: 'text',
-                success: function(mensagem) {
-                    
-                    if (mensagem.trim() === "Salvo com Sucesso") {
-                        
-                        $('#btn-fechar-conta').click();
-                        carregarDadosBancarios(); // Chama a função GLOBAL
-                        
-                    } else {
-                        $('#mensagem-conta').text(mensagem.trim()); 
-                    }
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                     $('#mensagem-conta').text('Erro de comunicação/rede (' + textStatus + ').');
-                }
-            });
-        });
+            // 3. Limpar o formulário principal e abrir o modal (usando a função genérica que você já tem)
+            // Assume-se que 'inserir()' apenas limpa o formulário principal e abre o #modalForm
+            inserir();
+        }
+
+        function inserir() {
+            $('#form').trigger("reset");
+            $('#id').val('');
+            $('#tituloModal').text('Inserir Novo Registro');
+            var myModal = new bootstrap.Modal(document.getElementById('modalForm'));
+            myModal.show();
+            $('#mensagem').text('');
+            limparCampos(); // Garante que os campos estejam limpos
+        }
+
 
         // --- AJAX PARA EXCLUSÃO DE CONTA BANCÁRIA (id="form-excluir-conta") ---
         $('#form-excluir-conta').submit(function(event) {
